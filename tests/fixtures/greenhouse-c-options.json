@@ -1,0 +1,96 @@
+{
+  "source": "greenhouse job board API (questions=true)",
+  "choices": {
+    "question_9793047101": [
+      "Before 2021",
+      "2021",
+      "2022",
+      "2023",
+      "2024",
+      "2025",
+      "2026"
+    ],
+    "question_9793048101": [
+      "ACT",
+      "SAT",
+      "Other"
+    ],
+    "question_9793049101": [
+      "I don't have SAT score",
+      "<1200",
+      "1201 - 1300",
+      "1301 - 1400",
+      "1401 - 1500",
+      "1501 - 1600"
+    ],
+    "question_9793050101": [
+      "I don't have ACT score",
+      "<30",
+      "31",
+      "32",
+      "33",
+      "34",
+      "35",
+      "36"
+    ],
+    "question_9793051101": [
+      "I've already graduated",
+      "August 2026 - December 2026",
+      "January 2027 - July 2027",
+      "August 2027 - December 2027",
+      "January 2028 - July 2028",
+      "August 2028 - December 2028",
+      "January 2029 - July 2029",
+      "August 2029 - December 2029",
+      "January 2030 - July 2030",
+      "August 2030 - December 2030"
+    ],
+    "question_9793052101": [
+      "Below 3.2",
+      "3.21 - 3.3",
+      "3.31 - 3.4",
+      "3.41 - 3.5",
+      "3.51 - 3.6",
+      "3.61 - 3.7",
+      "3.71 - 3.8",
+      "3.81 - 3.9",
+      "3.91 - 4.0",
+      "Above 4.0"
+    ],
+    "question_9793053101": [
+      "Yes",
+      "No",
+      "Maybe/I don\u2019t know"
+    ],
+    "question_9793054101": [
+      "Yes",
+      "No",
+      "Maybe/I don\u2019t know"
+    ],
+    "question_9793056101": [
+      "Yes",
+      "No"
+    ],
+    "question_9793057101": [
+      "No",
+      "I am considering further education after my current program",
+      "I have committed to another degree after my current program"
+    ],
+    "question_9793058101": [
+      "Yes",
+      "No"
+    ],
+    "question_9793062101": [
+      "I Agree"
+    ],
+    "question_9793063101": [
+      "I agree"
+    ],
+    "4005630101": [
+      "Female",
+      "Male",
+      "Other",
+      "Choose not to disclose"
+    ]
+  }
+}

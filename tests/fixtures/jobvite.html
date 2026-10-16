@@ -1,0 +1,506 @@
+<!doctype html>
+<!-- captured from a live application page on 2026-10-15 -->
+<html><body><body class="jv-desktop jv-page-apply  ng-scope" ng-app="jv.careersite.desktop.app" ng-controller="JVMain">
+            <div class="jv-page-container">
+        <div class="jv-page">
+                <div class="jv-page-content">
+            <header class="jv-page-header" role="banner">
+        <div class="jv-wrapper">
+            <h1 class="jv-logo">
+                    <a href="/acme/jobs">
+Acme Careers                    </a>
+            </h1>
+        </div>
+    </header>
+    
+    <article class="jv-page-body ng-scope" role="main" ng-controller="JVApply">
+            <div class="jv-wrapper">
+            <h2 class="jv-header">
+                                Sr Director of Accounting and Reporting
+
+
+    </h2>
+    <p class="jv-apply-meta">
+        Accounting and Finance<span class="jv-inline-separator"></span>
+        
+            Mountain View,
+            California
+        
+
+    </p>
+                <p>
+Thank you for considering a career at Acme. Please take a minute to fill out the following form. After you have completed your application an email will be sent to you with information about how to check the status of your application.        </p>
+        <hr>
+
+
+    <div class="jv-content-loader ng-hide" ng-hide="initialized">
+        <span class="jv-spinner"></span>
+    </div>
+    
+        
+        
+    <div class="jv-form jv-apply-form">
+        <form name="scopeData.applyForm" ng-submit="submitApplication()" novalidate="" ng-class="{ 'jv-form-submitted': applyForm.submitted }" aria-live="polite" class="ng-pristine ng-invalid ng-invalid-required ng-valid-pattern ng-valid-maxlength">
+    <div ng-form="scopeData.step1" ng-if="showStep(1)" class="jv-apply-step ng-pristine ng-scope ng-invalid ng-invalid-required ng-valid-pattern ng-valid-maxlength">
+    <div ng-show="showInvalidField(errors.resume)">
+    <h3 class="jv-step-header" id="jv-resume-header">
+        Add Resume*
+    </h3>
+        <div ng-controller="JVApplyWith" class="jv-apply-with jv-apply-section ng-scope" id="attachResume">
+            <div ng-show="!resumeName" ng-class="{ 'jv-invalid-field': errors.resume }">
+                <button jv-add-attachment="{ social: true }" attachment-label="Resume" pasted-label="Pasted Resume" class="jv-button ng-isolate-scope" type="button" aria-haspopup="true" aria-labelledby="jv-resume-header" aria-expanded="false" jv-focus-on="resumeDeleted" aria-required="true">
+Select <i class="icon icon-arrow-down jv-text-icon"></i>
+                </button>
+                
+            </div>
+            <div jv-edit-resume="" resume-content="resumeContent" visible="showEditResume" class="ng-isolate-scope">
+        <div class="jv-add-attachment jv-add-attachment-paste jv-paste-visible jv-tooltip-top ng-hide" ng-show="visible" aria-hidden="true">
+        <label for="jv-edit-resume-textarea0" class="jv-visually-hidden">Type or paste your Resume here</label>
+            <textarea id="jv-edit-resume-textarea0" ng-model="resumeContent" class="needsclick ng-pristine ng-untouched ng-valid ng-empty"></textarea>
+            <div class="jv-add-attachment-paste-buttons">
+                <button class="jv-button" type="button" ng-click="hide()">Cancel</button>
+                <button class="jv-button jv-button-primary" type="button" ng-click="saveContent()" ng-disabled="!resumeContent" disabled="disabled">Save</button>
+            </div>
+        </div>
+    </div>
+            <ul class="jv-file-list">
+                
+            </ul>
+            
+        </div>
+    </div>
+    <div ng-show="showInvalidField(!step1.validOnSubmit)" class="jv-apply-section">
+    <h3 class="jv-step-header" id="">
+        Personal Information
+    </h3>
+        <div ng-repeat="field in applyFields" jv-apply-field="field" jv-apply-fields="(field.fieldId && field.fieldId === -7) ? applyFields : null" jv-apply-field-show="showInvalidField(error)" jv-step="1" ng-model="applyData.fieldMap" class="jv-form-field ng-pristine ng-untouched ng-valid ng-scope ng-isolate-scope ng-not-empty">
+        <div ng-form="inputForm" ng-show="show({ error: !validOnSubmit }) && !hide" class="jv-form-field-input JVA_NAME ng-invalid ng-invalid-required ng-valid-pattern ng-valid-maxlength" ng-class="{ 'jv-invalid-field': !validOnSubmit && field.showErrorMessage }" ng-init="browser = 'desktop'">
+            
+                        <label ng-if="field.desktopLabel && field.type !== 'checkbox' && field.type !== 'radio'" for="jv-field-yiYcYfwa" class="jv-form-field-label ng-binding ng-scope">
+                    First Name<span ng-if="field.required" class="jv-required-label ng-scope">*</span>
+                </label>
+
+
+            <div ng-switch="" class="jv-form-field-control" ng-class="{ 'jv-form-field-appearance': field.type === 'select' && supportsAppearance }">
+                <input ng-switch-when="input" id="jv-field-yiYcYfwa" name="input-yiYcYfwa" autocomplete="given-name" ng-class="{ 'jv-form-bg-icon': field.icon }" ng-model="ngModel[field.viewFieldEId]" ng-required="field.required" ng-pattern="[object Object]" aria-required="true" type="text" maxlength="100" jv-clear="" class="ng-pristine ng-untouched ng-scope ng-empty ng-invalid ng-invalid-required ng-valid-pattern ng-valid-maxlength" required="required">
+                
+                
+                
+                
+                
+                
+                
+                
+                
+            </div>
+            
+            
+            
+            
+            
+        </div>
+    </div><div ng-repeat="field in applyFields" jv-apply-field="field" jv-apply-fields="(field.fieldId && field.fieldId === -7) ? applyFields : null" jv-apply-field-show="showInvalidField(error)" jv-step="1" ng-model="applyData.fieldMap" class="jv-form-field ng-pristine ng-untouched ng-valid ng-scope ng-isolate-scope ng-not-empty">
+        <div ng-form="inputForm" ng-show="show({ error: !validOnSubmit }) && !hide" class="jv-form-field-input JVA_NAME ng-invalid ng-invalid-required ng-valid-pattern ng-valid-maxlength" ng-class="{ 'jv-invalid-field': !validOnSubmit && field.showErrorMessage }" ng-init="browser = 'desktop'">
+            
+                        <label ng-if="field.desktopLabel && field.type !== 'checkbox' && field.type !== 'radio'" for="jv-field-yhYcYfw9" class="jv-form-field-label ng-binding ng-scope">
+                    Last Name<span ng-if="field.required" class="jv-required-label ng-scope">*</span>
+                </label>
+
+
+            <div ng-switch="" class="jv-form-field-control" ng-class="{ 'jv-form-field-appearance': field.type === 'select' && supportsAppearance }">
+                <input ng-switch-when="input" id="jv-field-yhYcYfw9" name="input-yhYcYfw9" autocomplete="family-name" ng-class="{ 'jv-form-bg-icon': field.icon }" ng-model="ngModel[field.viewFieldEId]" ng-required="field.required" ng-pattern="[object Object]" aria-required="true" type="text" maxlength="100" jv-clear="" class="ng-pristine ng-untouched ng-scope ng-empty ng-invalid ng-invalid-required ng-valid-pattern ng-valid-maxlength" required="required">
+                
+                
+                
+                
+                
+                
+                
+                
+                
+            </div>
+            
+            
+            
+            
+            
+        </div>
+    </div><div ng-repeat="field in applyFields" jv-apply-field="field" jv-apply-fields="(field.fieldId && field.fieldId === -7) ? applyFields : null" jv-apply-field-show="showInvalidField(error)" jv-step="1" ng-model="applyData.fieldMap" class="jv-form-field ng-pristine ng-untouched ng-valid ng-scope ng-isolate-scope ng-not-empty">
+        <div ng-form="inputForm" ng-show="show({ error: !validOnSubmit }) && !hide" class="jv-form-field-input JVA_EMAIL ng-invalid ng-invalid-required ng-valid-pattern ng-valid-maxlength" ng-class="{ 'jv-invalid-field': !validOnSubmit && field.showErrorMessage }" ng-init="browser = 'desktop'">
+            
+                        <label ng-if="field.desktopLabel && field.type !== 'checkbox' && field.type !== 'radio'" for="jv-field-ygYcYfw8" class="jv-form-field-label ng-binding ng-scope">
+                    Email<span ng-if="field.required" class="jv-required-label ng-scope">*</span>
+                </label>
+
+
+            <div ng-switch="" class="jv-form-field-control" ng-class="{ 'jv-form-field-appearance': field.type === 'select' && supportsAppearance }">
+                <input ng-switch-when="input" id="jv-field-ygYcYfw8" name="input-ygYcYfw8" autocomplete="email" ng-class="{ 'jv-form-bg-icon': field.icon }" ng-model="ngModel[field.viewFieldEId]" ng-required="field.required" ng-pattern="[object Object]" aria-required="true" type="text" maxlength="100" jv-clear="" class="ng-pristine ng-untouched ng-scope ng-empty ng-invalid ng-invalid-required ng-valid-pattern ng-valid-maxlength" required="required">
+                
+                
+                
+                
+                
+                
+                
+                
+                
+            </div>
+            
+            
+            
+            
+            
+        </div>
+    </div><div ng-repeat="field in applyFields" jv-apply-field="field" jv-apply-fields="(field.fieldId && field.fieldId === -7) ? applyFields : null" jv-apply-field-show="showInvalidField(error)" jv-step="1" ng-model="applyData.fieldMap" class="jv-form-field ng-pristine ng-untouched ng-valid ng-scope ng-isolate-scope ng-not-empty">
+        <div ng-form="inputForm" ng-show="show({ error: !validOnSubmit }) && !hide" class="jv-form-field-input JVA_PHONE ng-invalid ng-invalid-required ng-valid-pattern ng-valid-maxlength" ng-class="{ 'jv-invalid-field': !validOnSubmit && field.showErrorMessage }" ng-init="browser = 'desktop'">
+            
+                        <label ng-if="field.desktopLabel && field.type !== 'checkbox' && field.type !== 'radio'" for="jv-field-yjYcYfwb" class="jv-form-field-label ng-binding ng-scope">
+                    Cell Phone<span ng-if="field.required" class="jv-required-label ng-scope">*</span>
+                </label>
+
+
+            <div ng-switch="" class="jv-form-field-control" ng-class="{ 'jv-form-field-appearance': field.type === 'select' && supportsAppearance }">
+                <input ng-switch-when="input" id="jv-field-yjYcYfwb" name="input-yjYcYfwb" autocomplete="tel" ng-class="{ 'jv-form-bg-icon': field.icon }" ng-model="ngModel[field.viewFieldEId]" ng-required="field.required" ng-pattern="[object Object]" aria-required="true" type="tel" maxlength="100" jv-clear="" class="ng-pristine ng-untouched ng-scope ng-empty ng-invalid ng-invalid-required ng-valid-pattern ng-valid-maxlength" required="required">
+                
+                
+                
+                
+                
+                
+                
+                
+                
+            </div>
+            
+            
+            
+            
+            
+        </div>
+    </div><div ng-repeat="field in applyFields" jv-apply-field="field" jv-apply-fields="(field.fieldId && field.fieldId === -7) ? applyFields : null" jv-apply-field-show="showInvalidField(error)" jv-step="1" ng-model="applyData.fieldMap" class="jv-form-field ng-pristine ng-untouched ng-valid ng-scope ng-isolate-scope ng-not-empty">
+        <div ng-form="inputForm" ng-show="show({ error: !validOnSubmit }) && !hide" class="jv-form-field-select JVA_DROPDOWN ng-invalid ng-invalid-required" ng-class="{ 'jv-invalid-field': !validOnSubmit && field.showErrorMessage }" ng-init="browser = 'desktop'">
+            
+                        <label ng-if="field.desktopLabel && field.type !== 'checkbox' && field.type !== 'radio'" for="jv-field-ymIyZfwl" class="jv-form-field-label ng-binding ng-scope">
+                    Work Status<span ng-if="field.required" class="jv-required-label ng-scope">*</span>
+                </label>
+
+
+            <div ng-switch="" class="jv-form-field-control jv-form-field-appearance" ng-class="{ 'jv-form-field-appearance': field.type === 'select' && supportsAppearance }">
+                
+                
+                
+                
+                
+                <div ng-switch-when="select" class="jv-select-group ng-scope" ng-class="{ 'jv-select-group-has-label': field.mobileLabel }">
+                    <i ng-if="!field.multiSelect && supportsAppearance" class="jv-select-icon icon icon-arrow-down ng-scope"></i>
+                    <select ng-if="!field.multiSelect" id="jv-field-ymIyZfwl" name="input-ymIyZfwl" autocomplete="on" ng-model="ngModel[field.viewFieldEId]" ng-options="o.key as o.value  for o in field.values" ng-required="field.required" aria-required="true" ng-change="changeCountry(field,ngModel[field.viewFieldEId])" ng-class="{ 'jv-empty-select': !ngModel[field.viewFieldEId] }" class="ng-pristine ng-untouched ng-scope ng-empty ng-invalid ng-invalid-required jv-empty-select" required="required"><option value="" class="" selected="selected">Select an option...</option><option label="US Citizen" value="string:1912">US Citizen</option><option label="Permanent Resident" value="string:1913">Permanent Resident</option><option label="H1 Visa" value="string:1914">H1 Visa</option><option label="TN Visa" value="string:1915">TN Visa</option><option label="F1 Visa" value="string:1916">F1 Visa</option><option label="Decline to Self Identify" value="string:1917">Decline to Self Identify</option></select>
+                    
+                </div>
+                
+                
+                
+                
+            </div>
+            
+            
+            
+            
+            
+        </div>
+    </div><div ng-repeat="field in applyFields" jv-apply-field="field" jv-apply-fields="(field.fieldId && field.fieldId === -7) ? applyFields : null" jv-apply-field-show="showInvalidField(error)" jv-step="1" ng-model="applyData.fieldMap" class="jv-form-field ng-pristine ng-untouched ng-valid ng-scope ng-isolate-scope ng-not-empty">
+        <div ng-form="inputForm" ng-show="show({ error: !validOnSubmit }) && !hide" class="jv-form-field-select JVA_DROPDOWN ng-invalid ng-invalid-required" ng-class="{ 'jv-invalid-field': !validOnSubmit && field.showErrorMessage }" ng-init="browser = 'desktop'">
+            
+                        <label ng-if="field.desktopLabel && field.type !== 'checkbox' && field.type !== 'radio'" for="jv-field-yUfzZfwr" class="jv-form-field-label ng-binding ng-scope">
+                    Work Authorization<span ng-if="field.required" class="jv-required-label ng-scope">*</span>
+                </label>
+
+
+            <div ng-switch="" class="jv-form-field-control jv-form-field-appearance" ng-class="{ 'jv-form-field-appearance': field.type === 'select' && supportsAppearance }">
+                
+                
+                
+                
+                
+                <div ng-switch-when="select" class="jv-select-group ng-scope" ng-class="{ 'jv-select-group-has-label': field.mobileLabel }">
+                    <i ng-if="!field.multiSelect && supportsAppearance" class="jv-select-icon icon icon-arrow-down ng-scope"></i>
+                    <select ng-if="!field.multiSelect" id="jv-field-yUfzZfwr" name="input-yUfzZfwr" autocomplete="on" ng-model="ngModel[field.viewFieldEId]" ng-options="o.key as o.value  for o in field.values" ng-required="field.required" aria-required="true" ng-change="changeCountry(field,ngModel[field.viewFieldEId])" ng-class="{ 'jv-empty-select': !ngModel[field.viewFieldEId] }" class="ng-pristine ng-untouched ng-scope ng-empty ng-invalid ng-invalid-required jv-empty-select" required="required"><option value="" class="" selected="selected">Select an option...</option><option label="I am authorized to work in the country in which this job will be performed" value="string:I am authorized to work in the country in which this job will be performed">I am authorized to work in the country in which this job will be performed</option><option label="I will require visa sponsorship to work in the country in which this job will be performed" value="string:I will require visa sponsorship to work in the country in which this job will be performed">I will require visa sponsorship to work in the country in which this job will be performed</option></select>
+                    
+                </div>
+                
+                
+                
+                
+            </div>
+            
+            
+            
+            
+            
+        </div>
+    </div><div ng-repeat="field in applyFields" jv-apply-field="field" jv-apply-fields="(field.fieldId && field.fieldId === -7) ? applyFields : null" jv-apply-field-show="showInvalidField(error)" jv-step="1" ng-model="applyData.fieldMap" class="jv-form-field ng-pristine ng-untouched ng-valid ng-scope ng-isolate-scope ng-not-empty">
+        <div ng-form="inputForm" ng-show="show({ error: !validOnSubmit }) && !hide" class="jv-form-field-select JVA_DROPDOWN ng-invalid ng-invalid-required" ng-class="{ 'jv-invalid-field': !validOnSubmit && field.showErrorMessage }" ng-init="browser = 'desktop'">
+            
+                        <label ng-if="field.desktopLabel && field.type !== 'checkbox' && field.type !== 'radio'" for="jv-field-ycFV2fwy" class="jv-form-field-label ng-binding ng-scope">
+                    State<span ng-if="field.required" class="jv-required-label ng-scope">*</span>
+                </label>
+
+
+            <div ng-switch="" class="jv-form-field-control jv-form-field-appearance" ng-class="{ 'jv-form-field-appearance': field.type === 'select' && supportsAppearance }">
+                
+                
+                
+                
+                
+                <div ng-switch-when="select" class="jv-select-group ng-scope" ng-class="{ 'jv-select-group-has-label': field.mobileLabel }">
+                    <i ng-if="!field.multiSelect && supportsAppearance" class="jv-select-icon icon icon-arrow-down ng-scope"></i>
+                    <select ng-if="!field.multiSelect" id="jv-field-ycFV2fwy" name="input-ycFV2fwy" autocomplete="address-level1" ng-model="ngModel[field.viewFieldEId]" ng-options="o.key as o.value  for o in field.values" ng-required="field.required" aria-required="true" ng-change="changeCountry(field,ngModel[field.viewFieldEId])" ng-class="{ 'jv-empty-select': !ngModel[field.viewFieldEId] }" class="ng-pristine ng-untouched ng-scope ng-empty ng-invalid ng-invalid-required jv-empty-select" required="required"><option value="" class="" selected="selected">Select an option...</option><option label="Not Applicable" value="string:Not Applicable">Not Applicable</option><option label="Alaska" value="string:AK">Alaska</option><option label="Alabama" value="string:AL">Alabama</option><option label="Arkansas" value="string:AR">Arkansas</option><option label="Arizona" value="string:AZ">Arizona</option><option label="California" value="string:CA">California</option><option label="Colorado" value="string:CO">Colorado</option><option label="Connecticut" value="string:CT">Connecticut</option><option label="District Of Columbia" value="string:DC">District Of Columbia</option><option label="Delaware" value="string:DE">Delaware</option><option label="Florida" value="string:FL">Florida</option><option label="Georgia" value="string:GA">Georgia</option><option label="Hawaii" value="string:HI">Hawaii</option><option label="Iowa" value="string:IA">Iowa</option><option label="Idaho" value="string:ID">Idaho</option><option label="Illinois" value="string:IL">Illinois</option><option label="Indiana" value="string:IN">Indiana</option><option label="Kansas" value="string:KS">Kansas</option><option label="Kentucky" value="string:KY">Kentucky</option><option label="Louisiana" value="string:LA">Louisiana</option><option label="Massachusetts" value="string:MA">Massachusetts</option><option label="Maryland" value="string:MD">Maryland</option><option label="Maine" value="string:ME">Maine</option><option label="Michigan" value="string:MI">Michigan</option><option label="Minnesota" value="string:MN">Minnesota</option><option label="Missouri" value="string:MO">Missouri</option><option label="Mississippi" value="string:MS">Mississippi</option><option label="Montana" value="string:MT">Montana</option><option label="North Carolina" value="string:NC">North Carolina</option><option label="North Dakota" value="string:ND">North Dakota</option><option label="Nebraska" value="string:NE">Nebraska</option><option label="New Hampshire" value="string:NH">New Hampshire</option><option label="New Jersey" value="string:NJ">New Jersey</option><option label="New Mexico" value="string:NM">New Mexico</option><option label="Nevada" value="string:NV">Nevada</option><option label="New York" value="string:NY">New York</option><option label="Ohio" value="string:OH">Ohio</option><option label="Oklahoma" value="string:OK">Oklahoma</option><option label="Oregon" value="string:OR">Oregon</option><option label="Pennsylvania" value="string:PA">Pennsylvania</option><option label="Rhode Island" value="string:RI">Rhode Island</option><option label="South Carolina" value="string:SC">South Carolina</option><option label="South Dakota" value="string:SD">South Dakota</option><option label="Tennessee" value="string:TN">Tennessee</option><option label="Texas" value="string:TX">Texas</option><option label="Utah" value="string:UT">Utah</option><option label="Virginia" value="string:VA">Virginia</option><option label="Vermont" value="string:VT">Vermont</option><option label="Washington" value="string:WA">Washington</option><option label="Wisconsin" value="string:WI">Wisconsin</option><option label="West Virginia" value="string:WV">West Virginia</option><option label="Wyoming" value="string:WY">Wyoming</option></select>
+                    
+                </div>
+                
+                
+                
+                
+            </div>
+            
+            
+            
+            
+            
+        </div>
+    </div><div ng-repeat="field in applyFields" jv-apply-field="field" jv-apply-fields="(field.fieldId && field.fieldId === -7) ? applyFields : null" jv-apply-field-show="showInvalidField(error)" jv-step="1" ng-model="applyData.fieldMap" class="jv-form-field ng-pristine ng-untouched ng-valid ng-scope ng-isolate-scope ng-not-empty">
+        <div ng-form="inputForm" ng-show="show({ error: !validOnSubmit }) && !hide" class="jv-form-field-input JVA_NAME ng-invalid ng-invalid-required ng-valid-pattern ng-valid-maxlength" ng-class="{ 'jv-invalid-field': !validOnSubmit && field.showErrorMessage }" ng-init="browser = 'desktop'">
+            
+                        <label ng-if="field.desktopLabel && field.type !== 'checkbox' && field.type !== 'radio'" for="jv-field-yFUV2fwg" class="jv-form-field-label ng-binding ng-scope">
+                    Zip<span ng-if="field.required" class="jv-required-label ng-scope">*</span>
+                </label>
+
+
+            <div ng-switch="" class="jv-form-field-control" ng-class="{ 'jv-form-field-appearance': field.type === 'select' && supportsAppearance }">
+                <input ng-switch-when="input" id="jv-field-yFUV2fwg" name="input-yFUV2fwg" autocomplete="postal-code" ng-class="{ 'jv-form-bg-icon': field.icon }" ng-model="ngModel[field.viewFieldEId]" ng-required="field.required" ng-pattern="[object Object]" aria-required="true" type="text" maxlength="100" jv-clear="" class="ng-pristine ng-untouched ng-scope ng-empty ng-invalid ng-invalid-required ng-valid-pattern ng-valid-maxlength" required="required">
+                
+                
+                
+                
+                
+                
+                
+                
+                
+            </div>
+            
+            
+            
+            
+            
+        </div>
+    </div><div ng-repeat="field in applyFields" jv-apply-field="field" jv-apply-fields="(field.fieldId && field.fieldId === -7) ? applyFields : null" jv-apply-field-show="showInvalidField(error)" jv-step="1" ng-model="applyData.fieldMap" class="jv-form-field ng-pristine ng-untouched ng-valid ng-scope ng-isolate-scope ng-not-empty">
+        <div ng-form="inputForm" ng-show="show({ error: !validOnSubmit }) && !hide" class="jv-form-field-input JVA_NAME ng-invalid ng-invalid-required ng-valid-pattern ng-valid-maxlength" ng-class="{ 'jv-invalid-field': !validOnSubmit && field.showErrorMessage }" ng-init="browser = 'desktop'">
+            
+                        <label ng-if="field.desktopLabel && field.type !== 'checkbox' && field.type !== 'radio'" for="jv-field-yGUV2fwh" class="jv-form-field-label ng-binding ng-scope">
+                    City<span ng-if="field.required" class="jv-required-label ng-scope">*</span>
+                </label>
+
+
+            <div ng-switch="" class="jv-form-field-control" ng-class="{ 'jv-form-field-appearance': field.type === 'select' && supportsAppearance }">
+                <input ng-switch-when="input" id="jv-field-yGUV2fwh" name="input-yGUV2fwh" autocomplete="address-level2" ng-class="{ 'jv-form-bg-icon': field.icon }" ng-model="ngModel[field.viewFieldEId]" ng-required="field.required" ng-pattern="[object Object]" aria-required="true" type="text" maxlength="100" jv-clear="" class="ng-pristine ng-untouched ng-scope ng-empty ng-invalid ng-invalid-required ng-valid-pattern ng-valid-maxlength" required="required">
+                
+                
+                
+                
+                
+                
+                
+                
+                
+            </div>
+            
+            
+            
+            
+            
+        </div>
+    </div>
+    </div>
+        <div ng-controller="JVAttachProfile" ng-show="showInvalidField()" class="jv-apply-section ng-scope" id="socialProfile">
+    <h3 class="jv-step-header" id="">
+        Social Profile (optional)
+    </h3>
+            <div class="jv-apply-section-content">
+                        <div>
+                            <p>Use this option if you want to share your full LinkedIn profile in addition to your resume.</p>
+                        </div>
+                        <div class="jv-attach-social-profile" ng-class="{ 'jv-attach-social-profile-boxed': socialProfileAttached }">
+                            
+                            <div>
+                                <span id="attachProfile" ng-mouseenter="widgetType(false)"> <span class="awli-container">
+    <span class="IN-widget" data-lnkd-debug="<script type=&quot;IN/AwliWidget+init&quot; data-company-job-code=&quot;9719671&quot; data-integration-context=&quot;urn:li:organization:1015589&quot; data-mode=&quot;BUTTON_DATA&quot; data-callback-method=&quot;onProfileData&quot; data-default-button-callback=&quot;enableDefaultButton&quot; data-color=&quot;blue&quot; data-size=&quot;medium&quot; data-allow-sign-in=&quot;true&quot;>
+    </script>"></span>
+    
+</span>
+ </span>
+                            </div>
+                        </div>
+                    <div class="jv-apply-form-actions">
+                        <input type="checkbox" ng-model="linkedInRecruiter.statusSync" class="ng-pristine ng-untouched ng-valid ng-empty">
+                        <span>I agree to allow my application statuses to be visible inside LinkedIn Recruiter (optional).</span>
+                    </div>
+            </div>
+        </div>
+        <div class="jv-additional-files jv-apply-section" ng-show="showInvalidField()">
+    <h3 class="jv-step-header" id="">
+        Additional Files (optional)
+    </h3>
+            <span ng-show="visible.addCoverLetter">
+                <button jv-add-attachment="" attachment-label="Cover Letter" pasted-label="Pasted Cover Letter" class="jv-button ng-isolate-scope" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Add Cover Letter">
+Add Cover Letter                </button>
+            </span>
+            <ul class="jv-file-list">
+                
+            </ul>
+            
+        </div>
+    </div>
+        
+        
+                    <div class="jv-apply-form-actions">
+        <div ng-show="message.text" class="jv-message jv-message- ng-hide">
+            
+        </div>
+        <div ng-show="showRequiredError()" class="jv-apply-error ng-hide">
+            <p role="alert">
+                <strong>The above information is required.</strong>
+To complete this application, you must provide the minimum required information.            </p>
+            <p><a href="" ng-click="showAllFields = true"><strong>View Full Application Form</strong></a></p>
+        </div>
+        <div ng-show="showRequiredErrorForAllFields()" class="jv-apply-error ng-hide">
+            <p role="alert">
+                <strong>Please fill the required fields</strong>
+            </p>
+        </div>
+        <button ng-show="showNextButton()" class="jv-button jv-button-primary jv-button-large" type="button" ng-click="nextStep()" aria-controls="applyForm" aria-label="Next">
+Next →
+        </button>
+        <button ng-show="!showNextButton()" class="jv-button jv-button-primary jv-button-large ng-hide" type="submit" ng-disabled="submitting" tabindex="0" aria-label="Send Application">
+            <span ng-show="!submitting">Send Application</span>
+            <span ng-show="submitting" class="ng-hide">Sending Application <span class="jv-submit-spinner"></span></span>
+        </button>
+    <div class="jv-current-openings">
+        <a href="/acme/jobs">
+            ← Back to Current Openings
+        </a>
+    </div>
+    </div>
+            <div id="captcha"><div class="grecaptcha-badge" data-style="bottomright"><div class="grecaptcha-logo"></div><div class="grecaptcha-error"></div><textarea id="g-recaptcha-response" name="g-recaptcha-response" class="g-recaptcha-response"></textarea></div></div>
+            <div class="jv-wrapper jv-job-apply-pane"></div>
+        </form>
+    </div>
+    
+    
+    
+
+</div>
+
+        </article></div>
+    
+    
+
+            </div>
+    
+    <footer class="jv-footer">
+        <div class="jv-wrapper">
+            <p class="jv-text-center">
+                                </p><hr>
+
+                    <a class="jv-powered-by" target="_parent" href="https://www.jobvite.com/support/job-seeker-support/"><i class="icon icon-powered-by"><span>Powered by Jobvite</span></i></a>
+            <p></p>
+        </div>
+    </footer>
+
+    </div>
+
+        
+    
+    
+    
+    
+
+    
+
+    
+<div class="jv-add-attachment ng-scope ng-hide" ng-show="visible.tooltip" id="attachmentDropdown" ng-class="{ 'jv-paste-visible': visible.pasteField }" aria-hidden="true" tabindex="-1" role="dialog" aria-label="Attachment Options" ng-keyup="esc($event, hide)">
+            <div class="jv-add-attachment-item">
+                <span class="jv-text-block jv-text-link" ng-click="addAttachment.dropbox()" ng-keydown="enter($event, addAttachment.dropbox)" tabindex="0" role="button">
+                    <span class="jv-spinner ng-scope" ng-if="loading.dropbox"></span>
+                    <i class="jv-attachment-icon icon icon-dropbox-onecolor ng-hide" ng-show="!loading.dropbox"></i>
+Dropbox                </span>
+            </div>
+            <hr>
+            <div ng-show="visible.fileUpload" class="jv-add-attachment-item">
+                <label ng-transclude="" class="jv-text-block jv-text-link ng-empty ng-valid" jv-file-input="" ng-model="file" for="file-input-0">
+                    <i class="jv-attachment-icon icon needsclick ng-scope icon-upload-bottom" ng-class="browser.ios ? 'icon-camera' : 'icon-upload-bottom'"></i>
+                    <span class="needsclick ng-binding ng-scope" ng-keydown="enter($event, focusFileElement)" tabindex="0" role="button">File</span>
+                </label><input id="file-input-0" type="file">
+            </div>
+            <div ng-show="visible.pasteUpload"> <hr> </div>
+            <div ng-show="visible.pasteUpload" class="jv-add-attachment-item">
+                <span class="jv-text-block jv-text-link needsclick ng-binding" ng-click="showPasteField()" ng-keydown="enter($event, showPasteField)" tabindex="0" role="button">
+                    <i class="jv-attachment-icon icon icon-paste needsclick"></i>
+Type or Paste Resume                </span>
+            </div>
+
+            <a class="jv-close" href="" ng-click="hide()" tabindex="0">
+                <i class="icon icon-close"><span>Close</span></i>
+            </a>
+
+            <div class="jv-add-attachment-paste ng-hide" ng-show="visible.pasteField" aria-hidden="true">
+                <form class="jv-form ng-pristine ng-valid" ng-submit="savePasteField()">
+                    <label for="jv-paste-resume-textarea0" class="jv-visually-hidden ng-binding">Type or paste your Resume here</label>
+                    <textarea id="jv-paste-resume-textarea0" ng-model="pastedText" class="needsclick ng-pristine ng-untouched ng-valid ng-isolate-scope ng-empty" jv-textarea-placeholder="Type or paste your Resume here" placeholder="Type or paste your Resume here"></textarea>
+                    <div class="jv-add-attachment-paste-buttons">
+                        <button class="jv-button" type="button" ng-click="hidePasteField()">Cancel</button>
+                        <button class="jv-button jv-button-primary" type="submit" ng-disabled="!pastedText" disabled="disabled">Save</button>
+                    </div>
+                </form>
+            </div>
+
+                <div ng-show="visible.linkedinUpload"> <hr></div>
+                    <div id="addResume" ng-show="visible.linkedinUpload"><span class="awli-container">
+    <span class="IN-widget" data-lnkd-debug="<script type=&quot;IN/AwliWidget+init&quot; data-company-job-code=&quot;9719671&quot; data-integration-context=&quot;urn:li:organization:1015589&quot; data-mode=&quot;BUTTON_DATA&quot; data-callback-method=&quot;onProfileData&quot; data-default-button-callback=&quot;enableDefaultButton&quot; data-color=&quot;blue&quot; data-size=&quot;medium&quot; data-allow-sign-in=&quot;true&quot;></script>"></span></span></div></div><div class="jv-add-attachment ng-scope ng-hide" ng-show="visible.tooltip" id="attachmentDropdown" ng-class="{ 'jv-paste-visible': visible.pasteField }" aria-hidden="true" tabindex="-1" role="dialog" aria-label="Attachment Options" ng-keyup="esc($event, hide)">
+            <div class="jv-add-attachment-item">
+                <span class="jv-text-block jv-text-link" ng-click="addAttachment.dropbox()" ng-keydown="enter($event, addAttachment.dropbox)" tabindex="0" role="button">
+                    <span class="jv-spinner ng-scope" ng-if="loading.dropbox"></span>
+                    <i class="jv-attachment-icon icon icon-dropbox-onecolor ng-hide" ng-show="!loading.dropbox"></i>
+Dropbox                </span>
+            </div>
+            <hr>
+            <div ng-show="visible.fileUpload" class="jv-add-attachment-item">
+                <label ng-transclude="" class="jv-text-block jv-text-link ng-empty ng-valid" jv-file-input="" ng-model="file" for="file-input-1">
+                    <i class="jv-attachment-icon icon needsclick ng-scope icon-upload-bottom" ng-class="browser.ios ? 'icon-camera' : 'icon-upload-bottom'"></i>
+                    <span class="needsclick ng-binding ng-scope" ng-keydown="enter($event, focusFileElement)" tabindex="0" role="button">File</span>
+                </label><input id="file-input-1" type="file">
+            </div>
+            <div ng-show="visible.pasteUpload"> <hr> </div>
+            <div ng-show="visible.pasteUpload" class="jv-add-attachment-item">
+                <span class="jv-text-block jv-text-link needsclick ng-binding" ng-click="showPasteField()" ng-keydown="enter($event, showPasteField)" tabindex="0" role="button">
+                    <i class="jv-attachment-icon icon icon-paste needsclick"></i>
+Type or Paste Cover Letter                </span>
+            </div>
+
+            <a class="jv-close" href="" ng-click="hide()" tabindex="0">
+                <i class="icon icon-close"><span>Close</span></i>
+            </a>
+
+            <div class="jv-add-attachment-paste ng-hide" ng-show="visible.pasteField" aria-hidden="true">
+                <form class="jv-form ng-pristine ng-valid" ng-submit="savePasteField()">
+                    <label for="jv-paste-resume-textarea1" class="jv-visually-hidden ng-binding">Type or paste your Cover Letter here</label>
+                    <textarea id="jv-paste-resume-textarea1" ng-model="pastedText" class="needsclick ng-pristine ng-untouched ng-valid ng-isolate-scope ng-empty" jv-textarea-placeholder="Type or paste your Cover Letter here" placeholder="Type or paste your Cover Letter here"></textarea>
+                    <div class="jv-add-attachment-paste-buttons">
+                        <button class="jv-button" type="button" ng-click="hidePasteField()">Cancel</button>
+                        <button class="jv-button jv-button-primary" type="submit" ng-disabled="!pastedText" disabled="disabled">Save</button>
+                    </div>
+                </form>
+            </div>
+
+                <div ng-show="visible.linkedinUpload" class="ng-hide"> <hr></div>
+                    <div id="addResume" ng-show="visible.linkedinUpload" class="ng-hide"><span class="awli-container">
+    <span class="IN-widget" data-lnkd-debug="<script type=&quot;IN/AwliWidget+init&quot; data-company-job-code=&quot;9719671&quot; data-integration-context=&quot;urn:li:organization:1015589&quot; data-mode=&quot;BUTTON_DATA&quot; data-callback-method=&quot;onProfileData&quot; data-default-button-callback=&quot;enableDefaultButton&quot; data-color=&quot;blue&quot; data-size=&quot;medium&quot; data-allow-sign-in=&quot;true&quot;></script>"></span></span></div></div><div id="6cd18466-1e8f-4265-bd39-5e1ad4311dec" class="IN-staging"></div><div><div></div><div></div></div></body></body></html>

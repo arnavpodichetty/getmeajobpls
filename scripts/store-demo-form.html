@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Software Engineering Intern — Example Co. careers</title>
+<style>
+  body { margin: 0; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; background: #f4f5f7; color: #1f2329; }
+  header { background: #fff; border-bottom: 1px solid #e3e5e9; padding: 18px 48px; font-weight: 700; font-size: 18px; }
+  main { max-width: 760px; margin: 28px auto; background: #fff; border: 1px solid #e3e5e9; border-radius: 12px; padding: 28px 36px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .sub { color: #69707a; margin: 0 0 22px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+  input, select { width: 100%; box-sizing: border-box; padding: 9px 11px; border: 1px solid #cfd3da; border-radius: 7px; font: inherit; background: #fff; }
+  .full { grid-column: 1 / -1; }
+  h2 { font-size: 15px; margin: 24px 0 12px; padding-top: 16px; border-top: 1px solid #eceef1; }
+</style>
+</head>
+<body>
+<header>Example Co.</header>
+<main>
+  <h1>Software Engineering Intern</h1>
+  <p class="sub">San Francisco, CA · Summer 2027</p>
+  <form id="application" onsubmit="return false">
+    <div class="grid">
+      <div><label for="first_name">First name *</label><input id="first_name" autocomplete="given-name"></div>
+      <div><label for="last_name">Last name *</label><input id="last_name" autocomplete="family-name"></div>
+      <div><label for="email">Email *</label><input id="email" type="email"></div>
+      <div><label for="phone">Phone *</label><input id="phone" type="tel"></div>
+      <div><label for="city">City</label><input id="city"></div>
+      <div><label for="linkedin">LinkedIn profile</label><input id="linkedin"></div>
+      <div class="full"><label for="resume">Resume / CV *</label><input id="resume" type="file" accept=".pdf"></div>
+    </div>
+    <h2>Education</h2>
+    <div class="grid">
+      <div class="full"><label for="school">School *</label><input id="school"></div>
+      <div><label for="degree">Degree *</label>
+        <select id="degree"><option value="">Select…</option><option>Bachelor of Arts</option><option>Bachelor of Science</option><option>Master of Science</option></select></div>
+      <div><label for="major">Major *</label><input id="major"></div>
+    </div>
+    <h2>Questions</h2>
+    <div class="grid">
+      <div class="full"><label for="auth">Are you legally authorized to work in the United States? *</label>
+        <select id="auth"><option value="">Select…</option><option>Yes</option><option>No</option></select></div>
+      <div class="full"><label for="sponsor">Will you now or in the future require visa sponsorship? *</label>
+        <select id="sponsor"><option value="">Select…</option><option>Yes</option><option>No</option></select></div>
+      <div class="full"><label for="hear">How did you hear about this job?</label><input id="hear"></div>
+    </div>
+  </form>
+</main>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "name": "getmeajobpls",
+  "description": "Personal job-application autofill extension",
+  "private": true,
+  "author": "Arnav Podichetty",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "compile": "tsc --noEmit",
+    "test": "vitest run",
+    "postinstall": "wxt prepare",
+    "capture": "node scripts/capture.mjs",
+    "live-test": "node scripts/live-test.mjs",
+    "pull-captures": "node scripts/pull-captures.mjs",
+    "store-assets": "node scripts/store-assets.mjs"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.2.5",
+    "happy-dom": "^21.0.1",
+    "puppeteer-core": "^25.14.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.4",
+    "wxt": "^0.21.4"
+  }
+}

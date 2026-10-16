@@ -1,0 +1,11 @@
+node_modules
+.output
+.wxt
+*.log
+.live-test
+.DS_Store
+.env*
+# Your real profile and resumes
+profile/
+# Page snapshots from "Capture page" (name the employers you applied to)
+captures/

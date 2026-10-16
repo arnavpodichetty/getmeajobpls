@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>getmeajobpls</title>
+  </head>
+  <body>
+    <header>
+      <div class="brand"><img class="logo" src="/icon/48.png" alt="" />getmeajobpls</div>
+      <a id="open-options" href="#" title="Profile & settings">Profile</a>
+    </header>
+    <div class="site">
+      <span id="dot" class="dot"></span>
+      <div>
+        <div id="ats" class="site-name">Detecting…</div>
+        <div id="site-sub" class="site-sub"></div>
+      </div>
+    </div>
+    <div class="pickers">
+      <label class="field">
+        <span class="label">Resume</span>
+        <select id="resume"></select>
+      </label>
+      <label class="field">
+        <span class="label">Skills</span>
+        <select id="skillset"></select>
+      </label>
+    </div>
+    <div id="reason" class="muted"></div>
+    <button id="fill" class="fill" disabled>Fill this page</button>
+    <div id="summary"></div>
+    <footer>
+      <button id="save-answers" class="link" disabled>Save my answers</button>
+      <span class="sep">·</span>
+      <button id="capture" class="link" disabled>Capture page</button>
+    </footer>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
