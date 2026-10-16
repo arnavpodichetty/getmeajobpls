@@ -22,7 +22,7 @@ export function testProfile() {
   p.languages = [{ id: 'l1', language: 'English', proficiency: 'Fluent', fluent: true }];
   Object.assign(p.answers, {
     workAuthorized: 'Yes', needsSponsorship: 'No', willingToRelocate: 'Yes', over18: 'Yes', previouslyEmployed: 'No',
-    travelPercentage: '25-50%', phoneTextConsent: 'No', governmentDebarment: 'No', governmentConsulting: 'No', optStatus: 'N/A', stemOptEligible: 'N/A',
+    travelPercentage: '25-50%', phoneTextConsent: 'No', governmentDebarment: 'No', disciplinaryHistory: 'No', fiduciaryRoles: 'No', currentEmployerClient: 'No', governmentConsulting: 'No', optStatus: 'N/A', stemOptEligible: 'N/A',
     highSchoolGraduationYear: '2024', standardizedTestType: 'Not taken', satScore: 'Not taken', actScore: 'Not taken', furtherEducation: 'No', currentOffers: 'No',
     nonCompete: 'No', relatedToEmployee: 'No', governmentOfficial: 'No', conflictOfInterest: 'No', meetsRequirements: 'Yes', appliedBefore: 'No', agreeToTerms: 'Yes', securityClearance: 'None', citizenship: 'United States', referralSource: 'LinkedIn', earliestStartDate: '2027-05-26',
     locationPreferences: ['California'],

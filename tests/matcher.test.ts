@@ -227,6 +227,16 @@ describe('spelling variants and fallbacks', () => {
     expect(tiered(['Davis College', 'Stanford University'], davis)).toBeUndefined();
   });
 
+  it('spells multi-campus systems the way Workday lists them', () => {
+    for (const name of ['University of California, Berkeley', 'UC Berkeley', 'University of California-Berkeley', 'University of California at Berkeley']) {
+      expect(schoolVariants(name)).toContain('University of California-Berkeley');
+      expect(tiered(['University of California-Davis', 'University of California-Berkeley'], [schoolVariants(name)])).toBe('University of California-Berkeley');
+    }
+    expect(schoolVariants('University of Texas at Austin')).toContain('University of Texas-Austin');
+    expect(schoolVariants('University of Wisconsin, Madison')).toContain('University of Wisconsin-Madison');
+    expect(schoolVariants('University of Michigan')).toEqual(['University of Michigan', 'Michigan University']);
+  });
+
   it('finds a degree however the list spells it', () => {
     const ba = [degreeVariants('Bachelor of Arts')];
     expect(tiered(['B.S.', 'B.A.', 'M.S.'], ba)).toBe('B.A.');

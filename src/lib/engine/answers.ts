@@ -255,6 +255,29 @@ const DEFS: Def[] = [
     choiceOnly: true,
     value: () => 'Yes',
   },
+  // Fired / asked to resign, or disciplined by a regulator or licensing board (accounting
+  // and finance firms ask these). Not driving: a suspended driver's license is a different question.
+  {
+    key: 'disciplinaryHistory',
+    re: /\bhave you (?:ever )?been (?:\w+ ){0,3}(?:discharged|terminated|fired|dismissed|let go)\b|\basked to resign\b|\bresign(?:ed)? (?:in lieu of|after being (?:offered|given|asked))|\bseparated by mutual agreement\b|\blicen[cs]es?\b.{0,120}\b(?:revoked|suspended|surrendered|cancell?ed|disciplined|reprimanded|sanctioned|investigated)\b|\b(?:revoked|suspended|surrendered)\b.{0,60}\blicen[cs]es?\b|\b(?:subject of|party to)\b.{0,40}\b(?:pending )?(?:action|investigation|proceeding|complaint)s?\b.{0,80}\b(?:regulat\w*|licensing board|sec|finra|pcaob|irs)\b|\bconsent (?:decree|order)\b/,
+    not: /driv(?:er s|ers|ing|er) ?licen[cs]e|\bwilling\b/,
+    choiceOnly: true,
+    value: (c) => yesNo(c.profile.answers.disciplinaryHistory),
+  },
+  {
+    key: 'fiduciaryRoles',
+    re: /\b(?:hold|serve|serving|named|appointed|acting)\b.{0,80}\b(?:board member|member of (?:a|the|any) board|board of directors|trustee|trust protector|executor|executrix|personal representative|fiduciary)\b/,
+    not: /relat|family|spouse/,
+    choiceOnly: true,
+    value: (c) => yesNo(c.profile.answers.fiduciaryRoles),
+  },
+  // "Is your current employer a <company> client?" is certainly No when you have no current job.
+  {
+    key: 'currentEmployerClient',
+    re: /\bcurrent (?:employer|company)\b.{0,40}\b(?:client|customer)\b|\b(?:client|customer)\b.{0,30}\bcurrent employer\b/,
+    choiceOnly: true,
+    value: (c) => (c.profile.experience.length && !c.profile.experience.some((x) => x.current) ? 'No' : yesNo(c.profile.answers.currentEmployerClient)),
+  },
   {
     key: 'governmentDebarment',
     re: /debarred|debarment|suspend(?:ed|sion).*(?:government|federal|contracting)|(?:government|federal|contracting).*suspend(?:ed|sion)/,
@@ -297,7 +320,7 @@ const DEFS: Def[] = [
   // --- Yes/no eligibility questions (before location/country patterns) ---
   {
     key: 'workAuthorized',
-    re: /authori[sz](ed|ation)? to work|work authori[sz]ation|legally (authorized|eligible|permitted|able)|eligib(le|ility) to work|right to work|permitted to work|lawfully/,
+    re: /authori[sz](ed|ation)? to work|work authori[sz]ation|legally (authorized|eligible|permitted|able)|eligib(le|ility) to work|right to work|legal right\b.{0,60}\bto work\b|permitted to work|lawfully/,
     value: (c) => yesNo(c.profile.answers.workAuthorized),
   },
   { key: 'usCitizen', re: /(are you )?(a )?(us|u s|united states|american) citizen/, value: (c) => (c.profile.answers.citizenship ? (isUS(c.profile.answers.citizenship) ? 'Yes' : 'No') : null) },

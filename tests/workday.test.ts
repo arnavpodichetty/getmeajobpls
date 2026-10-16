@@ -210,3 +210,37 @@ describe('highest completed education', () => {
     expect(document.querySelector('select')!.value).toBe("Bachelor's Degree");
   });
 });
+
+describe('resume upload', () => {
+  it('attaches the resume once even after Workday re-renders the upload input', async () => {
+    const uploadInput = () => '<div id="upload"><label for="resume">Resume/CV</label><input id="resume" type="file" data-automation-id="file-upload-input-ref" /></div>';
+    document.body.innerHTML = uploadInput();
+    let attaches = 0;
+    const listen = () => document.querySelector('#resume')!.addEventListener('change', () => attaches++);
+    listen();
+    const ctx = context();
+    await fillPage(ctx, { ats: 'Workday' });
+    expect(attaches).toBe(1);
+
+    // Workday swaps in a fresh, empty input after taking the file.
+    document.body.innerHTML = uploadInput();
+    listen();
+    await fillPage({ ...ctx, incremental: true }, { ats: 'Workday', incremental: true });
+    expect(attaches).toBe(1);
+  });
+});
+
+describe('resume removed by hand', () => {
+  it('is not re-attached when watching for new fields', async () => {
+    const uploadInput = () => '<label for="resume">Resume/CV</label><input id="resume" type="file" />';
+    document.body.innerHTML = uploadInput();
+    const ctx = context();
+    await fillPage(ctx, { ats: 'Greenhouse' });
+    // You remove the file: the site renders a fresh, empty upload box.
+    document.body.innerHTML = uploadInput();
+    let attaches = 0;
+    document.querySelector('#resume')!.addEventListener('change', () => attaches++);
+    await fillPage({ ...ctx, incremental: true }, { ats: 'Greenhouse', incremental: true });
+    expect(attaches).toBe(0);
+  });
+});

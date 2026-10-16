@@ -138,7 +138,8 @@ export default defineContentScript({
     // --- On-page panel (top frame only) ---------------------------------------
 
     if (window === window.top) {
-      const panel = new FillPanel();
+      // Closing the panel also stops filling new fields, so changes you make by hand stay.
+      const panel = new FillPanel(stopWatching);
       let lastUrl = '';
       let checking = false;
       let checkTimer: number | undefined;
@@ -162,7 +163,7 @@ export default defineContentScript({
       let lastCheck = 0;
 
       const check = async () => {
-        if (ctx.isInvalid || checking || Date.now() > stopAt) return;
+        if (ctx.isInvalid || checking || panel.dismissed || Date.now() > stopAt) return;
         // Single-page apps (Workday) change URL without reloading; re-evaluate then.
         if (panel.shown && location.href === lastUrl) return;
         if (!mightBeApplication()) return;
@@ -193,7 +194,7 @@ export default defineContentScript({
       // Forms often render after load; look again shortly after the page changes.
       // Throttled, not debounced: a busy page must not keep pushing the check back.
       const panelObserver = new MutationObserver(() => {
-        if ((!panel.shown || location.href !== lastUrl) && checkTimer === undefined) schedule(300);
+        if (!panel.dismissed && (!panel.shown || location.href !== lastUrl) && checkTimer === undefined) schedule(300);
       });
       panelObserver.observe(document.documentElement, { childList: true, subtree: true });
       ctx.onInvalidated(() => {

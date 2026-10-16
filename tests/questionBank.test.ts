@@ -37,6 +37,23 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Legally authorized to work in the US', 'Yes'],
     ['Work Authorization: Are you currently authorized to work in the country where this role is located?', 'Yes'],
   ],
+  'work authorization (documentation)': [
+    ['Do you have a legal right and necessary documentation to work in the United States? (Identity and employment eligibility of all new hires will be verified as required by the Immigration Reform and Control Act of 1986.)', 'Yes'],
+  ],
+  'employment and regulatory history': [
+    ['Have you ever been discharged by any company, separated by mutual agreement, or resigned after being offered the option to do so?', 'No'],
+    ['Have you ever been terminated or asked to resign from any position?', 'No'],
+    ['Have you ever been terminated from employment?', 'No'],
+    ['Are you the subject of any pending action or investigation by any civil regulatory authority, including but not limited to a licensing board or agency of any state, a federal agency, the IRS, the AICPA or state society, the SEC, or the PCAOB, or have you completed a stipulation and consent decree, or entered into a settlement with any such regulatory authority?', 'No'],
+    ['Have you had a professional license or its equivalent investigated, revoked, suspended, or cancelled, or been otherwise disciplined, reprimanded, admonished, or removed from membership by any civil regulatory authority, including but not limited to a licensing board or agency of any state, a federal agency, the IRS, the AICPA or state society, the SEC, or the PCAOB?', 'No'],
+    ['Have you surrendered a professional license of any type to resolve a disciplinary investigation or proceeding with any civil regulatory authority, including but not limited to a licensing board or agency of any state, a federal agency, the IRS, the AICPA or state society, the SEC, or the PCAOB?', 'No'],
+  ],
+  'fiduciary roles': [
+    ['Do you currently hold a position, or have you been named to serve as a board member, trustee, trust protector, executor, or personal representative?', 'No'],
+  ],
+  'current employer a client': [
+    ['Is your current employer an Example Firm client?', 'No'],
+  ],
   'sponsorship needed': [
     ['Will you now or in the future require sponsorship for employment visa status (e.g., H-1B visa status)?', 'No'],
     ['Do you require visa sponsorship?', 'No'],
@@ -187,7 +204,6 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Have you ever been convicted of a felony?', null],
     ['Why do you want to work here?', null],
     ['Do you have experience with Kubernetes?', null],
-    ['Have you ever been terminated from employment?', null],
     ['Describe a time you led a team through a difficult project.', null],
   ],
 };
@@ -292,5 +308,15 @@ describe('choosing options', () => {
 
   it('declines only on decline options', () => {
     expect(bestOption(['Male', 'Female', 'I prefer not to say'], (o) => o, DECLINE)?.option).toBe('I prefer not to say');
+  });
+});
+
+describe('history questions answered blank in Options', () => {
+  it('are left for you', () => {
+    const p = profile();
+    Object.assign(p.answers, { disciplinaryHistory: '', fiduciaryRoles: '', currentEmployerClient: '' });
+    for (const q of ['Have you ever been terminated from employment?', 'Is your current employer an Example Firm client?', 'Do you currently hold a position, or have you been named to serve as a board member, trustee, trust protector, executor, or personal representative?']) {
+      expect(resolveAnswer(q, '', null, { profile: p, skills: [] }, true).answer).toBeNull();
+    }
   });
 });

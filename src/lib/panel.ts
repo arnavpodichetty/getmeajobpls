@@ -60,8 +60,10 @@ export class FillPanel {
   private reasonEl = h('div', { class: 'muted' });
   private reviewList = h('ul', { hidden: true });
   private busy = false;
+  /** Set when you close the panel with ×; it stays closed for the rest of this page. */
+  dismissed = false;
 
-  constructor() {
+  constructor(private onDismiss: () => void = () => {}) {
     this.root.append(h('style', {}, CSS), this.body);
     this.setFillLabel('Fill page');
     this.fillBtn.addEventListener('click', () => this.fill());
@@ -75,6 +77,7 @@ export class FillPanel {
   }
 
   show(state: Extract<PanelResponse, { kind: 'state' }>): void {
+    if (this.dismissed) return;
     this.siteEl.textContent = state.atsLabel;
     this.resumeSel.replaceChildren(
       h('option', { value: '' }, state.resumes.length ? 'None (skip upload)' : 'None uploaded'),
@@ -98,6 +101,12 @@ export class FillPanel {
     this.host.remove();
   }
 
+  private dismiss(): void {
+    this.dismissed = true;
+    this.remove();
+    this.onDismiss();
+  }
+
   private render(): void {
     const toggle = (box: HTMLElement) => (box.hidden = !box.hidden);
     this.details.replaceChildren(
@@ -119,7 +128,7 @@ export class FillPanel {
           { class: 'bar' },
           this.fillBtn,
           h('button', { class: 'icon', title: 'Resume & options', onClick: () => toggle(this.details) }, '⋯'),
-          h('button', { class: 'icon', title: 'Hide on this page', onClick: () => this.remove() }, '×'),
+          h('button', { class: 'icon', title: 'Hide on this page', onClick: () => this.dismiss() }, '×'),
         ),
         this.captureBtn,
         this.status,

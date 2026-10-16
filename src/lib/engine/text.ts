@@ -436,18 +436,22 @@ export function schoolVariants(name: string): string[] {
   const n = name.trim().replace(/^the\s+/i, '');
   if (!n) return [];
   const out = [n];
-  const uc = n.match(/^university of california(?:,|\s+-|\s+–|\s+at)?\s+(.+)$/i) ?? n.match(/^uc\s+(.+)$/i);
-  if (uc) {
-    const campus = uc[1].trim();
+  // Multi-campus systems: "University of Texas, Austin" = "University of Texas-Austin" (Workday's
+  // standard list) = "University of Texas at Austin".
+  const campus = n.match(/^(university of [a-z .]+?)(?:\s*,\s*|\s*[-–]\s*|\s+at\s+)(\S.*)$/i)
+    ?? n.match(/^(university of california)\s+(\S.*)$/i)
+    ?? n.match(/^(uc)\s+(\S.*)$/i);
+  if (campus) {
+    const system = /^uc$/i.test(campus[1]) ? 'University of California' : campus[1];
+    const place = campus[2].trim();
     out.push(
-      `University of California, ${campus}`,
-      `University of California - ${campus}`,
-      `University of California-${campus}`,
-      `University of California ${campus}`,
-      `University of California at ${campus}`,
-      `UC ${campus}`,
-      `U.C. ${campus}`,
+      `${system}, ${place}`,
+      `${system} - ${place}`,
+      `${system}-${place}`,
+      `${system} ${place}`,
+      `${system} at ${place}`,
     );
+    if (/^university of california$/i.test(system)) out.push(`UC ${place}`, `U.C. ${place}`);
   }
   const stateU = n.match(/^university of ([a-z .]+)$/i);
   if (stateU) out.push(`${stateU[1]} University`);

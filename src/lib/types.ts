@@ -115,6 +115,12 @@ export interface Profile {
     aiReviewConsent: YesNo;
     unlistedReferencesConsent: YesNo;
     governmentDebarment: YesNo;
+    /** Ever fired / asked to resign, or disciplined by a regulator or licensing board. */
+    disciplinaryHistory: YesNo;
+    /** Board member, trustee, executor or other fiduciary role. */
+    fiduciaryRoles: YesNo;
+    /** "Is your current employer a <company> client?" */
+    currentEmployerClient: YesNo;
     governmentConsulting: YesNo;
     optStatus: YesNoNA;
     stemOptEligible: YesNoNA;

@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.1 (2026-10-16)
+
+### Fixes
+- **Resume uploaded twice:** sites like Workday and Greenhouse replace the upload box after taking a file, and later passes treated the new box as unfilled. The resume is now attached at most once per fill, so a resume you remove by hand to upload a different one stays removed.
+- **Closing the panel:** × now keeps the panel closed for the rest of the page instead of it reappearing. It also stops filling fields that appear later, so changes you make by hand stay.
+- **Multi-campus school names:** "University of California, Berkeley", "UC Berkeley" and "University of California-Berkeley" are treated as the same school, and the same goes for other systems ("University of Texas at Austin" = "University of Texas-Austin"). Workday searches the hyphen spelling from its school list first.
+- **Work authorization:** "Do you have a legal right and necessary documentation to work in the United States?" now answers from your work-authorization setting.
+
+### New answers
+- **Employment and regulatory history** (default No): fired, asked to resign or separated by mutual agreement; pending regulator investigations; professional licenses revoked, suspended or surrendered. These questions no longer borrow the government-debarment answer.
+- **Board member, trustee, executor or other fiduciary role** (default No).
+- **Current employer is a client of the company you're applying to** (default No; always No when you have no current job).
+
 ## 1.0.0 (2026-10-16)
 
 The first full release. It covers everything built since the project started.

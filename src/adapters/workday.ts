@@ -257,6 +257,11 @@ async function firstMatch(input: HTMLElement, tiers: string[][]): Promise<boolea
   return false;
 }
 
+/** Workday's school list spells campuses "University of California-Berkeley": search that first. */
+function workdaySchoolOrder(variants: string[]): string[] {
+  return [...variants.filter((v) => /\S-\S/.test(v)), ...variants.filter((v) => !/\S-\S/.test(v))];
+}
+
 async function fillSchools(schools: Education[], results: FieldResult[]): Promise<void> {
   if (!schools.length) return;
   const found = await ensurePanels(/education/i, PANEL.schools, schools.length);
@@ -268,7 +273,7 @@ async function fillSchools(schools: Education[], results: FieldResult[]): Promis
     if (schoolEl && ed.school && !(schoolEl as HTMLInputElement).value) {
       const outcome =
         schoolEl.getAttribute('role') === 'combobox' || schoolEl.closest(SELECTORS.multiselect)
-          ? await firstMatch(schoolEl, [schoolVariants(ed.school)]).then((ok) => ({ ok, review: ok ? undefined : 'Pick your school from the list.' }))
+          ? await firstMatch(schoolEl, [workdaySchoolOrder(schoolVariants(ed.school))]).then((ok) => ({ ok, review: ok ? undefined : 'Pick your school from the list.' }))
           : fillText(schoolEl as HTMLInputElement, ed.school);
       record(results, `${tag}: school`, outcome.ok && !outcome.review, outcome.review);
     }

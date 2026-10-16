@@ -6,14 +6,14 @@ It never clicks Submit. Everything stays in your browser. Your profile and resum
 
 ## Features
 
-- **One-click fill**: a **Fill page** button on the page (or in the toolbar popup) fills the whole form from top to bottom.
+- **One-click fill**: a **Fill page** button on the page (or in the toolbar popup) fills the whole form from top to bottom. Close the on-page panel with **×** to hide it and stop autofill on that page.
 - **Resume upload first**: attaches your resume, waits for the site to read it, then fills what's left. Fields the site already filled are kept.
 - **Resume and skill rules**: picks the right resume and skill set for each job from keywords in the title and description (e.g. `software` → SWE resume).
 - **Review highlights**: filled fields get a green outline. Fields that need a check get an orange outline and show up in the popup with the reason.
 - **Multi-page forms**: keeps filling each new step as you move through Workday-style flows.
 - **Saved answers**: answer a custom question once, click **Save my answers from this page**, and similar questions on later forms are filled for you.
 - **Smart matching**: handles different spellings of schools, degrees, majors (with fallbacks), states, countries, dates, GPA and graduation ranges, yes/no wordings, and decline options.
-- **Standard questions**: work authorization, sponsorship, US citizen and export-control status, relocation, start dates and internship terms, class standing, test scores, referral source, agreements, and more. All of these are editable on the options page.
+- **Standard questions**: work authorization, sponsorship, US citizen and export-control status, employment and regulatory history, board or trustee roles, relocation, start dates and internship terms, class standing, test scores, referral source, agreements, and more. All of these are editable on the options page.
 - **EEO questions**: blank answers become the form's "decline to answer" option. Race subgroups (e.g. East Asian) pick the subgroup when listed and the broad category otherwise.
 - **Location preferences**: ranks offered office locations by your preferred states and cities, if you set them.
 - **Every kind of field**: text boxes, dropdowns, searchable dropdowns, radios, checkboxes, yes/no buttons, rich-text editors and date pickers, including inside shadow DOM. It also skips hidden bot-trap fields.

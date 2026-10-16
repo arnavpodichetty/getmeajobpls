@@ -99,3 +99,20 @@ describe('Capture page', () => {
     expect(document.querySelector('a[download]')).toBeNull();
   });
 });
+
+describe('Closing the panel', () => {
+  it('stays closed on this page and stops watching for new fields', () => {
+    const onDismiss = vi.fn();
+    const panel = new FillPanel(onDismiss);
+    const state = {
+      kind: 'state' as const, connected: true, isApplication: true, atsLabel: 'Greenhouse',
+      resumes: [], pickedResumeId: null, pickReason: '', skillSets: [], pickedSkillSetId: null, showCapture: false,
+    };
+    panel.show(state);
+    panelRoot.querySelector<HTMLButtonElement>('button[title="Hide on this page"]')!.click();
+    expect(panel.shown).toBe(false);
+    expect(onDismiss).toHaveBeenCalledOnce();
+    panel.show(state);
+    expect(panel.shown).toBe(false);
+  });
+});
