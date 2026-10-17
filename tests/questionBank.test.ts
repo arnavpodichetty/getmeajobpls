@@ -214,6 +214,34 @@ const BANK: Record<string, [string, string | null][]> = {
     ['How did you find out about us?', 'LinkedIn'],
     ['Source', 'LinkedIn'],
   ],
+  'other names': [
+    ['Have you ever been employed under any other name?', 'No'],
+    ['Have you even been employed under any other name?', 'No'],
+    ['Have you ever worked under a different name?', 'No'],
+    ['Have you ever been known by any other name?', 'No'],
+  ],
+  'professional license': [
+    ['Do you have a valid Insurance License?', 'No'],
+    ['Do you currently hold an active real estate license?', 'No'],
+    ['Are you currently licensed to sell insurance in your state?', 'No'],
+    ['Do you have a valid driver\'s license?', 'Yes'],
+    ['Are you willing to obtain an insurance license within 90 days of hire?', null],
+  ],
+  'high school or GED': [
+    ['Do you have a high school degree or GED?', 'Yes'],
+    ['Do you have a high school diploma or equivalent?', 'Yes'],
+    ['Have you graduated from high school or obtained a GED?', 'Yes'],
+  ],
+  'applied before / documentation / essential functions': [
+    ['Have you ever applied with Example Group previously?', 'No'],
+    ['If hired, will you be able to provide documentation required under applicable laws showing that you are legally able to work in the US?', 'Yes'],
+    ['Are you able, with or without reasonable workplace accommodations, to perform the essential functions of the job for which you are applying?', 'Yes'],
+  ],
+  'international student': [
+    ['Are you an international student?', 'No'],
+    ['Are you currently an international student?', 'No'],
+    ['Are you currently on an F-1 student visa?', 'No'],
+  ],
   'left for you (no guessing)': [
     ['Have you ever been convicted of a felony?', null],
     ['Why do you want to work here?', null],
@@ -260,6 +288,11 @@ const CHOICES: [string, string[], string | null, boolean][] = [
   ['Do you hold an active U.S. Government Security Clearance?', ['Yes - Secret', 'Yes - Top Secret', 'No, I do not hold an active U.S. Government Security Clearance.'], 'No, I do not hold an active U.S. Government Security Clearance.', true],
   ['Security clearance', ['None', 'Secret', 'Top Secret', 'TS/SCI'], 'None', true],
   ['Security clearance', ['Yes', 'No'], 'No', true],
+  ['Are you currently enrolled in a four-year accredited college or university?', ['Full-time', 'Part-time', 'Not attending'], 'Full-time', true],
+  ['Are you currently enrolled in a four-year accredited college or university?', ['Yes', 'No'], 'Yes', true],
+  ['Are you currently enrolled full-time?', ['Yes', 'No'], 'Yes', true],
+  ['Are you an international student?', ['Yes', 'No'], 'No', true],
+  ['Are you currently pursuing a Master\'s degree?', ['Yes', 'No'], 'No', true],
   ['Various federal laws restrict the post-government employment activities of former military personnel and federal government employees. The Post-Government Employment Certification is designed to assess which restrictions, if any, apply to you.', ['I have never been employed by the U.S. government or the U.S. Armed Forces.', 'I am a current or former U.S. government employee or member of the Armed Forces.'], 'I have never been employed by the U.S. government or the U.S. Armed Forces.', true],
   ['How Did You Hear About Us?', ['Agency', 'Career Site', 'Recruiter', 'Referred by Employee'], 'Career Site', true],
   ['We may use automated tools such as AI to support review of your application for this role, and if applicable, match you with relevant existing and future open roles. If you prefer not to have your application processed by these tools, you can opt-out. Opting out will not impact your eligibility for this role or to apply for relevant open roles.*', ['I consent to automated review', 'I opt out of automated review'], 'I consent to automated review', true],
@@ -322,6 +355,25 @@ describe('choosing options', () => {
 
   it('declines only on decline options', () => {
     expect(bestOption(['Male', 'Female', 'I prefer not to say'], (o) => o, DECLINE)?.option).toBe('I prefer not to say');
+  });
+});
+
+describe('enrollment status', () => {
+  it('part-time students pick Part-time and answer No to "enrolled full-time?"', () => {
+    const p = profile();
+    p.answers.enrollmentStatus = 'Part-time';
+    const ctx = { profile: p, skills: [] };
+    const tiered = resolveAnswer('Are you currently enrolled in a four-year accredited college or university?', '', null, ctx, true).answer!;
+    expect(bestOptionTiered(['Full-time', 'Part-time', 'Not attending'], (o) => o, tiered.tiers!)?.option).toBe('Part-time');
+    expect(resolveAnswer('Are you currently enrolled full-time?', '', null, ctx, true).answer?.value).toBe('No');
+  });
+});
+
+describe('professional license set to Yes', () => {
+  it('is left for you, since the license type is unknown', () => {
+    const p = profile();
+    p.answers.professionalLicense = 'Yes';
+    expect(resolveAnswer('Do you have a valid Insurance License?', '', null, { profile: p, skills: [] }, true).answer).toBeNull();
   });
 });
 

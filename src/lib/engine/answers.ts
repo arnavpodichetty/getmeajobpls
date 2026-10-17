@@ -56,6 +56,25 @@ const SHORT_LABEL_WORDS = 9;
 const latestJob = (p: Profile) => p.experience.find((e) => e.current) ?? p.experience[0];
 const latestSchool = (p: Profile) => p.education[0];
 const yesNo = (v: string) => v || null;
+
+/** "Are you currently enrolled / a student / pursuing a degree?" */
+function currentStudentAnswer(c: AnswerContext, label: string): string | null {
+  const s = stillStudying(c.profile);
+  if (s === null) return null;
+  if (!s) return 'No';
+  // "Are you enrolled full-time?" depends on your enrollment status.
+  const load = label.match(/\b(full|part) time\b/)?.[1];
+  if (load) {
+    const status = normalize(c.profile.answers.enrollmentStatus);
+    return status ? (status.startsWith(load) ? 'Yes' : 'No') : null;
+  }
+  // "Working towards a Master's or PhD?" is No for an undergraduate.
+  const levels = label.match(/\b(?:bachelor|master|ph ?d|doctor|associate|mba)/g);
+  if (!levels) return 'Yes';
+  const degree = normalize(latestSchool(c.profile)?.degree ?? '');
+  return levels.some((l) => degree.includes(l.replace(' ', '')) || (l === 'doctor' && /\bph ?d\b/.test(degree))) ? 'Yes' : 'No';
+}
+
 const declineIfBlank = (v: string) => v || DECLINE;
 /** A race subgroup first (with its other spellings), then the broad category forms usually list. */
 const raceTiers = (race: string): string[][] => {
@@ -215,6 +234,12 @@ const DEFS: Def[] = [
     not: /\bopt (?:in|out)\b/,
     value: (c) => c.profile.answers.stemOptEligible || null,
     tiers: (c) => optTiers(c.profile.answers.stemOptEligible),
+  },
+  {
+    key: 'internationalStudent',
+    re: /\bare you (?:currently )?(?:an? )?international student\b|\binternational student status\b|\b(?:are you )?(?:currently )?(?:on|hold(?:ing)?) an? (?:(?:f 1|j 1)(?: student)?|student) visa\b/,
+    choiceOnly: true,
+    value: (c) => yesNo(c.profile.answers.internationalStudent),
   },
   {
     key: 'optStatus',
@@ -384,6 +409,14 @@ const DEFS: Def[] = [
     re: /driv(?:er s|ers|ing|er) ?licen[cs]e|licensed driver|valid (?:driver|driving)\b|(?:car|vehicle|motor) licen[cs]e/,
     value: (c) => yesNo(c.profile.answers.driversLicense),
   },
+  // "Do you have a valid Insurance License?" A Yes default can't tell which license you hold, so it's left for you.
+  {
+    key: 'professionalLicense',
+    re: /\b(?:do|does) you (?:currently )?(?:have|hold|possess)\b.{0,60}\blicen[cs]e[sd]?\b|\bare you (?:currently )?(?:licensed|a licensed)\b/,
+    not: /\b(?:willing|able to|obtain|get|acquire|pursue|plan|require|need)\b/,
+    choiceOnly: true,
+    value: (c) => (c.profile.answers.professionalLicense === 'No' ? 'No' : null),
+  },
   { key: 'over18', re: /18 (years|or older)|at least 18|over (the age of )?18|age of 18|legal (working )?age|of legal age/, value: (c) => yesNo(c.profile.answers.over18) },
   // "Are you currently employed?" is your employment status, not whether you work here.
   {
@@ -391,6 +424,13 @@ const DEFS: Def[] = [
     re: /^(?:are you )?(?:currently |presently )?(?:employed|working)(?: (?:full time|part time|anywhere|at the moment|right now))?$|^(?:current )?employment status$/,
     choiceOnly: true,
     value: (c) => (c.profile.experience.length ? (c.profile.experience.some((x) => x.current) ? 'Yes' : 'No') : null),
+  },
+  // "Have you ever been employed under any other name?" asks about aliases, not this company.
+  {
+    key: 'otherNames',
+    re: /\b(?:employed|worked|known|gone|go) (?:under|by) (?:any |an )?(?:other|another|different|former|previous|prior) names?\b|\b(?:other|previous|prior|former) names? (?:used|you have used)\b|\bmaiden name\b/,
+    choiceOnly: true,
+    value: (c) => yesNo(c.profile.answers.otherNames),
   },
   {
     key: 'previouslyEmployed',
@@ -465,15 +505,16 @@ const DEFS: Def[] = [
   {
     key: 'currentStudent',
     re: /currently (enrolled|a student|pursuing)|are you a (current )?student|(?:working|studying) (?:towards?|on) (?:a |an |your )?(?:\w+ ){0,5}degree|pursuing (?:a |an )?(?:\w+ ){0,5}degree/,
-    value: (c, label) => {
+    value: currentStudentAnswer,
+    // Full-time / Part-time / Not attending option lists answer with your enrollment status.
+    tiers: (c, label) => {
       const s = stillStudying(c.profile);
-      if (s === null) return null;
-      if (!s) return 'No';
-      // "Working towards a Master's or PhD?" is No for an undergraduate.
-      const levels = label.match(/\b(?:bachelor|master|ph ?d|doctor|associate|mba)/g);
-      if (!levels) return 'Yes';
-      const degree = normalize(latestSchool(c.profile)?.degree ?? '');
-      return levels.some((l) => degree.includes(l.replace(' ', '')) || (l === 'doctor' && /\bph ?d\b/.test(degree))) ? 'Yes' : 'No';
+      if (currentStudentAnswer(c, label) !== (s ? 'Yes' : 'No')) return [];
+      if (s === false) return [['Not attending', 'Not enrolled', 'Not currently enrolled'], ['No']];
+      const status = c.profile.answers.enrollmentStatus;
+      if (!s || !status) return [];
+      const spellings = status === 'Part-time' ? ['Part-time', 'Part time', 'Yes, part-time'] : ['Full-time', 'Full time', 'Yes, full-time'];
+      return [spellings, ['Yes']];
     },
   },
 
@@ -556,6 +597,14 @@ const DEFS: Def[] = [
     re: /\b(?:current|academic|class|college|university|school) year\b|\byear (?:of|in) (?:your )?(?:study|studies|school|college|university|degree|education)\b|\byear (?:are|will) you\b.{0,30}\b(?:college|university|school|study|studies|program)\b|\b(?:class|student|academic) (?:standing|classification)\b|\b(?:level of education|education level)\b.*\b(?:during|semester|fall|spring|summer|winter|current)\b/,
     not: /graduat(?:ion|e) (?:date|year)|high school|start date|end date/,
     value: (c) => c.profile.answers.academicYear || null,
+  },
+  // "Do you have a high school degree or GED?" is a Yes/No, not your highest degree.
+  {
+    key: 'highSchoolDiploma',
+    re: /\b(?:do|did|have|are) you\b.{0,60}\b(?:high school|secondary school|ged|hiset)\b/,
+    not: /\b(?:year|date|when|gpa|name|which|what)\b/,
+    choiceOnly: true,
+    value: (c) => yesNo(c.profile.answers.highSchoolDiploma),
   },
   { key: 'highSchoolGraduationYear', re: /high school.*(?:graduat|completion)|(?:graduat|completion).*high school/, value: (c) => c.profile.answers.highSchoolGraduationYear || null },
   { key: 'standardizedTestType', re: /standardi[sz]ed test.*(?:type|taken)|(?:which|type of).*(?:standardi[sz]ed test|sat.*act)/, value: (c) => c.profile.answers.standardizedTestType || null, tiers: (c) => c.profile.answers.standardizedTestType === 'Not taken' ? [['Not taken'], ['Other']] : [[c.profile.answers.standardizedTestType]] },

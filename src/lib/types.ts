@@ -122,6 +122,10 @@ export interface Profile {
     /** "Is your current employer a <company> client?" */
     currentEmployerClient: YesNo;
     governmentConsulting: YesNo;
+    /** "Are you an international student?" (on a student visa such as F-1 or J-1). */
+    internationalStudent: YesNo;
+    /** "Full-time" or "Part-time" while enrolled; blank leaves full/part-time questions for you. */
+    enrollmentStatus: string;
     optStatus: YesNoNA;
     stemOptEligible: YesNoNA;
     highSchoolGraduationYear: string;
@@ -138,6 +142,12 @@ export interface Profile {
     over18: YesNo;
     /** Hold a full, valid driving license. */
     driversLicense: YesNo;
+    /** Hold any professional license (insurance, real estate, CPA, securities…). */
+    professionalLicense: YesNo;
+    /** High school diploma or GED. */
+    highSchoolDiploma: YesNo;
+    /** "Have you ever been employed under any other name?" */
+    otherNames: YesNo;
     previouslyEmployed: YesNo; // "Have you worked for <company> before?"
     nonCompete: YesNo; // "Are you bound by a non-compete?"
     relatedToEmployee: YesNo; // unused: relative/family questions are always answered No
