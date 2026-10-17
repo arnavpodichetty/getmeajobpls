@@ -84,6 +84,20 @@ function highlight(field: Field, status: 'filled' | 'review', enabled: boolean):
   target.style.setProperty('outline-offset', '2px', 'important');
 }
 
+// Upload widgets that list the file themselves (Workday, many React uploaders) leave
+// their <input> empty, e.g. My Experience after "Autofill with Resume".
+const FILE_NAME = /[\w)-]\.(?:pdf|docx?|rtf|txt|odt|pages)\b/i;
+function uploadShowsFile(input: HTMLElement): boolean {
+  let el: HTMLElement | null = input;
+  for (let depth = 0; depth < 6 && el?.parentElement; depth++) {
+    el = el.parentElement;
+    // Stop once the ancestor holds more than this upload widget.
+    if ([...el.querySelectorAll('input, select, textarea')].some((c) => c !== input)) break;
+    if (el.querySelector('[data-automation-id="file-upload-item"]') || FILE_NAME.test(el.textContent ?? '')) return true;
+  }
+  return false;
+}
+
 function pageShows(text: string): boolean {
   return composedElements(document).some((el) => !el.children.length && el.textContent?.includes(text));
 }
@@ -216,7 +230,7 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
   const resumeEl = opts.resumeTarget?.() ?? findResumeTarget(initial);
   if (ctx.resume && resumeEl && !handled.has(resumeEl) && resumeAttachedOn !== pageKey()) {
     handled.add(resumeEl);
-    const hasFile = resumeEl instanceof HTMLInputElement && !!resumeEl.files?.length;
+    const hasFile = (resumeEl instanceof HTMLInputElement && !!resumeEl.files?.length) || uploadShowsFile(resumeEl);
     if (hasFile && !ctx.settings.overwriteExisting) {
       results.push({ label: 'Resume', status: 'skipped', reason: 'A file is already attached.' });
     } else {

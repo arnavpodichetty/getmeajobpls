@@ -3,7 +3,7 @@
 ## 1.0.1 (2026-10-16)
 
 ### Fixes
-- **Resume uploaded twice:** sites like Workday and Greenhouse replace the upload box after taking a file, and later passes treated the new box as unfilled. The resume is now attached once per page, so a resume you remove by hand to upload a different one stays removed. Later pages (Workday's My Experience after "Autofill with Resume", or the next application in the same tab) still get it.
+- **Resume uploaded twice:** sites like Workday and Greenhouse replace the upload box after taking a file, and later passes treated the new box as unfilled. The resume is now attached once per page, so a resume you remove by hand to upload a different one stays removed. An upload box that already lists a file is left alone even when its input is empty, so Workday's My Experience no longer gets a second copy of the resume uploaded through "Autofill with Resume". An empty upload box on a later page (or the next application in the same tab) still gets it.
 - **Degree on Workday:** lists like "Bachelor Degree/Int'l Equiv" are now matched from a specific degree such as "Bachelor of Arts". The level-only option is a fallback; a BA is never filed as a Bachelor of Science.
 - **Closing the panel:** × now keeps the panel closed for the rest of the page instead of it reappearing. It also stops filling fields that appear later, so changes you make by hand stay.
 - **Multi-campus school names:** "University of California, Berkeley", "UC Berkeley" and "University of California-Berkeley" are treated as the same school, and the same goes for other systems ("University of Texas at Austin" = "University of Texas-Austin"). Workday searches the hyphen spelling from its school list first.

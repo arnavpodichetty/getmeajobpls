@@ -230,6 +230,18 @@ describe('resume upload', () => {
   });
 });
 
+describe('resume already uploaded', () => {
+  it('is not attached again when Workday lists the file but its input is empty (My Experience)', async () => {
+    loadFixture('workday-b-1');
+    expect(document.querySelector('[data-automation-id="file-upload-item-name"]')).toBeTruthy();
+    let attaches = 0;
+    document.querySelector('input[data-automation-id="file-upload-input-ref"]')!.addEventListener('change', () => attaches++);
+    const report = await workday.fill(context());
+    expect(attaches).toBe(0);
+    expect(report.fields.find((f) => /^Resume/.test(f.label))?.status).toBe('skipped');
+  });
+});
+
 describe('resume removed by hand', () => {
   it('is not re-attached when watching for new fields', async () => {
     const uploadInput = () => '<label for="resume">Resume/CV</label><input id="resume" type="file" />';
