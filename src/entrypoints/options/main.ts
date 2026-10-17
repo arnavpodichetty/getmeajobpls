@@ -335,6 +335,7 @@ function profileSections(): HTMLElement[] {
         textField('Standardized test type', p.answers, 'standardizedTestType', s, { list: 'test-type-list', placeholder: 'SAT, ACT, or Not taken' }),
         textField('Best SAT result', p.answers, 'satScore', s, { placeholder: 'Score or Not taken' }),
         textField('Best ACT result', p.answers, 'actScore', s, { placeholder: 'Score or Not taken' }),
+        selectField('Returning to school after the internship?', p.answers, 'returningToSchool', YES_NO, s),
         selectField('Further education immediately after your current degree?', p.answers, 'furtherEducation', [
           ['', '—'], ['No', 'No'],
           ['I am considering further education after my current program', 'Considering further education'],

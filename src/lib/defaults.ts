@@ -55,6 +55,7 @@ export function emptyProfile(): Profile {
       satScore: 'Not taken',
       actScore: 'Not taken',
       furtherEducation: 'No',
+      returningToSchool: 'Yes',
       currentOffers: 'No',
       offerDetails: '',
       sponsorshipDetails: '',

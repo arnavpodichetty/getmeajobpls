@@ -153,6 +153,20 @@ const BANK: Record<string, [string, string | null][]> = {
     ['What is your expected graduation date?', '2028-06'],
     ['When do you expect to graduate?', '2028-06'],
   ],
+  'schedule and program availability': [
+    ['Are you available for full-time employment for 10 to 12 (ten to twelve) weeks during the summer?', 'Yes'],
+    ['Are you available to work full-time for 12 weeks this summer?', 'Yes'],
+    ['Are you able to commit to a 10-week summer internship?', 'Yes'],
+    ['Can you work 40 hours per week for the duration of the program?', 'Yes'],
+    ['Are you available for full-time summer employment from June through August?', 'Yes'],
+  ],
+  'returning to school after the internship': [
+    ['Do you plan to return to school upon completion of your internship?', 'Yes'],
+    ['Will you be returning to school after the internship?', 'Yes'],
+    ['Are you returning to an academic program after the summer internship?', 'Yes'],
+    ['Do you intend to continue your studies after this internship?', 'Yes'],
+    ['Will you be enrolled as a student following the completion of the internship?', 'Yes'],
+  ],
   'location and relocation': [
     ['Are you willing to relocate?', 'Yes'],
     ['Would you be open to relocating for this role?', 'Yes'],

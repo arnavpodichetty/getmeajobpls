@@ -368,7 +368,7 @@ const DEFS: Def[] = [
   { key: 'willingToRelocate', re: /relocat/, value: (c) => yesNo(c.profile.answers.willingToRelocate) },
   {
     key: 'workScheduleAvailable',
-    re: /^(?=.*\b(?:availability|available|able|willing|can you|could you|commit|capable)\b)(?=.*\b(?:work|working|internship|program|placement|position|role)\b)(?=.*\b(?:hours?|hrs?|weeks?|months?|full time|part time|schedule|shifts?)\b)/,
+    re: /^(?=.*\b(?:availability|available|able|willing|can you|could you|commit|capable)\b)(?=.*\b(?:work|working|employment|employed|job|internship|program|placement|position|role|summer)\b)(?=.*\b(?:hours?|hrs?|weeks?|months?|full time|part time|schedule|shifts?)\b)/,
     not: /\b(?:how many|how much|which|what|describe|list|specify|provide)\b|\b(?:unavailable|unable|cannot|can t|not available|not able)\b/,
     choiceOnly: true,
     value: (c) => yesNo(c.profile.answers.workScheduleAvailable),
@@ -561,6 +561,13 @@ const DEFS: Def[] = [
   { key: 'standardizedTestType', re: /standardi[sz]ed test.*(?:type|taken)|(?:which|type of).*(?:standardi[sz]ed test|sat.*act)/, value: (c) => c.profile.answers.standardizedTestType || null, tiers: (c) => c.profile.answers.standardizedTestType === 'Not taken' ? [['Not taken'], ['Other']] : [[c.profile.answers.standardizedTestType]] },
   { key: 'satScore', re: /\bsat\b.{0,30}(?:score|result|test)|(?:score|result|test|taken|take).{0,30}\bsat\b|^sat$/, not: /\bact\b/, value: (c) => c.profile.answers.satScore || null },
   { key: 'actScore', re: /\bact\b.{0,30}(?:score|result|test)|(?:score|result|test|taken|take).{0,30}\bact\b|^act$/, not: /\bsat\b/, value: (c) => c.profile.answers.actScore || null },
+  // Interns going back to class after the internship; not plans for grad school (furtherEducation).
+  {
+    key: 'returningToSchool',
+    re: /\breturn(?:ing)? to (?:school|college|university|campus|classes|your studies|studies|(?:an |your )?academic (?:program|studies))\b|\b(?:back to|resum\w*) (?:school|college|classes|your studies|studies)\b|\bcontinu\w* (?:your |my )?(?:studies|education|degree|enrollment)\b.{0,20}\b(?:after|following|upon)\b.{0,30}\b(?:internship|co ?op|summer|assignment)\b|\b(?:enrolled|a student)\b.{0,40}\b(?:after|following|upon completion of)\b.{0,30}\b(?:internship|co ?op|summer|assignment)\b/,
+    choiceOnly: true,
+    value: (c) => yesNo(c.profile.answers.returningToSchool),
+  },
   { key: 'furtherEducation', re: /\b(?:further|additional|postgraduate|post graduate).{0,20}(?:education|studies|school|degree)|(?:pursu|continu|consider|commit|enroll|attend|plan|intend|intent).{0,60}(?:education|studies|degree|school).{0,70}(?:after|following|upon)|(?:plan|intend|intent|pursu|enroll|attend).{0,40}\b(?:graduate|master s|masters|phd|doctoral) (?:school|degree|studies)/, value: (c) => yesNo(c.profile.answers.furtherEducation) },
   { key: 'currentOffers', re: /(?:currently|current|any|other).{0,25}\boffers?\b|\boffers?\b.{0,25}(?:received|hold|outstanding)/, value: (c) => yesNo(c.profile.answers.currentOffers) },
   { key: 'offerDetails', re: /\boffers?\b.*(?:details|company|deadline)|company name.*job title.*deadline/, value: (c) => c.profile.answers.currentOffers === 'No' ? 'N/A' : c.profile.answers.offerDetails || null },

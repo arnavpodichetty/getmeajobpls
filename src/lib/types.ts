@@ -130,6 +130,8 @@ export interface Profile {
     satScore: string;
     actScore: string;
     furtherEducation: string;
+    /** "Will you return to school after the internship?" */
+    returningToSchool: YesNo;
     currentOffers: YesNo;
     offerDetails: string;
     sponsorshipDetails: string;

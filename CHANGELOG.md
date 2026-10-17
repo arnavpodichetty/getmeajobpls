@@ -7,11 +7,13 @@
 - **Degree on Workday:** lists like "Bachelor Degree/Int'l Equiv" are now matched from a specific degree such as "Bachelor of Arts". The level-only option is a fallback; a BA is never filed as a Bachelor of Science.
 - **Closing the panel:** × now keeps the panel closed for the rest of the page instead of it reappearing. It also stops filling fields that appear later, so changes you make by hand stay.
 - **Multi-campus school names:** "University of California, Berkeley", "UC Berkeley" and "University of California-Berkeley" are treated as the same school, and the same goes for other systems ("University of Texas at Austin" = "University of Texas-Austin"). Workday searches the hyphen spelling from its school list first.
+- **Summer availability:** "Are you available for full-time employment for 10 to 12 weeks during the summer?" now answers from your availability setting (Yes) instead of being flagged for review.
 - **Work authorization:** "Do you have a legal right and necessary documentation to work in the United States?" now answers from your work-authorization setting.
 
 ### New answers
 - **Employment and regulatory history** (default No): fired, asked to resign or separated by mutual agreement; pending regulator investigations; professional licenses revoked, suspended or surrendered. These questions no longer borrow the government-debarment answer.
 - **Board member, trustee, executor or other fiduciary role** (default No).
+- **Returning to school after the internship** (default Yes): "Do you plan to return to school upon completion of your internship?" was being read as the grad-school question and answered No, and "Will you be returning to school…" got your school's name.
 - **Current employer is a client of the company you're applying to** (default No; always No when you have no current job).
 
 ## 1.0.0 (2026-10-16)
