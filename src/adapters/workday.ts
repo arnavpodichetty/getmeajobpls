@@ -9,7 +9,7 @@ import { todayISO } from '../lib/clock';
 import { blur, isVisible, queryAllDeep, realClick, sleep, typeInto, waitForElement, waitForStable } from '../lib/engine/dom';
 import { resolveAnswer } from '../lib/engine/answers';
 import { fillPage, type Override } from '../lib/engine/fill';
-import { degreeVariants, majorPreferenceTiers, normalize, schoolVariants } from '../lib/engine/text';
+import { degreeTiers, majorPreferenceTiers, normalize, schoolVariants } from '../lib/engine/text';
 import type { Education, Experience, FieldResult, FillReport } from '../lib/types';
 import type { Adapter, FillContext } from './types';
 
@@ -280,7 +280,7 @@ async function fillSchools(schools: Education[], results: FieldResult[]): Promis
     const degree = panel.querySelector<HTMLElement>(PANEL.school.degree);
     if (degree && ed.degree) {
       // Replace a wrong pick (e.g. one made by resume parsing) only if it doesn't already match.
-      const outcome = await fillCombobox(degree, ed.degree, { tiers: [degreeVariants(ed.degree)] });
+      const outcome = await fillCombobox(degree, ed.degree, { tiers: degreeTiers(ed.degree) });
       record(results, `${tag}: degree`, outcome.ok && !outcome.review, outcome.review);
     }
     const field = panel.querySelector<HTMLElement>(PANEL.school.field);

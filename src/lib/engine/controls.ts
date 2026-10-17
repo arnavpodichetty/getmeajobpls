@@ -19,7 +19,7 @@ import {
 import { bestAvailabilityOption } from './availability';
 import { optionText, splSelectedValues } from './labels';
 import { bestLocationOption, locationSearchTerms, type LocationPreference } from './locationPreferences';
-import { bestOption, bestOptionTiered, CONFIDENT_OPTION_SCORE, DECLINE, isPlaceholderOption, MIN_OPTION_SCORE, optionScore } from './text';
+import { bestOption, bestOptionTiered, CONFIDENT_OPTION_SCORE, DECLINE, isPlaceholderOption, MIN_OPTION_SCORE, optionScore, searchTextFor } from './text';
 
 const pickBest = <T>(options: T[], text: (o: T) => string, value: string, tiers?: string[][], locationPreference?: LocationPreference, availabilityDate?: string) =>
   availabilityDate ? bestAvailabilityOption(options, text, availabilityDate) : locationPreference ? bestLocationOption(options, text, locationPreference) : tiers?.length ? bestOptionTiered(options, text, tiers) : bestOption(options, text, value);
@@ -303,7 +303,8 @@ function close(el: HTMLElement, typed: HTMLInputElement | null): void {
 }
 
 /** Words to type into an async search box (cities, schools): the most distinctive part first. */
-function queries(value: string): string[] {
+function queries(tierValue: string): string[] {
+  const value = searchTextFor(tierValue);
   const out = [value];
   const first = value.split(/[,(]/)[0].trim();
   if (first && first !== value) out.push(first);

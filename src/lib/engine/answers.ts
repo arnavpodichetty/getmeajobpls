@@ -5,7 +5,7 @@ import type { Profile } from '../types';
 import { todayISO } from '../clock';
 import { startDateForPosting } from './availability';
 import { locationPreferenceRank, type LocationPreference } from './locationPreferences';
-import { DECLINE, degreeVariants, majorPreferenceTiers, normalize, questionSimilarity, RACE_SUBGROUPS, schoolVariants, US_STATES } from './text';
+import { DECLINE, degreeTiers, majorPreferenceTiers, normalize, questionSimilarity, RACE_SUBGROUPS, schoolVariants, US_STATES } from './text';
 
 export interface AnswerContext {
   profile: Profile;
@@ -591,11 +591,11 @@ const DEFS: Def[] = [
     tiers: (c) => {
       const done = c.profile.education.find((e) => e.degree && e.end && e.end.slice(0, 7) <= today().slice(0, 7));
       return done
-        ? [degreeVariants(done.degree)]
+        ? degreeTiers(done.degree)
         : [['High School Diploma', 'High School Diploma/GED', 'High School or equivalent', 'High School', 'Secondary School', 'GED'], ['Some College', 'Some college coursework completed']];
     },
   },
-  { key: 'degree', re: /\bdegree\b|level of education|highest education|education level/, not: /\b(?:date|year|completion|gpa|coursework)\b|grade point/, value: (c) => latestSchool(c.profile)?.degree || null, tiers: (c) => [degreeVariants(latestSchool(c.profile)?.degree ?? '')] },
+  { key: 'degree', re: /\bdegree\b|level of education|highest education|education level/, not: /\b(?:date|year|completion|gpa|coursework)\b|grade point/, value: (c) => latestSchool(c.profile)?.degree || null, tiers: (c) => degreeTiers(latestSchool(c.profile)?.degree ?? '') },
   { key: 'major', short: true, re: /\bmajor\b|field of study|discipline|area of study|concentration|program of study/, value: (c) => latestSchool(c.profile)?.major || null, tiers: (c) => majorTiers(c.profile) },
   { key: 'minor', short: true, re: /\bminor\b/, value: (c) => latestSchool(c.profile)?.minor || null },
   { key: 'gpa', re: /\bgpa\b|grade point|cumulative grade/, value: (c) => latestSchool(c.profile)?.gpa || null },

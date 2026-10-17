@@ -59,8 +59,11 @@ export interface EngineOptions {
 // A fresh (non-incremental) fill starts over.
 let handled = new WeakSet<Element>();
 // Sites like Workday re-render the upload input after taking the file, so the new
-// element isn't in `handled`; this stops incremental passes from attaching it again.
-let resumeAttached = false;
+// element isn't in `handled`. Remember the page that got the resume so later passes
+// there don't attach it again (or re-attach one you removed). Another page, such as
+// Workday's "Autofill with Resume" step or the next application, still gets it.
+let resumeAttachedOn: string | null = null;
+const pageKey = () => `${location.origin}${location.pathname}`;
 
 const HIGHLIGHT_ATTR = 'data-getmeajobpls';
 const COLORS = { filled: '#1f9d63', review: '#d97706' };
@@ -199,7 +202,7 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
   if (!opts.incremental) {
     clearHighlights();
     handled = new WeakSet();
-    resumeAttached = false;
+    resumeAttachedOn = null;
   }
 
   const record = (field: Field, status: FieldResult['status'], reason?: string) => {
@@ -211,7 +214,7 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
   // 1. Resume first: many ATSs parse it and overwrite fields afterwards.
   const initial = scanFields(root);
   const resumeEl = opts.resumeTarget?.() ?? findResumeTarget(initial);
-  if (ctx.resume && resumeEl && !handled.has(resumeEl) && !resumeAttached) {
+  if (ctx.resume && resumeEl && !handled.has(resumeEl) && resumeAttachedOn !== pageKey()) {
     handled.add(resumeEl);
     const hasFile = resumeEl instanceof HTMLInputElement && !!resumeEl.files?.length;
     if (hasFile && !ctx.settings.overwriteExisting) {
@@ -219,7 +222,7 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
     } else {
       const outcome = attachFile(resumeEl, ctx.resume.file);
       if (outcome.ok) {
-        resumeAttached = true;
+        resumeAttachedOn = pageKey();
         filled++;
         notes.push('Resume attached; waited for the site to finish reading it.');
         await waitForStable(document.body, 1200, 12_000);

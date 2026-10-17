@@ -2,7 +2,7 @@ import { blur, byId, fire, isVisible, queryAllDeep, queryDeep, realClick, sleep,
 import { fillCombobox, fillText, formatDate } from '../lib/engine/controls';
 import { LANGUAGE_LEVEL_TIERS } from '../lib/engine/answers';
 import { fillPage } from '../lib/engine/fill';
-import { cleanLabel, degreeVariants, majorPreferenceTiers, normalize, schoolVariants } from '../lib/engine/text';
+import { cleanLabel, degreeTiers, majorPreferenceTiers, normalize, schoolVariants } from '../lib/engine/text';
 import type { Education, Experience, FieldResult, FillReport, Language } from '../lib/types';
 import type { Adapter, FillContext } from './types';
 
@@ -195,7 +195,7 @@ async function fillSchools(section: HTMLElement, schools: Education[], results: 
     const major = rowField(row, RE.major);
     if (major?.getAttribute('role') === 'combobox') await setPicklist(row, RE.major, ed.major, majorPreferenceTiers(ed.major, ed.majorFallbacks), results, `${tag}: major`);
     else await setText(row, RE.major, ed.major, results, `${tag}: major`);
-    await setPicklist(row, RE.degree, ed.degree, [degreeVariants(ed.degree)], results, `${tag}: degree`);
+    await setPicklist(row, RE.degree, ed.degree, degreeTiers(ed.degree), results, `${tag}: degree`);
     await setText(row, RE.gpa, ed.gpa, results, `${tag}: GPA`);
     await setDate(row, RE.start, ed.start, results, `${tag}: start`);
     await setDate(row, RE.end, ed.end, results, `${tag}: end`);

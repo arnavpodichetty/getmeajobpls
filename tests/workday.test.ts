@@ -244,3 +244,19 @@ describe('resume removed by hand', () => {
     expect(attaches).toBe(0);
   });
 });
+
+describe('resume on a later page', () => {
+  it('is attached again on a different page of the same tab', async () => {
+    const uploadInput = () => '<label for="resume">Resume/CV</label><input id="resume" type="file" />';
+    document.body.innerHTML = uploadInput();
+    const ctx = context();
+    await fillPage(ctx, { ats: 'Workday' }); // e.g. "Autofill with Resume"
+    history.pushState({}, '', '/apply/applyManually');
+    document.body.innerHTML = uploadInput();
+    let attaches = 0;
+    document.querySelector('#resume')!.addEventListener('change', () => attaches++);
+    await fillPage({ ...ctx, incremental: true }, { ats: 'Workday', incremental: true });
+    expect(attaches).toBe(1);
+    history.pushState({}, '', '/');
+  });
+});

@@ -1,7 +1,7 @@
 // The label matcher: which profile field a question maps to.
 import { describe, expect, it } from 'vitest';
 import { majorTiers, matchKey, resolveAnswer, savedAnswerFor } from '../src/lib/engine/answers';
-import { bestOptionTiered, cleanLabel, DECLINE, degreeVariants, optionScore, questionSimilarity, schoolVariants } from '../src/lib/engine/text';
+import { bestOptionTiered, cleanLabel, DECLINE, degreeTiers, degreeVariants, optionScore, questionSimilarity, schoolVariants } from '../src/lib/engine/text';
 import { testProfile } from './helpers/fixture';
 
 describe('matchKey', () => {
@@ -235,6 +235,17 @@ describe('spelling variants and fallbacks', () => {
     expect(schoolVariants('University of Texas at Austin')).toContain('University of Texas-Austin');
     expect(schoolVariants('University of Wisconsin, Madison')).toContain('University of Wisconsin-Madison');
     expect(schoolVariants('University of Michigan')).toEqual(['University of Michigan', 'Michigan University']);
+  });
+
+  it('falls back to a level-only degree option, never another field', () => {
+    const workday = ['Less than High School Graduate', 'High School Graduate or Equiv', "Tech School Certificate/Int'l Equiv", "Associate Degree/Int'l Equiv", "Bachelor Degree/Int'l Equiv", "Master Degree/Int'l Equiv", 'Master of Business Administration - MBA', 'Doctorate Degree/Int’l Equiv', 'Doctor of Philosophy – PHD', 'Degree Not Required'];
+    for (const d of ['Bachelor of Arts', 'Bachelor of Science', 'BS', "Bachelor's"]) expect(tiered(workday, degreeTiers(d))).toBe("Bachelor Degree/Int'l Equiv");
+    expect(tiered(workday, degreeTiers('Master of Science'))).toBe("Master Degree/Int'l Equiv");
+    expect(tiered(workday, degreeTiers('PhD'))).not.toBe("Master Degree/Int'l Equiv");
+    expect(tiered(["Bachelor's Degree or equivalent", "Master's Degree"], degreeTiers('Bachelor of Arts'))).toBe("Bachelor's Degree or equivalent");
+    // A BA is never filed as a BS.
+    expect(tiered(['Bachelor of Science', 'Master of Science'], degreeTiers('Bachelor of Arts'))).toBeUndefined();
+    expect(tiered(['Bachelor of Science (BS)', 'Bachelor of Arts (BA)', 'Bachelors'], degreeTiers('Bachelor of Arts'))).toBe('Bachelor of Arts (BA)');
   });
 
   it('finds a degree however the list spells it', () => {

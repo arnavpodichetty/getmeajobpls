@@ -271,6 +271,8 @@ export function optionScore(optionText: string, wanted: string): number {
   // A stored statement ("I am not a protected veteran") answering a plain Yes/No option.
   const optYN = isYesNo(optionText);
   const w = normalize(wanted);
+  const level = wanted.startsWith(DEGREE_LEVEL) ? wanted.slice(DEGREE_LEVEL.length) : null;
+  if (level) return isGenericDegreeLevel(opt, level) ? 1 : 0;
   const yearScore = academicYearScore(opt, w);
   if (yearScore !== null) return yearScore;
   const veteran = veteranScore(opt, w);
@@ -471,6 +473,46 @@ export function degreeVariants(degree: string): string[] {
   ];
   for (const [re, variants] of table) if (re.test(n)) return [d, ...variants.filter((v) => v !== d)];
   return [d];
+}
+
+/** Marks a tier entry that matches only a level-only option ("Bachelor Degree/Int'l Equiv"). */
+const DEGREE_LEVEL = 'degree-level:';
+
+/** What to type into a search box for a tier entry ("degree-level:bachelor" searches "Bachelor"). */
+export function searchTextFor(value: string): string {
+  if (!value.startsWith(DEGREE_LEVEL)) return value;
+  const level = value.slice(DEGREE_LEVEL.length);
+  return level === 'doctor' ? 'Doctor' : level[0].toUpperCase() + level.slice(1);
+}
+
+function degreeLevel(degree: string): string | null {
+  const n = normalize(degree);
+  if (/\bbachelor|^(?:ba|bs|ab|bsc|b a|b s|a b|beng|b eng|bba|bfa|b f a)\b/.test(n)) return 'bachelor';
+  if (/\bmba\b|business administration/.test(n)) return null; // forms list the MBA on its own
+  if (/\bmaster|^(?:ms|ma|msc|m s|m a|meng|m eng|mfa|m f a)\b/.test(n)) return 'master';
+  if (/\bdoctor|\bph ?d\b/.test(n)) return 'doctor';
+  if (/\bassociate/.test(n)) return 'associate';
+  return null;
+}
+
+/** "Bachelor Degree/Int'l Equiv", "Bachelor's degree or equivalent", "Bachelors": the level, no field. */
+function isGenericDegreeLevel(opt: string, level: string): boolean {
+  const stem = level === 'doctor' ? '(?:doctorate|doctoral|doctor s|doctors)' : `${level}(?: s|s)?`;
+  const m = opt.match(new RegExp(`^${stem}\\b(.*)$`));
+  if (!m) return false;
+  const rest = m[1].replace(/\b(?:degrees?|or|and|int l|international|equiv|equivalent|higher|level|4 year|four year|2 year|two year|college|university|program)\b/g, '').trim();
+  return rest === '';
+}
+
+/**
+ * Degree tiers: the degree's own spellings first, then a level-only option
+ * ("Bachelor Degree/Int'l Equiv"), never a different field of the same level.
+ */
+export function degreeTiers(degree: string): string[][] {
+  const tiers = [degreeVariants(degree)];
+  const level = degreeLevel(degree);
+  if (level) tiers.push([DEGREE_LEVEL + level]);
+  return tiers;
 }
 
 export function isPlaceholderOption(text: string): boolean {
