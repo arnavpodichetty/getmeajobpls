@@ -1,172 +1,96 @@
 # Changelog
 
+## 1.1.0 (2026-10-18)
+
+### New
+- **Resume tailoring (optional):** **Tailor resume** on the on-page panel rewrites the selected resume for the posting with your own Claude account, through Claude Code on your computer, and uses it for the upload. Off by default; set it up under Options → Resume tailoring.
+  - Uses your resume plus your profile's experience, projects and skills, and can swap in a role or project from your profile that fits the job better.
+  - Every bullet must trace back to your resume or profile. A rewrite that adds a number or tool that isn't there is replaced by the original.
+  - Always one page, in the layout of Jake's resume template.
+  - Shows what changed and a reminder to read the resume before submitting.
+  - Tailored copies are kept under Resumes → Tailored resumes, and a job you already tailored for reuses its copy.
+- **Skills for tailoring only:** a long list of every skill you have, under Skill sets. Only tailoring uses it, never form filling.
+- **Move the on-page panel:** drag it by its bar. It stays where you put it on every site; double-click the grip to reset.
+- **Credits:** a section at the bottom of the options page.
+- **Light and dark mode:** a switch at the bottom of the options sidebar. Dark is the default.
+
+### Fixes
+- **Resume and skills always match:** the skill set now follows the picked resume. Link them with **Use with resume** under Skill sets, or let matching names pair them.
+- **Options page layout:** even spacing between fields, inputs in a row line up when a label wraps, resume rules fit on one line, and Backup's buttons share a row. Descriptions use the full width, the sidebar highlights the section you click, and the empty space at the bottom is gone.
+- **Resume rules for a deleted resume:** show "choose resume" instead of a blank box.
+- **README:** shortened, with screenshots.
+
 ## 1.0.1 (2026-10-16)
 
 ### Fixes
-- **Resume uploaded twice:** sites like Workday and Greenhouse replace the upload box after taking a file, and later passes treated the new box as unfilled. The resume is now attached once per page, so a resume you remove by hand to upload a different one stays removed. An upload box that already lists a file is left alone even when its input is empty, so Workday's My Experience no longer gets a second copy of the resume uploaded through "Autofill with Resume". An empty upload box on a later page (or the next application in the same tab) still gets it.
-- **Degree on Workday:** lists like "Bachelor Degree/Int'l Equiv" are now matched from a specific degree such as "Bachelor of Arts". The level-only option is a fallback; a BA is never filed as a Bachelor of Science.
-- **Closing the panel:** × now keeps the panel closed for the rest of the page instead of it reappearing. It also stops filling fields that appear later, so changes you make by hand stay.
-- **Multi-campus school names:** "University of California, Berkeley", "UC Berkeley" and "University of California-Berkeley" are treated as the same school, and the same goes for other systems ("University of Texas at Austin" = "University of Texas-Austin"). Workday searches the hyphen spelling from its school list first.
-- **Summer availability:** "Are you available for full-time employment for 10 to 12 weeks during the summer?" now answers from your availability setting (Yes) instead of being flagged for review.
-- **Work authorization:** "Do you have a legal right and necessary documentation to work in the United States?" now answers from your work-authorization setting.
-- **High school or GED:** "Do you have a high school degree or GED?" used to get your highest degree (e.g. Bachelor's) instead of Yes/No.
+- **Resume uploaded twice:** the resume is attached once per page, and an upload box that already lists a file is left alone. A resume you remove by hand stays removed.
+- **Degree on Workday:** lists like "Bachelor Degree/Int'l Equiv" now match a specific degree such as "Bachelor of Arts", and a BA is never filed as a Bachelor of Science.
+- **Closing the panel:** × keeps the panel closed for the rest of the page and stops filling fields that appear later.
+- **Multi-campus school names:** "University of California, Berkeley", "UC Berkeley" and "University of California-Berkeley" are treated as the same school, and the same goes for other systems.
+- **Summer availability:** "available for 10 to 12 weeks during the summer" questions answer from your availability setting instead of being flagged.
+- **Work authorization:** "legal right and necessary documentation to work" questions answer from your work-authorization setting.
+- **High school or GED:** answered Yes/No instead of with your highest degree.
 
-### New answers
-- **Employment and regulatory history** (default No): fired, asked to resign or separated by mutual agreement; pending regulator investigations; professional licenses revoked, suspended or surrendered. These questions no longer borrow the government-debarment answer.
-- **Board member, trustee, executor or other fiduciary role** (default No).
-- **Returning to school after the internship** (default Yes): "Do you plan to return to school upon completion of your internship?" was being read as the grad-school question and answered No, and "Will you be returning to school…" got your school's name.
-- **Current employer is a client of the company you're applying to** (default No; always No when you have no current job).
-- **Employed under any other name** (default No). Before, this question was only answered because it happened to match "worked here before", and it was missed when a form misspelled it ("Have you even been…").
-- **Professional license** (default No): "Do you have a valid Insurance License?", real estate, CPA and similar. If you set it to Yes, these questions are left for you, because the tool can't tell which license you hold. Driver's license questions still use their own setting.
-- **High school diploma or GED** (default Yes).
-- **International student** (default No): "Are you an international student?" and "Are you on an F-1 / J-1 student visa?"
-- **Enrollment status** (default Full-time): "Are you currently enrolled in a four-year college?" with Full-time / Part-time / Not attending options now picks your status instead of being flagged for review. "Are you enrolled full-time?" answers from it too.
+### New
+- **New standard answers:** employment and regulatory history (No), board or fiduciary roles (No), returning to school after the internship (Yes), current employer is a client (No), employed under another name (No), professional license (No), high school diploma or GED (Yes), international student (No), and enrollment status (Full-time). Each is editable in the options page.
 
 ## 1.0.0 (2026-10-16)
 
 The first full release. It covers everything built since the project started.
 
 ### The extension
-- Chrome extension (Manifest V3, WXT, TypeScript) that autofills job applications. It never clicks Submit, and all data stays in the browser.
-- **Fill page** button in the toolbar popup and in a floating panel on application pages. The panel checks the page as soon as it loads and re-checks often, so it appears quickly.
-- Uploads the resume first, waits for the site to read it, then fills the rest, keeping anything the site already filled.
-- Picks the resume and skill set from the job title and description, with a manual override in the popup and the panel.
-- Green outlines on filled fields, orange outlines on fields to check, and a review list in the popup that gives the reason for each.
-- Keeps filling new steps and conditional questions as they appear (Workday-style multi-page forms).
-- Recovers cleanly when the extension is reloaded mid-session: catches background failures and cleans up stale page scripts. Open application tabs still need a refresh after a reload.
-- New logo: a resume that says "pls getme ajob".
+- **Autofill:** a Chrome extension (Manifest V3) that fills job applications. It never clicks Submit, and all data stays in the browser.
+- **Fill page:** in the toolbar popup and a floating panel on application pages.
+- **Resume upload first:** uploads the resume, waits for the site to read it, then fills the rest without overwriting what the site filled.
+- **Resume and skill picking:** chosen from the job title and description, with a manual override.
+- **Review highlights:** green for filled fields, orange for fields to check, with the reason in the popup.
+- **Multi-page forms:** keeps filling new steps and follow-up questions as they appear.
+- **Extension reloads:** handled cleanly mid-session; open application tabs still need a refresh.
+- **New logo:** a resume that says "pls getme ajob".
 
 ### Filling fields
-- Handles text boxes, dropdowns, searchable dropdowns, radios, checkboxes, yes/no buttons, rich-text editors, date pickers and shadow DOM, and skips hidden bot-trap fields.
-- Checks that dropdown and radio choices actually registered, and reports rejected selections for review instead of counting them as filled.
-- Fields a site re-renders mid-fill are retried on the second pass instead of being left blank.
-- "Today's date" fields use Pacific time by default instead of UTC, which was a day ahead in the evening. Settings → Time zone changes it.
+- **Every kind of field:** text boxes, dropdowns, searchable dropdowns, radios, checkboxes, yes/no buttons, rich-text editors, date pickers and shadow DOM. Hidden bot-trap fields are skipped.
+- **Verified choices:** dropdown and radio selections are checked, and rejected ones are flagged for review.
+- **Re-rendered fields:** retried on a second pass instead of being left blank.
+- **Today's date:** uses Pacific time by default; change it under Settings → Time zone.
 
 ### Supported sites
-- Dedicated adapters for Greenhouse, Lever, Ashby, SmartRecruiters, Workday, iCIMS and SAP SuccessFactors.
-- Shared-engine support for Workable, Rippling, Dover, Teamtailor, Recruitee, Jobvite, Breezy HR and about 20 more boards, plus a generic label-based fallback for any site.
-- **Workday**
-  - Fills each step.
-  - Adds and fills a panel for each job, school, language, website and skill.
-  - "Meets minimum requirements" always answers Yes.
-  - The phone number goes in the number box, not the extension box.
-  - Language panels fill every proficiency field (comprehension, overall, reading, speaking and writing) and handle the separate "I am fluent in this language" checkbox.
-  - When there's no LinkedIn field, the Websites section lists your portfolio, LinkedIn and GitHub.
-  - The first-page question "Have you previously been employed by <employer>… or associated with the University as a student?" answers from Previously employed (No); the student part is Yes only for a school in your education.
-- **SmartRecruiters**
-  - Supports the `spl-*` web components (radios, selects, autocompletes and multi-select tags).
-  - Finds dropdown labels across nested shadow roots and slotted option text, and clicks the inner option control.
-  - Checks that a radio choice actually registered and tries the inner control if it didn't.
-  - After a resume upload, each parsed school is a closed card; the fill opens the card for each school in your profile, fills Major and Degree, and saves it. Cards for other schools are left alone.
-  - "Confirm your email" is re-checked after the fill and matched to what's actually in the email box, since resume parsing can rewrite the email.
-  - Fixes for school, degree, GPA, government employment, work authorization, sponsorship, referral source, EEO, screening and foreign-residency questions. Leaves the "other university" field empty when your university is listed.
-- **SAP SuccessFactors**
-  - Works for every company on SuccessFactors.
-  - Opens collapsed sections, but never the site's header menus.
-  - Adds a row for each job, school and language and fills it.
-  - Fills the UI5 date pickers.
-  - Answers SuccessFactors-style radio groups.
-  - Never presses Enter or submits the form while filling. This fixes a "Leave site?" prompt that appeared mid-fill.
+- **Dedicated support:** Greenhouse, Lever, Ashby, SmartRecruiters, Workday, iCIMS and SAP SuccessFactors.
+- **Shared support:** Workable, Rippling, Dover, Teamtailor, Recruitee, Jobvite, Breezy HR and about 20 more boards, plus a label-based fallback for any site.
+- **Workday:** fills each step, adds a panel for each job, school, language, website and skill, and handles phone, language proficiency and previous-employment questions.
+- **SmartRecruiters:** supports its web components, school cards, the confirm-email field and its common screening questions.
+- **SAP SuccessFactors:** works for every company on it, opens collapsed sections, adds rows for jobs, schools and languages, and never submits the form while filling.
 - **Ashby:** self-identification forms get your full name.
 
 ### Answers to common questions
-
-**Identity and contact**
-- **Names:** certification/signature fields and plain "Name" fields get your full name. An optional full-name override is in Personal settings.
-- **University email:** questions asking for a university or academic email get a dedicated profile field, falling back to your `.edu` address.
-- **State residency:** answered from your saved address.
-- New answers: email contact consent (Yes) and military spouse (No).
-
-**Work authorization and citizenship**
-- Work authorization, sponsorship and relocation questions.
-- "Can you work … without sponsorship?" and "Authorized to work … without requiring sponsorship?" in any wording answer Yes when you're authorized and don't need sponsorship, instead of being read as the sponsorship question.
-- **US citizen:** picks the US-citizen option on export-control, ITAR and citizenship-status questions, and on any question that offers a US-citizen choice. "This position requires U.S. citizenship; do you meet this qualification?" is answered Yes/No from your citizenship.
-- Other / dual citizenship questions.
-- **Security clearance:** able / eligible / willing to obtain one answers Yes for U.S. citizens; holding one still comes from your profile, and Yes/No clearance lists are handled.
-- **OPT:** separate OPT-status and STEM OPT-extension answers, using N/A or falling back to No. Sponsorship questions that only mention OPT as an example are answered as sponsorship questions.
-
-**Employment history and conflicts**
-- **Always No, at any company and in any wording:**
-  - Currently or formerly employed by or contracting for the company. Answers plain "No", not "None" or "N/A", unless the question is a "select none" list.
-  - Any question about relatives, immediate family, in-laws, a spouse or partner: working at the company, holding a government post, or "such a position". This no longer depends on a setting.
-  - Government entity employee.
-  - Other work while employed there (conflict of interest).
-  - Plans to start a postgraduate degree.
-- Past government / DoD employment questions (post-government employment, NDAA Section 847) answer No, including options like "I have never been employed by the U.S. government…". State/local government employment is also covered.
-- "Have you worked with us before?" answers from Previously employed.
-- "Are you currently employed?" (your employment status) is separate from "Do you work here?".
-- **"If yes" follow-ups:** follow-ups about past employment at the company stay empty when they don't apply. Referral follow-ups ("Were you referred…? If so, provide their name") get your referrer's name or N/A, and relatives' names get N/A.
-
-**Education**
-- **Class standing:** associate years, Freshman through Senior, and graduate levels. "Third year", "3rd year" and "Year 3" match Junior without being confused with degree type or graduation year.
-- **Highest completed education:** answers your completed level (High School Diploma while still studying), even when the question mentions a graduation date.
-- "Currently working towards a Bachelor's or Master's degree?" is answered from your education, not as an employment question.
-- **GPA and graduation:** choices match the right numeric or date range, and long degree and GPA questions no longer receive a graduation date.
-- **Graduation date:** free-text questions are formatted the way they ask. "(Month/Year)" gives "June 2028".
-- **Majors:** tries variations of your major first, then your fallbacks in order. One rule covers every "<Field> Science", "<Field> Engineering" and "<Field> Studies" major: an option must name the whole field, so a bare "Science" or "Engineering" never answers it, and a different field that shares words ("Computer and Information Science" for "Computer Science") is never chosen. An exact option wins over a plural ("Sciences"). A bare head word already selected in Major, or a full degree description mistakenly placed there, is corrected even with overwriting off.
-- **Coursework:** relevant coursework from your education, separating completed courses from those in progress.
-- **High school and tests:** high-school graduation year, test type, SAT/ACT results, further-education plans, and current offers with details.
-
-**Availability, start dates and pay**
-- **Availability:** "Are you available for an internship starting …?", office-location/return-to-office, required work hours and program-duration questions answer Yes.
-- **Start dates:** one start date per season (summer, fall, winter, spring), each set in the options page. Optional nearest-window matching picks the closest listed start date within six months and skips past semesters. When an internship title gives no season, summer is assumed.
-- **Pay:** you set one hourly rate (blank by default).
-  - Annual pay is calculated as hourly × 40 × 52.
-  - Hourly and annual questions get the matching amount.
-  - Salary-range dropdowns get the range that contains it.
-- **Preferred work locations:** an ordered list with first/second/third-choice ranking, common city names, and mapping to U.S. regions when only regions are offered. A California city name followed by another country or region ("Los Angeles, Chile") doesn't count as California; notes like CA, the US, Bay Area, remote, hybrid or on-site may follow it.
-
-**EEO**
-- Blank answers pick the "decline to answer" option. A "Disabled" dropdown is recognized as the disability question.
-- **Veteran status** is read by meaning in any wording ("I identify as a veteran, just not a protected veteran", "Non-Protected Veteran", "Veteran - Not Protected", "I have served… but am not protected"). "I am not a protected veteran" picks "I am not a veteran" and never an option saying you are a veteran.
-- **Race:** profile options include South Asian, East Asian and Southeast Asian, defined in one table. Forms that list the subgroup (or another spelling such as "Asian Indian") get it; forms that don't get "Asian". A subgroup never matches a neighboring subgroup or American Indian, and East Asian never matches "South East Asian".
-
-**Other questions**
-- Referral source, agreements, internship terms, driver's license, travel percentage, phone/text consent, debarment, U.S. government consulting, hiring-event attendance and unlisted-reference consent, each answered from its own setting.
-- **Application source:** "How did you hear about us?", "Where did you first learn about this job?", "Source", "What led you to apply?" and "source of your application" try your sources in order (LinkedIn, then the company careers website by default), choosing one even in checkbox lists. The careers-website fallback accepts "Career Site", "Corporate website", "<Company> Careers", "<Company>.com" and similar, and isn't confused with career fairs.
-- **Acknowledgments:** statement questions pick the affirmative option (Understand, Understood, Acknowledged, Agree or Yes), even when it's the only one listed. Call/text consent is answered separately, and personal statements and self-assessment questions are never blanket-agreed.
-- Background checks and drug screens, identity verification upon hire (Yes), and essential functions with or without accommodation.
-- **AI review consent:** "We may use automated tools such as AI to review your application… you can opt out" questions answer from a new setting, Yes by default.
-- **Languages:** tries only "Native" / "Native speaker", then "Fluent", and moves on if neither is offered. With no in-between levels, typeahead dropdowns are fast.
-- **New rules:** referrer name, publications, and self-assessment statements.
-- **Manual-review settings:** business-line preferences and experience/proficiency levels can be left for you to answer.
-- **"Why are you interested?" questions** are left for you instead of getting a canned answer. There are no per-question saved answers; the standard-answer rules cover them.
+- **Identity and contact:** names, university email, state residency, email consent and military spouse.
+- **Work authorization and citizenship:** authorization, sponsorship, relocation, US citizenship, export control, security clearance and OPT.
+- **Employment history and conflicts:** past employment at the company, relatives at the company or in government, government employment and other conflicts answer No, and "if yes" follow-ups stay empty.
+- **Education:** class standing, highest completed level, GPA and graduation ranges, graduation date formats, majors with fallbacks, coursework, and high school and test scores.
+- **Availability, start dates and pay:** availability questions, a start date per season, one hourly rate converted for annual and range questions, and ranked preferred locations.
+- **EEO:** blank answers pick "decline to answer", veteran status is read by meaning in any wording, and race subgroups pick the subgroup when listed and the broad category otherwise.
+- **Other questions:** referral source, how you heard about the job, acknowledgments, background checks, AI review consent and languages, each from its own setting. "Why are you interested?" questions are left for you.
 
 ### Matching accuracy ("green means certain")
-- A field is marked green only for an exact answer, a known synonym, a clear Yes/No, or a deliberate fallback. Fuzzy word overlap is always orange.
-- Options that mean the opposite of your answer are never chosen, however many words they share ("I am a protected veteran" vs "I am not…", "Not Hispanic" vs "Hispanic").
-- Hedged options ("Yes, but I will need sponsorship later") and near-ties between two options are never green.
-- Whole-word matching only: "Female" no longer matches "Male"; spelling-level similarity is used only for long names like schools.
-- The location rule ("San Francisco, CA" in "San Francisco, California, United States") only applies to places. It was matching statements, which is how a veteran option was picked and marked green.
-- Questions are matched on the sentence that asks something, then without parenthetical notes, then the full label, so legal background ("military departments", "(select No if…)") can't decide the answer.
-- Numbered questions ("6. Do you hold…") are read the same as unnumbered ones.
-- Majors, race subgroups and locations use general rules rather than special cases for particular values, so every profile gets the same behavior.
+- **Green only when certain:** an exact answer, a known synonym, a clear Yes/No or a deliberate fallback. Fuzzy matches are always orange.
+- **No opposite or hedged answers:** options that mean the opposite of your answer, or hedge it, are never chosen as certain.
+- **Whole-word matching:** "Female" no longer matches "Male".
+- **Question parsing:** questions are matched on the sentence that asks something, so legal background and numbering can't decide the answer.
+- **General rules:** majors, race subgroups and locations use the same rules for every profile, not special cases.
 
 ### Profile and settings
-- Complete profile: personal info, links, education, experience, projects, languages, standard answers, EEO and skill sets. Personal fields start empty with example placeholders (Ada Lovelace). Standard answers come prefilled with common defaults, except pay, start dates, graduation details and publications.
-- **Skills:** one skill set per kind of role (for example SWE or Data), each with its own skills, picked by job-title keywords.
-- **Options page:**
-  - Every answer listed above is editable, and edits are saved and used by autofill.
-  - Clear dividers and header bars between sections.
-  - Pay field with a live annual-pay preview.
-  - Seasonal start-date overrides.
-- **Removed:**
-  - The automatic "California" preferred location.
-  - "Completed" from coursework.
-  - Resume tags.
-  - The separate resume skills list, which is now merged into Skill sets.
-- "Resume" is spelled without accents everywhere.
+- **Complete profile:** personal info, links, education, experience, projects, languages, standard answers, EEO and skill sets. Personal fields start empty; standard answers start with common defaults.
+- **Skill sets:** one per kind of role, picked by job-title keywords.
+- **Options page:** every answer is editable, with a live annual-pay preview and seasonal start dates.
+- **Removed:** the automatic "California" location, "Completed" from coursework, resume tags and the separate resume skills list.
 
 ### Privacy and Chrome Web Store
-- No network requests: the AI answer step and the Claude Code helper were removed, along with the `nativeMessaging` permission and the Anthropic SDK.
-- The profile is no longer built into the extension from a local folder; move it between browsers with Backup → Export / Import.
-- Privacy policy (`PRIVACY.md`), store listing text and permission justifications (`store/LISTING.md`), and `npm run store-assets` for screenshots and the promo tile, using a fictional profile and a neutral demo form.
+- **No network requests:** the AI answer step and the Claude Code helper were removed, along with the `nativeMessaging` permission.
+- **Profile in the browser:** no longer built in from a local folder; move it with Backup → Export / Import.
+- **Store materials:** privacy policy, listing text, permission justifications and `npm run store-assets` for screenshots.
 
 ### Development
-- **Capture page** in the popup and the floating panel saves an HTML snapshot of a form, including shadow DOM and without typed values, so support for a site can be fixed. It's a developer tool, hidden unless you turn it on under Settings → Developer. `npm run pull-captures` moves snapshots from Downloads into the git-ignored `captures/` folder, once or continuously with `--watch`.
-- Regression tests for matching rules, captured forms and settings persistence: 649 tests passing, plus TypeScript checks and production builds.
-- `tests/questionBank.test.ts`: about 140 wordings across 18 question types, plus realistic option lists, each with the answer it must give and whether it may be green.
-- Test fixtures are anonymized: employer names, domains, job-board slugs, job IDs and capture URLs are replaced with "Acme" / example.com, and fixtures are named by ATS (`greenhouse-a`, `workday-b-1`). The fictional test profile uses no real person's school, location, dates or job titles.
-- `npm run live-test` needs the application URLs you want to test; it no longer ships a default list of real postings.
-- README rewritten to cover features, settings, matching behavior, supported sites and install steps, with credits kept.
-- Version set to 1.0.0.
+- **Capture page:** a developer option that saves an HTML snapshot of a form for fixing a site, with `npm run pull-captures` to collect them.
+- **Tests:** 649 tests, including about 140 question wordings in `tests/questionBank.test.ts`, plus TypeScript checks and builds. Test fixtures are anonymized.
+- **Live tests:** `npm run live-test` takes the application URLs you want to test.
+- **README:** rewritten to cover features, supported sites and install steps.

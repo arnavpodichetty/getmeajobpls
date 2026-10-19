@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { countMatches, pickResume } from '../src/lib/resumeRules';
-import type { ResumeMeta, ResumeRule } from '../src/lib/types';
+import { countMatches, pickResume, pickSkillSetFor, skillSetForResume } from '../src/lib/resumeRules';
+import type { ResumeMeta, ResumeRule, SkillSet } from '../src/lib/types';
 
 const resume = (id: string, isDefault = false): ResumeMeta => ({
   id,
@@ -92,5 +92,42 @@ describe('pickResume', () => {
   it('skips rules pointing at deleted resumes', () => {
     const stale: ResumeRule[] = [{ id: 'x', keywords: ['software'], resumeId: 'gone' }, ...rules];
     expect(pickResume(resumes, stale, { title: 'Software Engineer', text: '' })?.resumeId).toBe('swe');
+  });
+});
+
+describe('skill set follows the resume', () => {
+  const set = (id: string, name: string, extra: Partial<SkillSet> = {}): SkillSet => ({ id, name, keywords: [], skills: [], isDefault: false, ...extra });
+  const named = (id: string, name: string, extra: Partial<ResumeMeta> = {}): ResumeMeta => ({ ...resume(id), name, ...extra });
+  const lib = [named('r-ml', 'AI/ML'), named('r-data', 'Data'), named('r-pm', 'PM'), named('r-tail', 'Data · tailored', { tailoredFrom: 'r-data' })];
+
+  it('uses the set linked to the resume, even when names differ', () => {
+    const sets = [set('s-a', 'Analytics', { resumeId: 'r-data' }), set('s-data', 'Data')];
+    expect(skillSetForResume(sets, lib, 'r-data')).toBe('s-a');
+  });
+
+  it('pairs unlinked sets by name, including partial names like ML and AI/ML', () => {
+    const sets = [set('s-data', 'Data'), set('s-ml', 'ML'), set('s-pm', 'pm')];
+    expect(skillSetForResume(sets, lib, 'r-ml')).toBe('s-ml');
+    expect(skillSetForResume(sets, lib, 'r-data')).toBe('s-data');
+    expect(skillSetForResume(sets, lib, 'r-pm')).toBe('s-pm');
+  });
+
+  it('a tailored copy goes with the set of the resume it came from', () => {
+    expect(skillSetForResume([set('s-data', 'Data'), set('s-ml', 'ML')], lib, 'r-tail')).toBe('s-data');
+  });
+
+  it('does not guess when several sets could match', () => {
+    expect(skillSetForResume([set('a', 'ML Research'), set('b', 'Applied ML')], lib, 'r-ml')).toBeNull();
+  });
+
+  it('the resume decides, not the skill set keywords', () => {
+    // "data" in the title would pick the Data set by keywords, but the picked resume is AI/ML.
+    const sets = [set('s-data', 'Data', { keywords: ['data'] }), set('s-ml', 'ML', { keywords: ['machine learning'] })];
+    expect(pickSkillSetFor(sets, lib, 'r-ml', { title: 'Data Scientist', text: '' })).toBe('s-ml');
+  });
+
+  it('falls back to keywords only for a resume with no matching set', () => {
+    const sets = [set('s-swe', 'SWE', { keywords: ['software'] })];
+    expect(pickSkillSetFor(sets, lib, 'r-pm', { title: 'Software Engineer', text: '' })).toBe('s-swe');
   });
 });

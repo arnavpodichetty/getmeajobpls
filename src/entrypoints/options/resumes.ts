@@ -58,7 +58,7 @@ export async function resumeSection(): Promise<HTMLElement> {
         mimeType: 'application/pdf',
         size: file.size,
         uploadedAt: Date.now(),
-        isDefault: resumes.length === 0,
+        isDefault: !resumes.some((r) => !r.tailoredFrom),
         blob: file,
       });
       resumes = await listResumes();
@@ -133,7 +133,8 @@ export async function resumeSection(): Promise<HTMLElement> {
               if (!confirm(`Delete "${meta.name}"?`)) return;
               await deleteResume(meta.id);
               resumes = await listResumes();
-              if (meta.isDefault && resumes[0]) await setDefaultResume(resumes[0].id);
+              const next = resumes.find((r) => !r.tailoredFrom);
+              if (meta.isDefault && next) await setDefaultResume(next.id);
               resumes = await listResumes();
               draw();
             },
@@ -165,9 +166,61 @@ export async function resumeSection(): Promise<HTMLElement> {
     fileInput,
   );
 
+  /** One compact row per tailored copy; they're picked from the on-page panel, never as the default or by rules. */
+  function tailoredRow(meta: ResumeMeta): HTMLElement {
+    const date = new Date(meta.uploadedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const base = resumes.find((r) => r.id === meta.tailoredFrom)?.name;
+    return h(
+      'div',
+      { class: 'tailored-row' },
+      h('span', { class: 'card-title' }, meta.tailoredFor ?? meta.name, h('span', { class: 'muted' }, ` · ${base ? `from ${base} · ` : ''}${date} · ${formatSize(meta.size)}`)),
+      h('button', { class: 'ghost', onClick: () => open(meta) }, 'Open'),
+      h(
+        'button',
+        {
+          class: 'ghost danger',
+          onClick: async () => {
+            await deleteResume(meta.id);
+            resumes = await listResumes();
+            draw();
+          },
+        },
+        'Delete',
+      ),
+    );
+  }
+
+  let tailoredOpen = false;
   function draw() {
+    const own = resumes.filter((r) => !r.tailoredFrom);
+    const tailored = resumes.filter((r) => r.tailoredFrom).sort((a, b) => b.uploadedAt - a.uploadedAt);
+    const box = h(
+      'details',
+      { class: 'tailored', open: tailoredOpen },
+      h('summary', {}, `Tailored resumes (${tailored.length})`),
+      h(
+        'div',
+        { class: 'tailored-list' },
+        ...tailored.map(tailoredRow),
+        h(
+          'button',
+          {
+            class: 'ghost danger',
+            onClick: async () => {
+              if (!confirm(`Delete all ${tailored.length} tailored resumes?`)) return;
+              for (const r of tailored) await deleteResume(r.id);
+              resumes = await listResumes();
+              draw();
+            },
+          },
+          'Delete all',
+        ),
+      ),
+    );
+    box.addEventListener('toggle', () => (tailoredOpen = box.open));
     list.replaceChildren(
-      ...(resumes.length ? resumes.map(card) : [h('p', { class: 'muted' }, 'No resumes yet.')]),
+      ...(own.length ? own.map(card) : [h('p', { class: 'muted' }, 'No resumes yet.')]),
+      ...(tailored.length ? [box] : []),
     );
     onLibraryChange();
   }
@@ -197,9 +250,10 @@ export async function rulesSection(rules: ResumeRule[]): Promise<HTMLElement> {
         },
       },
       h('option', { value: '' }, '— choose resume —'),
-      ...resumes.map((r) => h('option', { value: r.id }, r.name)),
+      ...resumes.filter((r) => !r.tailoredFrom).map((r) => h('option', { value: r.id }, r.name)),
     );
-    sel.value = rule.resumeId;
+    // A rule pointing at a deleted resume shows "choose resume" instead of a blank box.
+    sel.value = resumes.some((r) => r.id === rule.resumeId && !r.tailoredFrom) ? rule.resumeId : '';
     return sel;
   }
 

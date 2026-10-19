@@ -1,64 +1,57 @@
 # getmeajobpls
 
-A Chrome extension that autofills job applications. Open an application, click **Fill page**, and it uploads your resume and answers the form from your profile.
+A Chrome extension that autofills job applications. Open an application, click **Fill page**, and it uploads your resume and answers the form from your profile. It never clicks Submit, and everything stays in your browser.
 
-It never clicks Submit. Everything stays in your browser. Your profile and resumes are stored locally, and nothing is sent anywhere.
+![A form filled by getmeajobpls, with filled fields outlined in green and the Fill page panel on the right](store/screenshot-4-filled-form.png)
+
+![The options page, where you set up your profile](store/screenshot-1-profile.png)
 
 ## Features
 
-- **One-click fill**: a **Fill page** button on the page (or in the toolbar popup) fills the whole form from top to bottom. Close the on-page panel with **×** to hide it and stop autofill on that page.
-- **Resume upload first**: attaches your resume, waits for the site to read it, then fills what's left. Fields the site already filled are kept.
-- **Resume and skill rules**: picks the right resume and skill set for each job from keywords in the title and description (e.g. `software` → SWE resume).
-- **Review highlights**: filled fields get a green outline. Fields that need a check get an orange outline and show up in the popup with the reason.
-- **Multi-page forms**: keeps filling each new step as you move through Workday-style flows.
-- **Saved answers**: answer a custom question once, click **Save my answers from this page**, and similar questions on later forms are filled for you.
-- **Smart matching**: handles different spellings of schools, degrees, majors (with fallbacks), states, countries, dates, GPA and graduation ranges, yes/no wordings, and decline options.
-- **Standard questions**: work authorization, sponsorship, US citizen and export-control status, employment and regulatory history, board or trustee roles, relocation, start dates and internship terms, class standing, test scores, referral source, agreements, and more. All of these are editable on the options page.
-- **EEO questions**: blank answers become the form's "decline to answer" option. Race subgroups (e.g. East Asian) pick the subgroup when listed and the broad category otherwise.
-- **Location preferences**: ranks offered office locations by your preferred states and cities, if you set them.
-- **Every kind of field**: text boxes, dropdowns, searchable dropdowns, radios, checkboxes, yes/no buttons, rich-text editors and date pickers, including inside shadow DOM. It also skips hidden bot-trap fields.
-- **Page capture (developer)**: turn on **Settings → Developer → Show "Capture page" button** to save a snapshot of a form, so support for a site can be fixed. Snapshots download to your Downloads folder; `npm run pull-captures` moves them into the git-ignored `captures/` folder (add `-- --watch` to keep moving new ones).
+- **One-click fill** from a panel on the page or the toolbar popup. Uploads your resume first, then fills the rest without overwriting what the site already filled.
+- **Picks the right resume and skills** for each job from keywords in the title and description.
+- **Review highlights**: green for filled, orange for fields to check, with the reason in the popup.
+- **Multi-page forms**: keeps filling each new step of Workday-style flows.
+- **Saved answers**: answer a custom question once and similar questions are filled later.
+- **Standard and EEO questions**: work authorization, sponsorship, relocation, start dates, referral source and more, all editable. Blank EEO answers become "decline to answer".
+- **Every kind of field**, including searchable dropdowns, rich-text editors, date pickers and shadow DOM.
+- **Resume tailoring (optional)**: rewrites a resume for the posting with your own Claude account. See [below](#resume-tailoring).
 
 ## Supported sites
 
 | Site | Support |
 | --- | --- |
-| Greenhouse | Dedicated support, tested live |
-| Lever | Dedicated support, tested live |
-| Ashby | Dedicated support, tested live |
-| SmartRecruiters | Dedicated support, tested live |
-| Workday | Dedicated support for each step, repeating sections and skills |
-| iCIMS | Dedicated support |
-| SAP SuccessFactors | Dedicated support: opens sections and adds a row for each job, school and language |
+| Greenhouse, Lever, Ashby, SmartRecruiters | Dedicated, tested live |
+| Workday, iCIMS, SAP SuccessFactors | Dedicated |
 | Workable, Rippling, Dover, Teamtailor, Recruitee, Jobvite, Breezy HR | Supported and tested |
-| BambooHR, JazzHR, Taleo, Oracle Recruiting, ADP, UKG, Dayforce, Paylocity, Phenom, Eightfold, Avature, Pinpoint, Personio, Wellfound, Gem, Comeet, JobScore, Freshteam, Zoho Recruit, Cornerstone | Supported, not yet tested live |
-| Any other site | Generic support that matches fields by their labels |
+| BambooHR, JazzHR, Taleo, Oracle, ADP, UKG, Dayforce, Paylocity, Phenom, Eightfold, Avature and more | Supported, not yet tested live |
+| Any other site | Generic, matches fields by their labels |
 
 ## Install
 
-Requires Node 20+ and Google Chrome (or another Chromium browser).
+Requires Node 20+ and Chrome (or another Chromium browser).
 
-1. Install and build:
-   ```sh
-   npm install
-   npm run build
-   ```
-2. Open `chrome://extensions` and turn on **Developer mode**.
-3. Click **Load unpacked** and select the `.output/chrome-mv3` folder.
-4. Pin the extension from the puzzle-piece menu.
-5. Fill in your profile and upload your resumes on the options page, which opens on install or from the popup's **Profile ↗** link.
+```sh
+npm install
+npm run build
+```
 
-After rebuilding, click ↻ on the extension in `chrome://extensions` and reload any open application pages.
+Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick `.output/chrome-mv3`. Fill in your profile and upload your resumes on the options page.
 
-To move your profile to another browser or computer, use **Backup → Export JSON** (tick **Include resume PDFs**) and **Import JSON…** on the other side.
+After rebuilding, click ↻ on the extension and reload open application pages. To move to another browser, use **Backup → Export JSON** and **Import JSON…**.
+
+## Resume tailoring
+
+Optional. **Tailor resume** rewrites the selected resume for a posting from your resume and profile, using your own Claude account through [Claude Code](https://claude.com/claude-code) (no API key), and keeps it to one page. To set it up, open **Resume tailoring** on the options page and follow the steps there.
+
+<img src="docs/tailored-resume.png" alt="A tailored resume for a fictional applicant" width="600">
+
+> **Always read a tailored resume before you submit it.** It is written by AI, which can get things wrong.
 
 ## Privacy
 
-Everything you enter is stored only in your browser. The extension makes no network requests of its own; your information goes to an employer only when you submit an application yourself. See [PRIVACY.md](PRIVACY.md).
+Everything is stored only in your browser, and the extension makes no network requests of its own. Resume tailoring, if you turn it on, sends the resume, the job page's text and your profile to Claude through your own Claude Code. See [PRIVACY.md](PRIVACY.md).
 
 ## Credits
 
 Designed and built by [Arnav Podichetty](https://github.com/arnavpodichetty).
-
-Workday's step names and `data-automation-id` conventions were cross-checked against
-[Autofill-Jobs](https://github.com/andrewmillercode/Autofill-Jobs) (MIT). No code was copied.

@@ -60,6 +60,8 @@ export interface SkillSet {
   skills: string[];
   /** Used when no set's keywords match the job. */
   isDefault: boolean;
+  /** The resume this set goes with; picking that resume picks this set. '' = match by name. */
+  resumeId?: string;
 }
 
 export interface SavedAnswer {
@@ -101,6 +103,8 @@ export interface Profile {
   projects: Project[];
   skills: string[];
   skillSets: SkillSet[];
+  /** Every skill you have, only for resume tailoring to pick from; never filled into forms. */
+  tailoringSkills: string[];
   languages: Language[];
   answers: {
     workAuthorized: YesNo;
@@ -199,6 +203,14 @@ export interface ResumeMeta {
   size: number;
   uploadedAt: number;
   isDefault: boolean;
+  /** Set on resumes made by "Tailor resume": the resume it was tailored from. */
+  tailoredFrom?: string;
+  /** The job it was tailored for, e.g. "Data Engineering Intern · Hooli". */
+  tailoredFor?: string;
+  /** The page it was tailored on; the same job reuses this copy (see tailorMatch.ts). */
+  tailoredUrl?: string;
+  /** Claude's change notes and the bullets that were put back, shown again when the copy is reused. */
+  tailorNotes?: { changes: string[]; warnings: string[] };
 }
 
 export interface ResumeRecord extends ResumeMeta {
@@ -227,6 +239,8 @@ export interface Settings {
   showCaptureButton: boolean;
   /** IANA time zone for "today" on date fields; '' uses the computer's. */
   timeZone: string;
+  /** Show "Tailor resume" (needs the local Claude Code helper). */
+  tailorEnabled: boolean;
 }
 
 export type FieldStatus = 'filled' | 'review' | 'skipped';

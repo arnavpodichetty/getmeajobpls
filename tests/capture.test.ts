@@ -39,7 +39,7 @@ function showPanel(showCapture = true) {
   const panel = new FillPanel();
   panel.show({
     kind: 'state', connected: true, isApplication: true, atsLabel: 'Workday',
-    resumes: [], pickedResumeId: null, pickReason: '', skillSets: [], pickedSkillSetId: null, showCapture,
+    resumes: [], pickedResumeId: null, pickReason: '', skillSets: [], pickedSkillSetId: null, skillSetByResume: {}, showCapture, canTailor: false,
   });
   return panelRoot.querySelector<HTMLButtonElement>('.capture')!;
 }
@@ -106,7 +106,7 @@ describe('Closing the panel', () => {
     const panel = new FillPanel(onDismiss);
     const state = {
       kind: 'state' as const, connected: true, isApplication: true, atsLabel: 'Greenhouse',
-      resumes: [], pickedResumeId: null, pickReason: '', skillSets: [], pickedSkillSetId: null, showCapture: false,
+      resumes: [], pickedResumeId: null, pickReason: '', skillSets: [], pickedSkillSetId: null, skillSetByResume: {}, showCapture: false, canTailor: false,
     };
     panel.show(state);
     panelRoot.querySelector<HTMLButtonElement>('button[title="Hide on this page"]')!.click();

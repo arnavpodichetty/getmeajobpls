@@ -1,14 +1,17 @@
 import './style.css';
+import { browser } from 'wxt/browser';
 import { TIME_ZONES } from '../../lib/clock';
 import { ACADEMIC_YEARS } from '../../lib/engine/academicYear';
 import { payExpectation } from '../../lib/engine/answers';
 import { $, h } from '../../lib/dom';
 import { emptyEducation, emptyExperience, emptyLanguage, emptyProject, emptySavedAnswer, emptySkillSet } from '../../lib/defaults';
+import { listResumes } from '../../lib/resumeDb';
 import { loadProfile, loadRules, loadSettings, saveProfile, saveSettings } from '../../lib/storage';
-import type { Profile, Settings } from '../../lib/types';
+import type { Profile, ResumeMeta, Settings } from '../../lib/types';
 import { backupSection } from './backup';
 import { checkboxField, grid, listField, selectField, textArea, textField } from './fields';
 import { resumeSection, rulesSection } from './resumes';
+import { tailoringSection } from './tailoring';
 import { debounce } from './toast';
 
 // ---------------------------------------------------------------------------
@@ -58,6 +61,8 @@ const EXPERIENCE_TYPES: [string, string][] = [
 
 let profile: Profile;
 let settings: Settings;
+/** Your resumes (not tailored copies), for linking skill sets to them. */
+let ownResumes: ResumeMeta[] = [];
 const saveP = debounce(() => saveProfile(profile));
 const saveS = debounce(() => saveSettings(settings));
 
@@ -245,7 +250,7 @@ function profileSections(): HTMLElement[] {
     section(
       'skills',
       'Skill sets',
-      'The skills for each kind of role, used for skills fields and typeaheads. The job title picks the set, the same way it picks a resume, and you can switch it in the popup or the on-page panel.',
+      'The skills for each kind of role, used for skills fields and typeaheads. Each set goes with a resume: picking a resume picks its set, so the two always start out matching. Link them with "Use with resume", or leave it on "Match by name" to pair sets and resumes with matching names (e.g. "ML" and "AI/ML"). Keywords are only used for a resume with no set. You can still switch either one in the popup or the on-page panel.',
       repeatable(
         p.skillSets,
         emptySkillSet,
@@ -256,8 +261,9 @@ function profileSections(): HTMLElement[] {
             {},
             grid(
               textField('Name', x, 'name', s, { placeholder: 'SWE' }),
-              listField('Job-title keywords', x, 'keywords', s, { placeholder: 'software, backend, full stack' }),
+              selectField('Use with resume', x, 'resumeId', [['', 'Match by name'], ...ownResumes.map((r): [string, string] => [r.id, r.name])], s),
               checkboxField('Use when nothing matches', x, 'isDefault', s),
+              listField('Job-title keywords', x, 'keywords', s, { placeholder: 'software, backend, full stack' }),
             ),
             listField('Skills', x, 'skills', s, { placeholder: 'Python, Java, SQL' }),
           ),
@@ -265,6 +271,14 @@ function profileSections(): HTMLElement[] {
       ),
       h('h3', {}, 'Fallback skills'),
       listField('Used only if you have no skill sets', p, 'skills', s, { placeholder: 'Python, SQL' }),
+      h('h3', {}, 'Skills for tailoring only'),
+      h(
+        'p',
+        { class: 'hint' },
+        'Every skill you have, as long as you like, comma- or line-separated. Resume tailoring picks the few a posting asks for and adds them to the matching skill line; ' +
+          'they are never filled into application forms, so a long list here doesn\'t turn into a skill dump.',
+      ),
+      listField('All skills', p, 'tailoringSkills', s, { placeholder: 'Python, SQL, Airflow, dbt, Spark, Tableau, Excel, A/B testing, …', multiline: true, rows: 6 }),
     ),
     section(
       'languages',
@@ -427,19 +441,78 @@ function settingsSection(): HTMLElement {
   );
 }
 
-function credits(): HTMLElement {
-  return h(
-    'footer',
-    { class: 'credits' },
-    h('p', {}, 'getmeajobpls was designed and built by ', h('a', { href: 'https://github.com/arnavpodichetty', target: '_blank', rel: 'noopener' }, 'Arnav Podichetty'), '.'),
+const REPO = 'https://github.com/arnavpodichetty/getmeajobpls';
+
+function link(href: string, text: string): HTMLAnchorElement {
+  return h('a', { href, target: '_blank', rel: 'noopener' }, text);
+}
+
+/** Version, links, and every credit, at the bottom of the page. */
+function creditsSection(): HTMLElement {
+  return section(
+    'credits',
+    'Credits',
+    null,
     h(
       'p',
       {},
-      'Workday step names and data-automation-id conventions were cross-checked against ',
-      h('a', { href: 'https://github.com/andrewmillercode/Autofill-Jobs', target: '_blank', rel: 'noopener' }, 'Autofill-Jobs'),
-      ' (MIT). No code was copied.',
+      h('strong', {}, `getmeajobpls ${browser.runtime.getManifest().version}`),
+      ' — designed and built by ',
+      link('https://github.com/arnavpodichetty', 'Arnav Podichetty'),
+      '.',
+    ),
+    h('p', { class: 'about-links' }, link(REPO, 'Source code'), link(`${REPO}/blob/main/CHANGELOG.md`, 'Changelog'), link(`${REPO}/blob/main/PRIVACY.md`, 'Privacy policy')),
+    h(
+      'ul',
+      { class: 'credits' },
+      h(
+        'li',
+        {},
+        'Workday step names and data-automation-id conventions were cross-checked against ',
+        link('https://github.com/andrewmillercode/Autofill-Jobs', 'Autofill-Jobs'),
+        ' (MIT). No code was copied.',
+      ),
+      h(
+        'li',
+        {},
+        'Resume tailoring runs ',
+        link('https://claude.com/claude-code', 'Claude Code'),
+        ' by Anthropic on your computer, under your own Claude account. getmeajobpls is not affiliated with or endorsed by Anthropic.',
+      ),
+      h(
+        'li',
+        {},
+        'Tailored resumes follow the layout of ',
+        link('https://github.com/jakegut/resume', "Jake's resume template"),
+        ' (MIT), rebuilt in HTML and CSS; no code was copied.',
+      ),
+      h(
+        'li',
+        {},
+        'Tailored resumes are set in Computer Modern by Donald Knuth, using the ',
+        link('https://github.com/stevenpetryk/computer-modern', 'CMU fonts'),
+        ' (SIL Open Font License).',
+      ),
     ),
   );
+}
+
+/** Light / dark switch at the bottom of the sidebar. Dark is the default; the choice is kept in this browser. */
+function themeToggle(): HTMLElement {
+  const root = document.documentElement;
+  const buttons = (['dark', 'light'] as const).map((theme) =>
+    h('button', { type: 'button', 'data-theme-choice': theme, onClick: () => set(theme) }, theme === 'dark' ? '☾ Dark' : '☀ Light'),
+  );
+  const sync = () => buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeChoice === (root.dataset.theme ?? 'dark'))));
+  function set(theme: 'dark' | 'light') {
+    root.dataset.theme = theme;
+    try {
+      localStorage.setItem('theme', theme);
+    } catch {}
+    sync();
+  }
+  sync();
+  return h('div', { class: 'theme-toggle', role: 'group', 'aria-label': 'Theme' }, ...buttons);
 }
 
 const NAV: [string, string][] = [
@@ -458,19 +531,23 @@ const NAV: [string, string][] = [
   ['#Files', ''],
   ['resumes', 'Resumes'],
   ['rules', 'Resume rules'],
+  ['tailoring', 'Resume tailoring'],
   ['#App', ''],
   ['settings', 'Settings'],
   ['backup', 'Backup'],
+  ['credits', 'Credits'],
 ];
 
 export async function renderAll(): Promise<void> {
   [profile, settings] = await Promise.all([loadProfile(), loadSettings()]);
+  ownResumes = (await listResumes()).filter((r) => !r.tailoredFrom);
   const rules = await loadRules();
   $('#nav').replaceChildren(
     h('div', { class: 'brand' }, h('img', { class: 'logo', src: '/icon/48.png', alt: '' }), 'getmeajobpls'),
     ...NAV.map(([id, label]) =>
       id.startsWith('#') ? h('div', { class: 'nav-group' }, id.slice(1)) : h('a', { href: `#${id}`, 'data-section': id }, label),
     ),
+    themeToggle(),
   );
   $('#main').replaceChildren(
     h(
@@ -482,9 +559,10 @@ export async function renderAll(): Promise<void> {
     ...profileSections(),
     await resumeSection(),
     await rulesSection(rules),
+    tailoringSection(settings, saveS),
     settingsSection(),
     backupSection(renderAll),
-    credits(),
+    creditsSection(),
   );
 }
 
@@ -492,8 +570,17 @@ export async function renderAll(): Promise<void> {
 function trackActiveSection(): void {
   const links = [...document.querySelectorAll<HTMLAnchorElement>('nav a[data-section]')];
   let frame = 0;
+  // A section you click stays highlighted until you scroll yourself. Sections near
+  // the end can't scroll to the top, so position alone would highlight the last one.
+  let clicked: string | null = null;
+  for (const a of links) a.addEventListener('click', () => { clicked = a.dataset.section ?? null; update(); });
+  for (const type of ['wheel', 'touchmove', 'keydown'] as const) window.addEventListener(type, () => (clicked = null), { passive: true });
   const update = () => {
     frame = 0;
+    if (clicked) {
+      for (const a of links) a.classList.toggle('active', a.dataset.section === clicked);
+      return;
+    }
     const sections = [...document.querySelectorAll<HTMLElement>('main section[id]')];
     const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
     let current = sections[0]?.id;

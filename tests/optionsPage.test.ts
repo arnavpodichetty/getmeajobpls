@@ -10,6 +10,8 @@ import { resolveAnswer } from '../src/lib/engine/answers';
 
 beforeAll(async () => {
   fakeBrowser.reset();
+  // The fake browser has no manifest; Credits shows the version from it.
+  vi.spyOn(fakeBrowser.runtime, 'getManifest').mockReturnValue({ manifest_version: 3, name: 'getmeajobpls', version: '1.1.0' });
   await putResume({
     id: 'r1', name: 'SWE resume', tags: ['SWE'], skills: ['SQL'], fileName: 'swe.pdf',
     mimeType: 'application/pdf', size: 1000, uploadedAt: 1, isDefault: true, blob: new Blob(['%PDF']),
@@ -21,11 +23,18 @@ beforeAll(async () => {
 });
 
 describe('options page', () => {
+  it('ends with Credits, showing the version', () => {
+    const about = document.querySelector('#credits')!;
+    expect(about.textContent).toContain('getmeajobpls 1.1.0');
+    expect(about.textContent).toContain('Autofill-Jobs');
+    expect(about.textContent).toContain('not affiliated with or endorsed by Anthropic');
+  });
+
   it('renders every section', () => {
     const ids = [...document.querySelectorAll('section')].map((s) => s.id);
     expect(ids).toEqual([
       'personal', 'links', 'education', 'experience', 'projects', 'skills', 'languages', 'answers', 'eeo',
-      'saved-answers', 'resumes', 'rules', 'settings', 'backup',
+      'saved-answers', 'resumes', 'rules', 'tailoring', 'settings', 'backup', 'credits',
     ]);
   });
 

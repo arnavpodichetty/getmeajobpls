@@ -7,7 +7,8 @@ import { uid } from './defaults';
 import { mergeSavedAnswers } from './engine/capture';
 import { sendToFrame, type FrameInfo } from './messages';
 import { listResumes } from './resumeDb';
-import { pickResume, pickSkillSet } from './resumeRules';
+import { pickResume, pickSkillSetFor, skillSetForResume } from './resumeRules';
+import { findTailored, jobLabel } from './tailorMatch';
 import { loadProfile, loadRules, loadSettings, saveProfile } from './storage';
 import type { FillReport, ResumeMeta } from './types';
 
@@ -20,13 +21,17 @@ export interface TabState {
   atsLabel: string;
   /** True when the page looks like an application form worth showing the panel for. */
   isApplication: boolean;
-  resumes: Pick<ResumeMeta, 'id' | 'name' | 'tags'>[];
+  resumes: Pick<ResumeMeta, 'id' | 'name' | 'tags' | 'tailoredFrom'>[];
   pickedResumeId: string | null;
   pickReason: string;
   skillSets: { id: string; name: string }[];
   pickedSkillSetId: string | null;
+  /** Skill set that goes with each resume, so changing the resume changes the skills to match. */
+  skillSetByResume: Record<string, string>;
   /** Developer setting: show "Capture page". */
   showCapture: boolean;
+  /** Resume tailoring is turned on (Options → Resume tailoring). */
+  canTailor: boolean;
 }
 
 /** Ask every frame's content script what it sees; frames without one are skipped. */
@@ -52,18 +57,9 @@ export function describe(targets: Frame[]): string {
   return [...new Set(targets.map((f) => f.atsName + (f.isTop ? '' : ' (embedded)')))].join(', ');
 }
 
-export async function tabState(tabId: number): Promise<TabState> {
-  const resumes = (await listResumes()).map(({ id, name, tags }) => ({ id, name, tags }));
-  const showCapture = (await loadSettings()).showCaptureButton;
-  const frames = await detectFrames(tabId);
-  if (!frames.length) {
-    return { connected: false, atsLabel: 'Not connected', isApplication: false, resumes, pickedResumeId: null, pickReason: '', skillSets: [], pickedSkillSetId: null, showCapture };
-  }
-  const targets = targetFrames(frames);
-  const fields = targets.reduce((n, f) => n + f.fieldCount, 0);
-  const knownAts = targets.some((f) => f.atsId !== 'generic');
-
-  // Resume preselection: job title and text from the top frame plus any form frames.
+/** Job title and text from the top frame plus any form frames (for picking and tailoring a resume). */
+export async function pageContext(tabId: number, targets?: Frame[]): Promise<{ title: string; text: string }> {
+  targets ??= targetFrames(await detectFrames(tabId));
   const textFrames = [...new Set([0, ...targets.map((f) => f.frameId)])];
   const texts = await Promise.allSettled(textFrames.map((id) => sendToFrame(tabId, id, { type: 'pageText' })));
   const page = { title: '', text: '' };
@@ -72,13 +68,44 @@ export async function tabState(tabId: number): Promise<TabState> {
     page.title += ` ${t.value.title}`;
     page.text += `\n${t.value.text}`;
   }
-  const pick = pickResume(await listResumes(), await loadRules(), page);
+  return page;
+}
+
+export async function tabState(tabId: number): Promise<TabState> {
+  const resumes = (await listResumes()).map(({ id, name, tags, tailoredFrom }) => ({ id, name, tags, tailoredFrom }));
+  const settings = await loadSettings();
+  const showCapture = settings.showCaptureButton;
+  const canTailor = settings.tailorEnabled;
+  const frames = await detectFrames(tabId);
+  if (!frames.length) {
+    return { connected: false, atsLabel: 'Not connected', isApplication: false, resumes, pickedResumeId: null, pickReason: '', skillSets: [], pickedSkillSetId: null, skillSetByResume: {}, showCapture, canTailor };
+  }
+  const targets = targetFrames(frames);
+  const fields = targets.reduce((n, f) => n + f.fieldCount, 0);
+  const knownAts = targets.some((f) => f.atsId !== 'generic');
+
+  const page = await pageContext(tabId, targets);
+  const library = await listResumes();
+  let pick = pickResume(library, await loadRules(), page);
+  // Back on a job you already tailored for: pick that copy.
+  if (pick) {
+    const tab = await browser.tabs.get(tabId).catch(() => null);
+    const done = tab?.url ? findTailored(library, pick.resumeId, tab.url, tab.title ? jobLabel(tab.title) : '') : undefined;
+    if (done) pick = { resumeId: done.id, reason: 'tailoring this job earlier' };
+  }
   const profile = await loadProfile();
-  const skillPick = pickSkillSet(profile.skillSets, page);
+  const skillSetByResume: Record<string, string> = {};
+  for (const r of library) {
+    const id = skillSetForResume(profile.skillSets, library, r.id);
+    if (id) skillSetByResume[r.id] = id;
+  }
   return {
     showCapture,
+    canTailor,
     skillSets: profile.skillSets.map(({ id, name }) => ({ id, name })),
-    pickedSkillSetId: skillPick?.resumeId ?? null,
+    // The skill set follows the picked resume so the two start out matching.
+    pickedSkillSetId: pickSkillSetFor(profile.skillSets, library, pick?.resumeId ?? null, page),
+    skillSetByResume,
     connected: true,
     atsLabel: describe(targets),
     // Known ATS with a form, or a form elsewhere that looks like a job application

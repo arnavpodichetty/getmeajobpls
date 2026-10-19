@@ -5,9 +5,9 @@ import { $, h } from '../../lib/dom';
 import { mergeSavedAnswers } from '../../lib/engine/capture';
 import { sendToFrame } from '../../lib/messages';
 import { describe, detectFrames, targetFrames } from '../../lib/orchestrate';
-import { pickSkillSet } from '../../lib/resumeRules';
 import { listResumes } from '../../lib/resumeDb';
-import { pickResume } from '../../lib/resumeRules';
+import { pickResume, pickSkillSetFor, skillSetForResume } from '../../lib/resumeRules';
+import { findTailored, jobLabel } from '../../lib/tailorMatch';
 import { loadProfile, loadRules, loadSettings, saveProfile } from '../../lib/storage';
 import { downloadCapture } from '../../lib/captureDownload';
 import type { FillReport } from '../../lib/types';
@@ -101,14 +101,22 @@ async function init(): Promise<void> {
     page.title += ` ${t.value.title}`;
     page.text += `\n${t.value.text}`;
   }
-  const pick = pickResume(resumes, await loadRules(), page);
+  let pick = pickResume(resumes, await loadRules(), page);
+  // Back on a job you already tailored for: pick that copy, like the on-page panel does.
+  const done = pick ? findTailored(resumes, pick.resumeId, tab.url, tab.title ? jobLabel(tab.title) : '') : undefined;
+  if (done) pick = { resumeId: done.id, reason: 'tailoring this job earlier' };
   if (pick) {
     resumeSel.value = pick.resumeId;
     reasonEl.textContent = `Picked by ${pick.reason}`;
   }
-  const skillPick = pickSkillSet(profile.skillSets, page);
-  if (skillPick) skillSel.value = skillPick.resumeId;
-  resumeSel.addEventListener('change', () => (reasonEl.textContent = ''));
+  // The skill set follows the resume; change skills after that to mix them.
+  const skillPick = pickSkillSetFor(profile.skillSets, resumes, pick?.resumeId ?? null, page);
+  if (skillPick) skillSel.value = skillPick;
+  resumeSel.addEventListener('change', () => {
+    reasonEl.textContent = '';
+    const skills = skillSetForResume(profile.skillSets, resumes, resumeSel.value);
+    if (skills) skillSel.value = skills;
+  });
 
   fillBtn.disabled = false;
   saveBtn.disabled = false;

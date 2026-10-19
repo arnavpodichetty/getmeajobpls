@@ -2,6 +2,7 @@
 // background worker. Chrome serializes messages as JSON, so files travel as base64.
 import { browser } from 'wxt/browser';
 import type { TabState } from './orchestrate';
+import type { TailorResult } from './tailor';
 import type { FillReport, ResumeMeta } from './types';
 
 export interface FrameInfo {
@@ -52,6 +53,7 @@ export type PanelRequest =
   | { type: 'panel:capture' }
   | { type: 'panel:fill'; resumeId: string | null; skillSetId: string | null }
   | { type: 'panel:saveAnswers' }
+  | { type: 'panel:tailor'; resumeId: string }
   | { type: 'panel:options' };
 
 export type PanelResponse =
@@ -59,6 +61,7 @@ export type PanelResponse =
   | { kind: 'capture'; html: string; url: string }
   | { kind: 'reports'; reports: FillReport[] }
   | { kind: 'saved'; added: number; updated: number }
+  | ({ kind: 'tailored' } & TailorResult)
   | { kind: 'ok' }
   | { kind: 'error'; error: string };
 

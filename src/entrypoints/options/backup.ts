@@ -99,7 +99,8 @@ export function backupSection(onImported: () => Promise<void>): HTMLElement {
       { class: 'row' },
       h('button', { onClick: () => exportBackup(includeFiles.checked) }, 'Export JSON'),
       h('label', { class: 'check inline' }, includeFiles, h('span', {}, 'Include resume PDFs')),
+      h('button', { class: 'secondary', onClick: () => importInput.click() }, 'Import JSON…'),
+      importInput,
     ),
-    h('div', { class: 'row' }, h('button', { class: 'secondary', onClick: () => importInput.click() }, 'Import JSON…'), importInput),
   );
 }

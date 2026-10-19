@@ -29,6 +29,7 @@ export function emptyProfile(): Profile {
     projects: [],
     skills: [],
     skillSets: [],
+    tailoringSkills: [],
     languages: [],
     answers: {
       workAuthorized: 'Yes',
@@ -139,7 +140,7 @@ export const emptyProject = (): Project => ({
   description: '',
 });
 
-export const emptySkillSet = (): SkillSet => ({ id: uid(), name: '', keywords: [], skills: [], isDefault: false });
+export const emptySkillSet = (): SkillSet => ({ id: uid(), name: '', keywords: [], skills: [], isDefault: false, resumeId: '' });
 
 export const emptyLanguage = (): Language => ({ id: uid(), language: '', proficiency: '', fluent: false });
 
@@ -155,6 +156,7 @@ export const defaultSettings = (): Settings => ({
   showOnPage: true,
   showCaptureButton: false,
   timeZone: DEFAULT_TIME_ZONE,
+  tailorEnabled: false,
 });
 
 export function normalizeSettings(raw: unknown): Settings {
@@ -183,6 +185,7 @@ export function normalizeProfile(raw: unknown): Profile {
     experience: (p.experience ?? []).map((e) => ({ ...emptyExperience(), ...e })),
     projects: (p.projects ?? []).map((e) => ({ ...emptyProject(), ...e })),
     skills: list(p.skills),
+    tailoringSkills: list(p.tailoringSkills),
     skillSets: (p.skillSets ?? []).map((x) => ({ ...emptySkillSet(), ...x, keywords: list(x.keywords), skills: list(x.skills) })),
     // Older profiles stored languages as plain strings.
     languages: (Array.isArray(p.languages) ? p.languages : []).map((l: unknown) =>

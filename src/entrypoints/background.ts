@@ -3,10 +3,17 @@ import { browser } from 'wxt/browser';
 import type { BackgroundRequest, PanelRequest, PanelResponse, ResumeFilePayload } from '../lib/messages';
 import { captureTab, fillTab, saveAnswersFromTab, tabState } from '../lib/orchestrate';
 import { blobToBase64, getResume } from '../lib/resumeDb';
+import { REOPEN_KEY, tailorForTab } from '../lib/tailor';
 
 export default defineBackground(() => {
-  browser.runtime.onInstalled.addListener(({ reason }) => {
+  browser.runtime.onInstalled.addListener(async ({ reason }) => {
     if (reason === 'install') browser.runtime.openOptionsPage();
+    // Turning on tailoring restarts the extension (see options/tailoring.ts); go back to where you were.
+    const { [REOPEN_KEY]: section } = await browser.storage.local.get(REOPEN_KEY);
+    if (typeof section === 'string') {
+      await browser.storage.local.remove(REOPEN_KEY);
+      await browser.tabs.create({ url: browser.runtime.getURL(`/options.html#${section}`) });
+    }
   });
 
   browser.runtime.onMessage.addListener((msg: BackgroundRequest | PanelRequest, sender, sendResponse) => {
@@ -22,6 +29,10 @@ export default defineBackground(() => {
           case 'panel:fill': {
             const { resumeId, skillSetId } = msg as Extract<PanelRequest, { type: 'panel:fill' }>;
             return { kind: 'reports', reports: await fillTab(tabId, resumeId, skillSetId) };
+          }
+          case 'panel:tailor': {
+            const { resumeId } = msg as Extract<PanelRequest, { type: 'panel:tailor' }>;
+            return { kind: 'tailored', ...(await tailorForTab(tabId, resumeId)) };
           }
           case 'panel:saveAnswers':
             return { kind: 'saved', ...(await saveAnswersFromTab(tabId)) };

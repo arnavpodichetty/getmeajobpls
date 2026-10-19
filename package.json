@@ -3,7 +3,7 @@
   "description": "Personal job-application autofill extension",
   "private": true,
   "author": "Arnav Podichetty",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -15,9 +15,12 @@
     "capture": "node scripts/capture.mjs",
     "live-test": "node scripts/live-test.mjs",
     "pull-captures": "node scripts/pull-captures.mjs",
-    "store-assets": "node scripts/store-assets.mjs"
+    "store-assets": "node scripts/store-assets.mjs",
+    "tailor-install": "node scripts/tailor/install.mjs",
+    "tailor-try": "node scripts/tailor/try.mjs"
   },
   "devDependencies": {
+    "computer-modern": "^0.1.3",
     "fake-indexeddb": "^6.2.5",
     "happy-dom": "^21.0.1",
     "puppeteer-core": "^25.14.0",

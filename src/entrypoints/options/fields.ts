@@ -100,7 +100,7 @@ export function listField(
   obj: Obj,
   key: string,
   onChange: () => void,
-  opts: { placeholder?: string; multiline?: boolean } = {},
+  opts: { placeholder?: string; multiline?: boolean; rows?: number } = {},
 ): HTMLElement {
   const parse = (v: string) =>
     v
@@ -112,7 +112,7 @@ export function listField(
     onChange();
   };
   const control = opts.multiline
-    ? h('textarea', { rows: 3, placeholder: opts.placeholder, onInput })
+    ? h('textarea', { rows: opts.rows ?? 3, placeholder: opts.placeholder, onInput })
     : h('input', { type: 'text', placeholder: opts.placeholder, onInput });
   control.value = (obj[key] as string[]).join(', ');
   return h('label', { class: 'field wide' }, h('span', {}, label), control);
