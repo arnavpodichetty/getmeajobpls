@@ -191,7 +191,7 @@ function profileSections(): HTMLElement[] {
       'Most recent first. The first entry answers "school", "degree", "GPA" questions; Workday adds one panel per entry. Major fallbacks are tried in order after your major and its variations when those are unavailable.',
       repeatable(p.education, emptyEducation, 'School', (e) =>
         grid(
-          textField('School', e, 'school', s, { wide: true, placeholder: 'University of London' }),
+          textField('School', e, 'school', s, { wide: true, placeholder: 'University of California, Berkeley' }),
           textField('Degree', e, 'degree', s, { placeholder: 'Bachelor of Arts' }),
           textField('Major', e, 'major', s, { placeholder: 'Mathematics' }),
           listField('Major fallbacks, in order (comma-separated)', e, 'majorFallbacks', s, { placeholder: 'Computer Science, Statistics' }),

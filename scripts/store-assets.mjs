@@ -26,7 +26,7 @@ const PROFILE = {
     street: '1 Analytical Way', addressLine2: '', city: 'San Francisco', state: 'CA', zip: '94105', country: 'United States',
   },
   links: { linkedin: 'https://linkedin.com/in/ada-lovelace', github: 'https://github.com/ada-lovelace', website: 'https://adalovelace.dev', portfolio: '', twitter: '', other: '' },
-  education: [{ id: 'e1', school: 'University of London', degree: 'Bachelor of Science', major: 'Mathematics', majorFallbacks: [], secondMajor: '', minor: '', gpa: '3.9', coursework: '', start: '2024-09', end: '2028-06' }],
+  education: [{ id: 'e1', school: 'University of California, Berkeley', degree: 'Bachelor of Science', major: 'Mathematics', majorFallbacks: [], secondMajor: '', minor: '', gpa: '3.9', coursework: '', start: '2024-09', end: '2028-06' }],
   experience: [{ id: 'x1', company: 'Analytical Engines', title: 'Software Engineering Intern', type: 'Internship', location: 'San Francisco, CA', start: '2026-09', end: '', current: true, description: 'Wrote the first published algorithm for the Analytical Engine.' }],
   projects: [],
   skills: ['Python', 'SQL', 'Mathematics'],

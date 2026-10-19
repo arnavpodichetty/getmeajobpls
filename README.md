@@ -4,7 +4,7 @@ A Chrome extension that autofills job applications. Open an application, click *
 
 ![A form filled by getmeajobpls, with filled fields outlined in green and the Fill page panel on the right](store/screenshot-4-filled-form.png)
 
-![The options page, where you set up your profile](store/screenshot-1-profile.png)
+![The options page, where you set up your profile](docs/options.png)
 
 ## Features
 
@@ -43,8 +43,6 @@ After rebuilding, click ↻ on the extension and reload open application pages. 
 ## Resume tailoring
 
 Optional. **Tailor resume** rewrites the selected resume for a posting from your resume and profile, using your own Claude account through [Claude Code](https://claude.com/claude-code) (no API key), and keeps it to one page. To set it up, open **Resume tailoring** on the options page and follow the steps there.
-
-<img src="docs/tailored-resume.png" alt="A tailored resume for a fictional applicant" width="600">
 
 > **Always read a tailored resume before you submit it.** It is written by AI, which can get things wrong.
 
