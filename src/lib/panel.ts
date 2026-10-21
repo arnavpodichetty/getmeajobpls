@@ -7,6 +7,7 @@ import type { PanelResponse, PanelRequest } from './messages';
 import { requestResumeFile, sendPanel } from './messages';
 import { base64ToBlob } from './resumeDb';
 import { downloadCapture } from './captureDownload';
+import { jobInfoForPage } from './jobInfo';
 import type { FillReport } from './types';
 
 const CSS = `
@@ -40,6 +41,9 @@ li { margin-bottom: 4px; } li small { display: block; }
 .notice { border-left: 3px solid #c26a00; padding: 2px 0 2px 7px; color: #6b4a1d; }
 .changes { margin-top: 2px; }
 .err { color: #b4412f; }
+.job { gap: 2px; }
+.job-title { font-weight: 650; font-size: 13px; line-height: 1.3; }
+.pay { margin-top: 3px; align-self: flex-start; padding: 1px 7px; border-radius: 10px; background: #e3f1ec; color: #22594b; font-weight: 600; }
 @media (prefers-color-scheme: dark) {
   .wrap { color: #ecebe6; }
   .box { background: #1f1f1d; border-color: #34332f; }
@@ -48,6 +52,7 @@ li { margin-bottom: 4px; } li small { display: block; }
   .link { color: #5cb399; }
   .capture, .tailor { background: #1f1f1d; border-color: #34332f; color: #5cb399; }
   .notice { color: #e2b77a; }
+  .pay { background: #22392f; color: #8fd3bd; }
 }
 `;
 
@@ -69,6 +74,9 @@ export class FillPanel {
     this.fillBtn.replaceChildren(boltIcon(13), text);
   }
   private status = h('div', { class: 'box', hidden: true });
+  /** The role, company, location and pay of the posting on this page. */
+  private job = h('div', { class: 'box job', hidden: true });
+  private jobTimer: number | undefined;
   private details = h('div', { class: 'box', hidden: true });
   private siteEl = h('div', { class: 'muted' });
   private reasonEl = h('div', { class: 'muted' });
@@ -173,8 +181,13 @@ export class FillPanel {
     return this.host.isConnected;
   }
 
-  show(state: Extract<PanelResponse, { kind: 'state' }>): void {
+  /** On a job posting page there's nothing to fill yet; the panel shows the job and tailoring. */
+  postingOnly = false;
+
+  show(state: Extract<PanelResponse, { kind: 'state' }>, postingOnly = false): void {
     if (this.dismissed) return;
+    this.postingOnly = postingOnly;
+    if (!this.busy) this.fillBtn.setAttribute('aria-disabled', String(postingOnly));
     this.siteEl.textContent = state.atsLabel;
     // A tailored resume picked on this page stays picked when a multi-step form changes URL.
     const keep = this.resumeSel.selectedOptions[0]?.dataset.tailored ? this.resumeSel.value : null;
@@ -191,14 +204,46 @@ export class FillPanel {
     this.reasonEl.textContent = this.resumeSel.value === keep && keep ? 'Tailored for this posting' : state.pickReason;
     this.captureBtn.hidden = !state.showCapture;
     this.tailorBtn.hidden = !state.canTailor;
-    this.fillBtn.title = `Fill this ${state.atsLabel} application`;
+    this.fillBtn.title = postingOnly ? 'Open the application to fill it' : `Fill this ${state.atsLabel} application`;
     if (!this.host.isConnected) {
       this.render();
       document.documentElement.append(this.host);
     }
+    this.watchJob();
+  }
+
+  /** Read the posting's details now and for a while after: SPAs (Oracle, Workday) render them late. */
+  private watchJob(): void {
+    clearInterval(this.jobTimer);
+    let runs = 0;
+    const refresh = () => {
+      if (!this.host.isConnected || ++runs > 10) return clearInterval(this.jobTimer);
+      this.renderJob();
+    };
+    refresh();
+    this.jobTimer = window.setInterval(refresh, 2000);
+  }
+
+  private renderJob(): void {
+    let info;
+    try {
+      info = jobInfoForPage();
+    } catch {
+      return;
+    }
+    this.job.hidden = !info.title && !info.pay;
+    if (this.job.hidden) return;
+    this.job.replaceChildren(
+      ...(info.title ? [h('div', { class: 'job-title' }, info.title)] : []),
+      ...(info.company ? [h('div', {}, info.company)] : []),
+      ...(info.location ? [h('div', { class: 'muted', title: info.locations }, info.location)] : []),
+      ...(info.posted ? [h('div', { class: 'muted' }, info.posted)] : []),
+      ...(info.pay ? [h('div', { class: 'pay', title: 'Pay listed on this posting' }, info.pay)] : []),
+    );
   }
 
   remove(): void {
+    clearInterval(this.jobTimer);
     this.host.remove();
   }
 
@@ -229,7 +274,7 @@ export class FillPanel {
       h('button', { class: 'icon', title: 'Hide on this page', onClick: () => this.dismiss() }, '×'),
     );
     this.makeDraggable(bar);
-    this.wrap.replaceChildren(bar, this.tailorBtn, this.captureBtn, this.status, this.details);
+    this.wrap.replaceChildren(bar, this.job, this.tailorBtn, this.captureBtn, this.status, this.details);
     this.body.replaceChildren(this.wrap);
     this.applyPosition();
   }
@@ -312,6 +357,16 @@ export class FillPanel {
 
   private async fill(): Promise<void> {
     if (this.busy) return;
+    // The page may have turned into the application since (Workday draws the form late).
+    if (this.postingOnly && document.querySelector('input:not([type=hidden]):not([type=search]), select, textarea')) {
+      this.postingOnly = false;
+      this.fillBtn.title = 'Fill this application';
+    }
+    if (this.postingOnly) {
+      this.status.replaceChildren(h('div', { class: 'muted' }, 'This is the job posting. Click Apply on the page, then Fill page.'));
+      this.status.hidden = false;
+      return;
+    }
     this.busy = true;
     this.fillBtn.setAttribute('aria-disabled', 'true');
     this.setFillLabel('Filling…');

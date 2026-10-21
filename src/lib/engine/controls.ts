@@ -48,14 +48,15 @@ export function formatDate(iso: string, el: Element, label = ''): string {
   const type = (el as HTMLInputElement).type;
   if (type === 'date') return `${y}-${m}-${d}`;
   if (type === 'month') return `${y}-${m}`;
-  // A question that spells out "(Month/Year)" or "month and year" wants words: "May 2028".
-  if (/\bmonth\s*(?:\/|and|,|&|-)?\s*year\b/i.test(label) && !/\bday\b/i.test(label)) return `${monthName(iso)} ${y}`;
+  // A format spelled out in the placeholder or question ("MM/YYYY") beats everything else.
   const hint = `${el.getAttribute('placeholder') ?? ''} ${el.getAttribute('aria-label') ?? ''} ${label}`.toLowerCase();
   if (/dd.?mm.?yyyy/.test(hint)) return `${d}/${m}/${y}`;
   if (/mm.?dd.?yyyy/.test(hint)) return `${m}/${d}/${y}`;
   if (/mm.?yyyy/.test(hint)) return `${m}/${y}`;
   if (/yyyy.?mm/.test(hint)) return `${y}-${m}`;
   if (/^\s*yyyy\s*$/.test(hint)) return y;
+  // Otherwise a question asking for "(Month/Year)" or "month and year" wants words: "May 2028".
+  if (/\bmonth\s*(?:\/|and|,|&|-)?\s*year\b/i.test(label) && !/\bday\b/i.test(label)) return `${monthName(iso)} ${y}`;
   return iso.length > 7 ? `${m}/${d}/${y}` : `${m}/${y}`;
 }
 

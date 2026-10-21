@@ -265,8 +265,9 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
     for (const field of fields) {
       // Workday re-renders a questionnaire after some answers; the next pass finds the new copy.
       if (!field.el.isConnected) continue;
-      field.members.forEach((m) => handled.add(m));
+      // Skipped fields stay unhandled: the adapter may fill them itself later (Oracle's entry forms).
       if (opts.skip?.(field)) continue;
+      field.members.forEach((m) => handled.add(m));
 
       const question = normalize(field.label);
       const reviewBusiness = ctx.settings.reviewBusinessLines && /\bbusiness (?:lines?|line s|units?)\b|\bdivisions?\b.*\b(?:prefer|interested)\b/.test(question);

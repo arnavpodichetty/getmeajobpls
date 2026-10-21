@@ -1,19 +1,30 @@
 # Changelog
 
+## 1.2.0 (2026-10-21)
+
+### New
+- **Job details on the panel:** the role, company, location, pay and posting date, read from the posting and kept on its application pages. Locations show as city and state; hover over "+ 2 more" for the rest.
+- **Panel on job postings:** shows on the posting page before you apply, so you can see the details and tailor your resume first.
+- **Oracle Recruiting Education and Experience:** adds one entry per job and one for your latest school, fills each from that entry and saves it. Entries already listed are skipped.
+
+### Fixes
+- **Oracle Recruiting dropdowns:** Country, City, State, Postal Code, phone code, graduation dates and EEO dropdowns all showed "no options". They fill now, and existing values are kept.
+- **Oracle entry forms you open yourself:** were filled with your latest job every time. They now get the next job that isn't listed yet.
+- **"Title" with Mr. / Ms. / Dr.:** was answered with your job title. It's left for you now.
+- **"What type of degree program are you enrolled in?":** was answered "Yes". It picks your degree now.
+- **Graduation month and year asked separately:** the month dropdown gets "June" and the year dropdown "2028", not a full date.
+- **Dates with a format in the question:** "month and year … as MM/YYYY" got "May 2028". A format the question spells out is used now: "05/2028".
+
 ## 1.1.1 (2026-10-19)
 
 ### Fixes
-- **Ashby "Missing entry for required field" on submit:** Ashby saves each answer to its server as it's picked, and answers saved at the same moment overwrote each other there, so questions that looked answered came back as missing. The filler now waits for each save to finish before answering the next question.
-- **Questions with help text under them:** a question like Ashby's "Are you legally authorized to work in the United States?" with "(If hired, verification will be required…)" below it was read as the help text, so it was skipped without being flagged. The question is read from its title now, and required questions marked only by a style (no "*") are recognized, so unanswered ones are flagged for review.
-- **Workday jobs and links under other section names:** work experience under "Professional Experience" and links under "Portfolio" (instead of "Work Experience" and "Websites") were left empty. Panels are now recognized by their fields, whatever the section is called.
-- **Tailored resumes no longer look squished:** spacing now matches Jake's LaTeX template: 12pt line spacing in bullets, more room around section headings and under the header, a small gap between bullets, the template's bullet indent, and dates and locations aligned to its right edge.
-- **Tailored resume details:** the name prints in plain bold as pdflatex does, `--` in dates becomes an en dash, the `|` and tech stack after a project name are no longer italic, and a web address in a project line is linked.
-- **Tailoring on application pages without the job description:** Workday's steps, Lever's /apply and Ashby's Application tab now get the description from the ATS's public job listing, or from the posting page you opened earlier in the same tab.
-- **Oracle Recruiting dropdowns:** Country, City, State, Postal Code, phone country code, graduation month and year, and the EEO dropdowns were all flagged "the dropdown showed no options". Oracle lists its choices as grid cells, which are now read, and a pick only counts once Oracle shows it in the box. Values already in these dropdowns are no longer overwritten.
-- **"Title" with Mr. / Ms. / Dr. options:** was answered with your job title and flagged. A Title choice is left for you; a Title text box still gets your job title.
-- **"What type of degree program are you currently enrolled in?":** was answered "Yes" (as if asking whether you're enrolled). It now picks your degree.
-- **Graduation month and year asked separately:** a dropdown asking only for the month now gets the month name ("June"), and one asking only for the year gets the year.
-- **On-page panel position:** starts in the top-right corner instead of the middle of the right edge. A spot you dragged it to is still remembered.
+- **Ashby "Missing entry for required field" on submit:** answers saved at the same moment overwrote each other. The filler now waits for each save before the next answer.
+- **Questions with help text under them:** the help text was read as the question, so required questions were skipped without a flag. The title is read now.
+- **Workday sections with other names:** jobs under "Professional Experience" and links under "Portfolio" were left empty. Sections are recognized by their fields now.
+- **Tailored resumes no longer look squished:** line spacing, heading gaps, bullet indent and right-aligned dates now match Jake's LaTeX template.
+- **Tailored resume details:** a plain bold name, en dashes in dates, no italics on a project's tech stack, and linked web addresses.
+- **Tailoring without a job description on the page:** Workday's steps, Lever's /apply and Ashby's Application tab now get it from the job listing or the posting you opened before.
+- **On-page panel position:** starts in the top-right corner. A spot you dragged it to is still remembered.
 
 ## 1.1.0 (2026-10-18)
 

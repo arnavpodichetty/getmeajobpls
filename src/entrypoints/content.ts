@@ -4,6 +4,7 @@ import { detectAdapter } from '../adapters';
 import type { FillContext, ResumeFile } from '../adapters/types';
 import { captureForm, collectAnswers } from '../lib/engine/capture';
 import { isVisible } from '../lib/engine/dom';
+import { isJobPosting } from '../lib/jobInfo';
 import { FillPanel } from '../lib/panel';
 import { sendPanel } from '../lib/messages';
 import { scanFields } from '../lib/engine/scan';
@@ -147,7 +148,7 @@ export default defineContentScript({
 
       /** Local test before involving the background: ATS site, embedded ATS, or a form that looks like a job application. */
       const mightBeApplication = () => {
-        if (adapter().id !== 'generic') return true;
+        if (adapter().id !== 'generic' || isJobPosting()) return true;
         const embedded = [...document.querySelectorAll('iframe[src]')].some((f) => {
           try {
             return detectAdapter(new URL((f as HTMLIFrameElement).src, location.href), document).id !== 'generic';
@@ -161,11 +162,16 @@ export default defineContentScript({
         return formInfo().jobForm;
       };
       let lastCheck = 0;
+      // Workday changes the URL to /apply before drawing the form, so a panel shown for the
+      // posting looks again whenever the number of form fields changes.
+      const formFieldCount = () => document.querySelectorAll('input:not([type=hidden]):not([type=search]), select, textarea').length;
+      let lastFieldCount = 0;
+      const needsCheck = () => !panel.shown || location.href !== lastUrl || (panel.postingOnly && formFieldCount() !== lastFieldCount);
 
       const check = async () => {
         if (ctx.isInvalid || checking || panel.dismissed || Date.now() > stopAt) return;
         // Single-page apps (Workday) change URL without reloading; re-evaluate then.
-        if (panel.shown && location.href === lastUrl) return;
+        if (!needsCheck()) return;
         if (!mightBeApplication()) return;
         checking = true;
         try {
@@ -180,7 +186,9 @@ export default defineContentScript({
             return;
           }
           lastUrl = location.href;
-          if (!ctx.isInvalid && state.kind === 'state' && state.isApplication) panel.show(state);
+          lastFieldCount = formFieldCount();
+          // Job posting pages (before Apply) get the panel too, for the job's details and tailoring.
+          if (!ctx.isInvalid && state.kind === 'state' && (state.isApplication || isJobPosting())) panel.show(state, !state.isApplication);
         } finally {
           checking = false;
         }
@@ -194,7 +202,7 @@ export default defineContentScript({
       // Forms often render after load; look again shortly after the page changes.
       // Throttled, not debounced: a busy page must not keep pushing the check back.
       const panelObserver = new MutationObserver(() => {
-        if (!panel.dismissed && (!panel.shown || location.href !== lastUrl) && checkTimer === undefined) schedule(300);
+        if (!panel.dismissed && needsCheck() && checkTimer === undefined) schedule(300);
       });
       panelObserver.observe(document.documentElement, { childList: true, subtree: true });
       ctx.onInvalidated(() => {

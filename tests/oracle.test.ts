@@ -3,6 +3,7 @@
 // choice as a [role="gridcell"][aria-selected], and yes/no questions as
 // role="radio" pill buttons. These stand-ins mimic that markup and behaviour.
 import { beforeEach, describe, expect, it } from 'vitest';
+import { oracle } from '../src/adapters/oracle';
 import { fillPage } from '../src/lib/engine/fill';
 import { resetLayoutCache } from '../src/lib/engine/dom';
 import { context, fastTimings } from './helpers/fixture';
@@ -15,14 +16,15 @@ function cxSelect(id: string, label: string, options: string[], opts: { required
   return `<div class="input-row input-row--has-picker">
     <label class="input-row__label" for="${id}"><span class="input-row__label-text">${label}${opts.required ? ' <span aria-hidden="true">*</span>' : ''}</span></label>
     <div class="input-row__control-container"><div class="cx-select-container">
-      <input id="${id}" name="${id}" type="text" role="combobox" aria-autocomplete="list" aria-haspopup="grid" aria-controls="${id}-listbox" aria-expanded="false"
+      <input id="${id}" name="${id.replace(/-\d+$/, '')}" type="text" role="combobox" aria-autocomplete="list" aria-haspopup="grid" aria-controls="${id}-listbox" aria-expanded="false"
         ${opts.required ? 'aria-required="true"' : ''} data-options="${options.join('|')}" ${opts.ignoreClicks ? 'data-ignore="1"' : ''} class="cx-select-input">
     </div></div></div>`;
 }
 
 /** Opens a grid of matching options under the input; a click on a cell writes it into the input. */
 function wireCxSelects(): void {
-  for (const input of document.querySelectorAll<HTMLInputElement>('input[aria-haspopup="grid"]')) {
+  for (const input of document.querySelectorAll<HTMLInputElement>('input[aria-haspopup="grid"]:not([data-wired])')) {
+    input.dataset.wired = '1';
     const all = input.dataset.options!.split('|');
     const render = () => {
       document.getElementById(`${input.id}-listbox`)?.remove();
@@ -46,6 +48,10 @@ function wireCxSelects(): void {
     input.addEventListener('click', render);
     input.addEventListener('input', render);
   }
+}
+
+function cxSelectRaw(id: string, labelledby: string, options: string[]): string {
+  return `<div class="cx-select-container"><input id="${id}" type="text" role="combobox" aria-autocomplete="list" aria-haspopup="grid" aria-controls="${id}-listbox" aria-labelledby="${labelledby}" data-options="${options.join('|')}" class="cx-select-input"></div>`;
 }
 
 function pills(label: string, options: string[], required = false): string {
@@ -109,5 +115,150 @@ describe('Oracle Recruiting', () => {
     resetLayoutCache();
     const report = await fillPage(context({ resume: null }), { ats: 'Oracle Recruiting' });
     expect(report.fields).toEqual([expect.objectContaining({ label: 'Country', status: 'review' })]);
+  });
+});
+
+// --- Education and Experience entries ------------------------------------------
+// Each entry is a tile; "Add …" opens an inline form and the form's save button
+// turns it into a tile. The date pickers' aria-labelledby points at a stale
+// label id, as on the real page, so their only label is "Month" / "Year".
+
+const YEARS = ['2023', '2024', '2025', '2026', '2027', '2028'];
+
+function dateRow(name: 'startDate' | 'endDate', n: number): string {
+  return `<div class="input-row"><label><span id="labelText-${name}-${n}">${name === 'startDate' ? 'Start Date' : 'End Date'}</span></label>
+    <div class="input-row__control-container">
+      <span id="inputFieldLabel-month-${name}-${n}">Month</span>${cxSelectRaw(`month-${name}-${n}`, `labelText-${name}-${n - 18} inputFieldLabel-month-${name}-${n}`, MONTHS)}
+      <span id="inputFieldLabel-year-${name}-${n}">Year</span>${cxSelectRaw(`year-${name}-${n}`, `labelText-${name}-${n - 18} inputFieldLabel-year-${name}-${n}`, YEARS)}
+    </div></div>`;
+}
+
+const text = (name: string, label: string, n: number) =>
+  `<div class="input-row"><label for="${name}-${n}"><span>${label}</span></label><div class="input-row__control-container"><input class="input-row__control" id="${name}-${n}" name="${name}"></div></div>`;
+
+const FORMS = {
+  Experience: (n: number) => `${text('employerName', 'Employer Name', n)}${text('jobTitle', 'Job Title', n + 1)}
+    ${dateRow('startDate', n + 2)}${dateRow('endDate', n + 3)}
+    <div class="input-row input-row--checkbox"><input type="checkbox" class="input-row__hidden-control" id="af-checkbox-currentJobFlag-${n}" aria-labelledby="currentJobFlag-${n}-label">
+      <label for="af-checkbox-currentJobFlag-${n}"><span id="currentJobFlag-${n}-label">Current Job</span></label></div>
+    ${cxSelect(`countryCode-${n}`, 'Employer Country', ['Canada', 'United States'])}
+    ${text('employerCity', 'Employer City', n + 4)}
+    ${pills('Internal', ['No', 'Yes'])}
+    <div class="input-row"><label for="achievements-${n}">Achievements</label><textarea id="achievements-${n}" name="achievements"></textarea></div>`,
+  Education: (n: number) => `${cxSelect(`contentItemId-${n}`, 'Degree', ["Associate's Degree", "Bachelor's Degree", "Master's Degree"], { required: true })}
+    ${cxSelect(`educationalEstablishmentId-${n}`, 'School', ['University of California - Davis', 'University of California - Los Angeles', 'Other'], { required: true })}
+    ${dateRow('endDate', n + 1)}
+    ${text('areaOfStudy', 'Area of Study', n + 2)}`,
+};
+
+type Saved = Record<string, string | boolean>;
+
+/** One Education or Experience block that behaves like Oracle's. Returns what each save stored. */
+function entryBlock(kind: 'Experience' | 'Education', tiles: { title: string; subtitle: string; invalid?: boolean }[] = []): Saved[] {
+  const saved: Saved[] = [];
+  const block = document.createElement('div');
+  block.className = 'apply-flow-block apply-flow-block--tile-profile-items';
+  block.innerHTML = `<h2 class="apply-flow-block__title"><span>${kind}</span></h2><div class="profile-item-list"></div>
+    <div class="profile-add-item"><button type="button" class="button apply-flow-profile-item-tile__new-tile"><span class="button__label">Add ${kind}</span></button></div>`;
+  document.querySelector('form')!.append(block);
+  const list = block.querySelector('.profile-item-list')!;
+  let n = 100;
+
+  const tile = (title: string, subtitle: string, invalid = false) => {
+    const article = document.createElement('article');
+    article.className = `apply-flow-profile-item-tile${invalid ? ' apply-flow-profile-item-tile--invalid' : ''}`;
+    article.innerHTML = `<div data-profile-item-tile="true" role="group" aria-label="${title} ${subtitle}">
+      <div class="apply-flow-profile-item-tile__summary-title"><span>${title}</span></div>
+      <div class="apply-flow-profile-item-tile__summary-subtitle">${subtitle}</div>
+      <button class="apply-flow-profile-item-tile__edit-item-icon" title="Edit"></button></div>`;
+    article.querySelector('button')!.addEventListener('click', () => openForm(article));
+    list.append(article);
+    return article;
+  };
+
+  const openForm = (article: HTMLElement) => {
+    article.classList.add('apply-flow-profile-item-tile--active');
+    n += 20;
+    const content = document.createElement('div');
+    content.innerHTML = `<div class="profile-item-content"><div class="profile-item-content--form">${FORMS[kind](n)}</div></div>
+      <div class="profile-item-footer"><button type="button" class="button save-btn">Save</button></div>`;
+    block.append(content);
+    wireCxSelects();
+    wirePills();
+    content.querySelector('.save-btn')!.addEventListener('click', () => {
+      const values: Saved = {};
+      content.querySelectorAll<HTMLInputElement>('input, textarea').forEach((input) => {
+        const key = (input.name || input.id).replace(/-\d+$/, '');
+        values[key] = input.type === 'checkbox' ? input.checked : input.value;
+      });
+      values.internal = content.querySelector('[aria-checked="true"]')?.textContent?.trim() ?? '';
+      saved.push(values);
+      const title = String(kind === 'Experience' ? values.jobTitle : values.areaOfStudy);
+      const subtitle = String(kind === 'Experience' ? values.employerName : values['educationalEstablishmentId']);
+      article.remove();
+      content.remove();
+      tile(title, subtitle);
+    });
+  };
+
+  for (const t of tiles) tile(t.title, t.subtitle, t.invalid);
+  block.querySelector('.apply-flow-profile-item-tile__new-tile')!.addEventListener('click', () => openForm(tile('', '')));
+  return saved;
+}
+
+function withSecondJob() {
+  const ctx = context({ resume: null });
+  ctx.profile.experience.push({ id: 'x2', company: 'Babbage Works', title: 'Research Assistant', type: 'Internship', location: 'Boston, MA', start: '2025-06', end: '2025-08', current: false, description: '' });
+  return ctx;
+}
+
+describe('Oracle Recruiting entries', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '<form></form>';
+    resetLayoutCache();
+  });
+
+  it('adds one experience per job, each from its own job', async () => {
+    const saved = entryBlock('Experience');
+    await oracle.fill(withSecondJob());
+    expect(saved).toEqual([
+      expect.objectContaining({ employerName: 'Analytical Engines', jobTitle: 'Software Engineering Intern', 'month-startDate': 'September', 'year-startDate': '2026', 'month-endDate': '', 'year-endDate': '', 'af-checkbox-currentJobFlag': true, employerCity: 'Seattle' }),
+      expect.objectContaining({ employerName: 'Babbage Works', jobTitle: 'Research Assistant', 'month-startDate': 'June', 'year-startDate': '2025', 'month-endDate': 'August', 'year-endDate': '2025', 'af-checkbox-currentJobFlag': false, employerCity: 'Boston' }),
+    ]);
+    // Your address is not the employer's, and "Internal" / "Achievements" are left to you.
+    for (const entry of saved) {
+      expect(entry).toEqual(expect.objectContaining({ countryCode: '', achievements: '', internal: '' }));
+    }
+    expect(document.querySelectorAll('article')).toHaveLength(2);
+  });
+
+  it('skips jobs already listed and fills a form you opened with the next job', async () => {
+    const saved = entryBlock('Experience', [{ title: 'Software Engineering Intern', subtitle: 'Analytical Engines\n09/2026 - Present' }]);
+    await oracle.fill(withSecondJob());
+    expect(saved.map((s) => s.employerName)).toEqual(['Babbage Works']);
+
+    // Opening another entry by hand while new fields are watched: it gets a job not listed yet, not your latest one.
+    document.body.innerHTML = '<form></form>';
+    const savedByHand = entryBlock('Experience', [{ title: 'Software Engineering Intern', subtitle: 'Analytical Engines\n09/2026 - Present' }]);
+    document.querySelector<HTMLElement>('.apply-flow-profile-item-tile__new-tile')!.click();
+    await oracle.fill({ ...withSecondJob(), incremental: true });
+    expect(document.querySelector<HTMLInputElement>('input[name="employerName"]')!.value).toBe('Babbage Works');
+    expect(savedByHand).toEqual([]); // saving a form you opened is left to you
+  });
+
+  it('completes an incomplete education entry instead of adding another', async () => {
+    const saved = entryBlock('Education', [{ title: 'Unnamed Major', subtitle: 'University of California\n05/2028', invalid: true }]);
+    await oracle.fill(context({ resume: null }));
+    expect(saved).toEqual([expect.objectContaining({
+      contentItemId: "Bachelor's Degree", educationalEstablishmentId: 'University of California - Los Angeles',
+      'month-endDate': 'June', 'year-endDate': '2028', areaOfStudy: 'Computer Science',
+    })]);
+    expect(document.querySelectorAll('article')).toHaveLength(1);
+  });
+
+  it('adds your school when none is listed', async () => {
+    const saved = entryBlock('Education');
+    await oracle.fill(context({ resume: null }));
+    expect(saved.map((s) => s.educationalEstablishmentId)).toEqual(['University of California - Los Angeles']);
   });
 });
