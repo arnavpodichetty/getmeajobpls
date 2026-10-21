@@ -242,7 +242,14 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Are you currently an international student?', 'No'],
     ['Are you currently on an F-1 student visa?', 'No'],
   ],
+  'Oracle Recruiting': [
+    ['Are you at least 18 years of age?', 'Yes'],
+    ['For the position you are applying to, are you legally authorized to work in this country? Note: If hired, based upon the work location, you may be required to provide government issued documentation proving your work authorization, on or before your first day of employment.', 'Yes'],
+    ['Will you now or in the future require sponsorship for an employment-based visa status?', 'No'],
+  ],
   'left for you (no guessing)': [
+    // A "Title" choice lists honorifics (Mr. / Ms. / Dr.), not your job title.
+    ['Title', null],
     ['Have you ever been convicted of a felony?', null],
     ['Why do you want to work here?', null],
     ['Do you have experience with Kubernetes?', null],
@@ -303,6 +310,7 @@ const CHOICES: [string, string[], string | null, boolean][] = [
   ['Are you a U.S. person as defined by ITAR?', ['Yes', 'No'], 'Yes', true],
   ['Do you consent to receive SMS messages regarding your application?', ['Yes, I consent', 'No I do not consent'], 'No I do not consent', true],
   ['Do you currently reside in California?', ['Yes', 'No'], 'Yes', true],
+  ['What is the type of degree program are you currently enrolled in?', ['High School Diploma', 'Associate Degree', 'Bachelor’s Degree', 'Master’s Degree (non-MBA)', 'Master of Business Administration (MBA – 2-Year Program)', 'Doctorate (PhD, EdD, etc.)', 'Professional Degree (MD, JD, etc.)', 'None'], 'Bachelor’s Degree', true],
 ];
 
 describe('choosing options', () => {

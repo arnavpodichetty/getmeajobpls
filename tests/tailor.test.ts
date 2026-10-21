@@ -7,6 +7,7 @@ import { contactItem, contactLines, inline, renderHtml } from '../scripts/tailor
 import { trimOnce } from '../scripts/tailor/fit.mjs';
 // @ts-expect-error plain JS helper module
 import { normalizeDoc } from '../scripts/tailor/schema.mjs';
+import { htmlToText, postingSource } from '../src/lib/posting';
 import { pickResume } from '../src/lib/resumeRules';
 import { jobLabel } from '../src/lib/tailor';
 import { findTailored, jobKey } from '../src/lib/tailorMatch';
@@ -157,6 +158,16 @@ describe('resume template', () => {
     expect(html).toContain('<span class="title-detail">| Python, FastAPI, pgvector, React</span>');
     expect(html).toContain('<i>Notes on the Engine</i>');
     expect(html).toContain('<b>Languages</b>: Python, SQL, Java');
+  });
+
+  it('links a web address in a project tech stack and turns -- into an en dash', () => {
+    const doc = structuredClone(base);
+    const project = doc.sections.flatMap((s: { entries: { titleDetail: string; date: string }[] }) => s.entries).find((e: { titleDetail: string }) => e.titleDetail)!;
+    project.titleDetail = 'React | ada.dev';
+    project.date = 'Jun 2026 -- Present';
+    const html = renderHtml(doc);
+    expect(html).toContain('<span class="title-detail">| React | <a href="https://ada.dev">ada.dev</a></span>');
+    expect(html).toContain('Jun 2026 – Present');
   });
 });
 
@@ -345,5 +356,45 @@ describe('tailoring from the resume plus your profile', async () => {
       { label: 'Languages', items: ['Python', 'SQL'] },
       { label: 'Tools', items: ['Airflow', 'Docker'] },
     ]);
+  });
+});
+
+describe('finding the job description for an application page', () => {
+  const api = (url: string) => postingSource(url)?.api ?? null;
+
+  it('maps Workday application steps to the posting in the public job API', () => {
+    const job = 'https://acme.wd5.myworkdayjobs.com/wday/cxs/acme/Careers/job/US-TX-Austin/Data-Engineer_JR123';
+    expect(api('https://acme.wd5.myworkdayjobs.com/en-US/Careers/job/US-TX-Austin/Data-Engineer_JR123')).toBe(job);
+    expect(api('https://acme.wd5.myworkdayjobs.com/Careers/job/US-TX-Austin/Data-Engineer_JR123/apply/applyManually?source=LinkedIn')).toBe(job);
+    expect(api('https://acme.wd5.myworkdayjobs.com/en-US/Careers/details/Data-Engineer_JR123')).toBe('https://acme.wd5.myworkdayjobs.com/wday/cxs/acme/Careers/job/Data-Engineer_JR123');
+    expect(api('https://wd1.myworkdaysite.com/en-US/recruiting/acme/Careers/job/Austin/Data-Engineer_JR123/apply')).toBe('https://wd1.myworkdaysite.com/wday/cxs/acme/Careers/job/Austin/Data-Engineer_JR123');
+    expect(api('https://acme.wd5.myworkdayjobs.com/en-US/Careers')).toBeNull();
+  });
+
+  it('maps Lever, Ashby and Greenhouse postings and their application pages', () => {
+    expect(api('https://jobs.lever.co/hooli/1a2b-3c/apply')).toBe('https://api.lever.co/v0/postings/hooli/1a2b-3c');
+    expect(api('https://jobs.eu.lever.co/hooli/1a2b-3c')).toBe('https://api.eu.lever.co/v0/postings/hooli/1a2b-3c');
+    expect(api('https://jobs.ashbyhq.com/hooli/1a2b-3c/application')).toBe('https://api.ashbyhq.com/posting-api/job-board/hooli');
+    expect(api('https://job-boards.greenhouse.io/hooli/jobs/4012345')).toBe('https://boards-api.greenhouse.io/v1/boards/hooli/jobs/4012345');
+    expect(api('https://job-boards.greenhouse.io/embed/job_app?for=hooli&token=4012345')).toBe('https://boards-api.greenhouse.io/v1/boards/hooli/jobs/4012345');
+    expect(api('https://example.com/careers/data-engineer')).toBeNull();
+  });
+
+  it('reads the description from each API', () => {
+    const workday = postingSource('https://acme.wd5.myworkdayjobs.com/Careers/job/Austin/Data-Engineer_JR123/apply')!;
+    expect(workday.read({ jobPostingInfo: { title: 'Data Engineer', jobDescription: '<p>Build pipelines.</p><ul><li>SQL</li><li>Python</li></ul>' } })).toEqual({
+      title: 'Data Engineer',
+      text: 'Build pipelines.\n- SQL\n- Python',
+    });
+    const lever = postingSource('https://jobs.lever.co/hooli/abc/apply')!;
+    expect(lever.read({ text: 'Data Engineer', descriptionPlain: 'Build pipelines.', lists: [{ text: 'Requirements', content: '<li>SQL</li>' }] })?.text).toBe('Build pipelines.\n\nRequirements\n- SQL');
+    const ashby = postingSource('https://jobs.ashbyhq.com/hooli/ABC/application')!;
+    expect(ashby.read({ jobs: [{ id: 'xyz', title: 'Other', descriptionPlain: 'No' }, { id: 'abc', title: 'Data Engineer', descriptionPlain: 'Build pipelines.' }] })).toEqual({ title: 'Data Engineer', text: 'Build pipelines.' });
+    expect(ashby.read({ jobs: [] })).toBeNull();
+  });
+
+  it('turns API HTML into plain text, including Greenhouse\'s escaped HTML', () => {
+    expect(htmlToText('&lt;p&gt;Pay: $100K &amp;amp; equity&lt;/p&gt;&lt;p&gt;Remote&lt;/p&gt;')).toBe('Pay: $100K & equity\nRemote');
+    expect(htmlToText('<h2>About</h2><p>We&#39;re&nbsp;hiring</p>')).toBe("About\nWe're hiring");
   });
 });

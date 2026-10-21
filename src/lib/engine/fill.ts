@@ -18,6 +18,7 @@ import {
   fillText,
   formatDate,
   highlightTarget,
+  monthName,
   type Outcome,
 } from './controls';
 import { closestDeep, composedElements, sleep, waitForStable } from './dom';
@@ -53,6 +54,8 @@ export interface EngineOptions {
   skip?: (field: Field) => boolean;
   /** Only fill fields not handled before (multi-step watching). */
   incremental?: boolean;
+  /** Runs after each field is filled, e.g. to wait for the site to save it. */
+  afterField?: () => Promise<void>;
 }
 
 // Elements already handled, so incremental passes (new steps) skip them.
@@ -141,6 +144,12 @@ function asText(value: AnswerValue): string {
 async function fillField(field: Field, answer: Answer): Promise<Outcome> {
   let value = answer.value;
   if (answer.isDate && typeof value === 'string' && !isChoice(field)) value = formatDate(value, field.el, field.label);
+  // A dropdown asking only for the month ("June") or only for the year ("2028") of a date.
+  else if (answer.isDate && typeof value === 'string' && /^\d{4}-\d{2}/.test(value)) {
+    const question = normalize(field.label);
+    if (/\bmonth\b/.test(question) && !/\byears?\b/.test(question)) value = monthName(value);
+    else if (/\byears?\b/.test(question) && !/\bmonths?\b/.test(question)) value = value.slice(0, 4);
+  }
   const one = asText(value);
   switch (field.kind) {
     case 'text':
@@ -320,6 +329,7 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
       if (!outcome.ok) record(field, 'review', outcome.review);
       else if (outcome.review || answer.confidence === 'low') record(field, 'review', outcome.review ?? 'Matched loosely — please check.');
       else record(field, 'filled');
+      if (outcome.ok) await opts.afterField?.();
       await sleep(30);
     }
     await sleep(400);

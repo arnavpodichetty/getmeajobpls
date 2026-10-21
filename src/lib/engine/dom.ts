@@ -48,6 +48,18 @@ export function closestDeep(el: Element, selector: string): Element | null {
   return null;
 }
 
+/**
+ * react-select's control box ("select__control", "css-13cymwt-control"). A
+ * class that merely contains "__control", like Oracle's
+ * "input-row__control-container", is not one.
+ */
+export function reactSelectControl(el: Element): Element | null {
+  for (let cur = el.parentElement; cur; cur = cur.parentElement) {
+    if ([...cur.classList].some((c) => /__control(?:--[\w-]+)?$|css-\w+-control$/.test(c))) return cur;
+  }
+  return null;
+}
+
 /** True when the page has a layout engine (false under happy-dom in tests). */
 let layoutKnown: boolean | null = null;
 function hasLayout(): boolean {

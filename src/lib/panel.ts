@@ -14,7 +14,7 @@ const CSS = `
 * { box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
 [hidden] { display: none !important; }
 .wrap {
-  position: fixed; top: 45%; right: 12px; z-index: 2147483646; width: 168px;
+  position: fixed; top: 12px; right: 12px; z-index: 2147483646; width: 168px;
   display: flex; flex-direction: column; gap: 6px; font-size: 12px; line-height: 1.35; color: #1d1d1b;
 }
 .bar { display: flex; align-items: stretch; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.22); overflow: hidden; touch-action: none; }

@@ -110,7 +110,7 @@ try {
       await page.goto(url, { waitUntil: 'networkidle2', timeout: 60_000 });
       await new Promise((r) => setTimeout(r, 2500));
       if (process.env.PANEL) {
-        // Click "Fill page" on the on-page panel like a person would (it sits at 45% height, right edge).
+        // Click "Fill page" on the on-page panel like a person would (it sits at the top right).
         // The panel is in a closed shadow root; hit-test the right edge to find it.
         const x = page.viewport().width - 12 - 168 + 50;
         let y = -1;

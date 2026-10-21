@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.1 (2026-10-19)
+
+### Fixes
+- **Ashby "Missing entry for required field" on submit:** Ashby saves each answer to its server as it's picked, and answers saved at the same moment overwrote each other there, so questions that looked answered came back as missing. The filler now waits for each save to finish before answering the next question.
+- **Questions with help text under them:** a question like Ashby's "Are you legally authorized to work in the United States?" with "(If hired, verification will be required…)" below it was read as the help text, so it was skipped without being flagged. The question is read from its title now, and required questions marked only by a style (no "*") are recognized, so unanswered ones are flagged for review.
+- **Workday jobs and links under other section names:** work experience under "Professional Experience" and links under "Portfolio" (instead of "Work Experience" and "Websites") were left empty. Panels are now recognized by their fields, whatever the section is called.
+- **Tailored resumes no longer look squished:** spacing now matches Jake's LaTeX template: 12pt line spacing in bullets, more room around section headings and under the header, a small gap between bullets, the template's bullet indent, and dates and locations aligned to its right edge.
+- **Tailored resume details:** the name prints in plain bold as pdflatex does, `--` in dates becomes an en dash, the `|` and tech stack after a project name are no longer italic, and a web address in a project line is linked.
+- **Tailoring on application pages without the job description:** Workday's steps, Lever's /apply and Ashby's Application tab now get the description from the ATS's public job listing, or from the posting page you opened earlier in the same tab.
+- **Oracle Recruiting dropdowns:** Country, City, State, Postal Code, phone country code, graduation month and year, and the EEO dropdowns were all flagged "the dropdown showed no options". Oracle lists its choices as grid cells, which are now read, and a pick only counts once Oracle shows it in the box. Values already in these dropdowns are no longer overwritten.
+- **"Title" with Mr. / Ms. / Dr. options:** was answered with your job title and flagged. A Title choice is left for you; a Title text box still gets your job title.
+- **"What type of degree program are you currently enrolled in?":** was answered "Yes" (as if asking whether you're enrolled). It now picks your degree.
+- **Graduation month and year asked separately:** a dropdown asking only for the month now gets the month name ("June"), and one asking only for the year gets the year.
+- **On-page panel position:** starts in the top-right corner instead of the middle of the right edge. A spot you dragged it to is still remembered.
+
 ## 1.1.0 (2026-10-18)
 
 ### New

@@ -5,10 +5,12 @@
 // 97% wide. All sizes are in em so the page can be scaled to fit.
 
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+/** LaTeX's dashes: --- is an em dash, -- an en dash (date ranges). */
+const dashes = (s) => s.replace(/---/g, '\u2014').replace(/--/g, '\u2013');
 
 /** Escape, then allow **bold** and *italic*. */
 export function inline(s) {
-  return esc(s)
+  return dashes(esc(s))
     .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
     .replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g, '$1<i>$2</i>');
 }
@@ -57,39 +59,47 @@ function css(style, scale) {
 @page { size: letter; margin: 0; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: ${(11 * scale).toFixed(2)}pt; }
-body { font-family: ${FONT_STACKS[style.font]}; color: #000; background: #fff; line-height: 1.15; -webkit-print-color-adjust: exact; }
+/* LaTeX's baselines: 13.6pt at 11pt, 12pt at \\small. */
+body { font-family: ${FONT_STACKS[style.font]}; color: #000; background: #fff; line-height: 1.236; -webkit-print-color-adjust: exact; }
 .page { width: 8.5in; padding: 0.5in; }
 /* One underline weight for every link (LaTeX's \\underline varies between viewers). */
-a { color: inherit; text-decoration: underline; text-underline-offset: 0.12em; text-decoration-thickness: 0.4pt; }
+a { color: inherit; text-decoration: underline; text-underline-offset: 0.2em; text-decoration-thickness: 0.4pt; }
 header { text-align: ${style.nameAlign}; }
-h1 { font-size: 2.26em; font-weight: bold; line-height: 1.1; color: ${accent};${style.headings === 'smallcaps-rule' ? ' font-variant: small-caps;' : ''} }
-.contact { font-size: 0.91em; margin-top: 0.15em; line-height: 1.3; }
+/* Computer Modern has no bold small caps, so pdflatex prints the template's \\scshape name as plain bold. */
+h1 { font-size: 2.26em; font-weight: bold; line-height: 1.1; color: ${accent};${style.headings === 'smallcaps-rule' && style.font !== 'computer-modern' ? ' font-variant: small-caps;' : ''} }
+.contact { font-size: 0.91em; margin-top: 0.1em; line-height: 1.3; }
+header { margin-bottom: 0.75em; }
 .contact .item { white-space: nowrap; }
-h2 { ${heading} color: ${accent}; margin: 0.4em 0 0.25em; padding-bottom: 0.02em; }
+h2 { ${heading} color: ${accent}; margin: 0.65em 0 0.3em; padding-bottom: 0.1em; line-height: 1.2; }
+section:first-of-type h2 { margin-top: 0; }
 .entries { padding-left: 0.15in; }
 /* Even gaps between entries, whatever their bullet count. */
-.entry + .entry { margin-top: 0.22em; }
-.row { display: flex; justify-content: space-between; gap: 1em; width: 97%; }
+.entry + .entry { margin-top: 0.3em; }
+/* Header rows are 0.97\\textwidth, starting at the entry indent like the template's tabular*. */
+.row { display: flex; justify-content: space-between; gap: 1em; width: calc(0.97 * 7.5in); }
 .row > :last-child { flex-shrink: 0; text-align: right; }
 .title { font-weight: bold; }
-.title-detail { font-style: italic; font-weight: normal; }
+.title-detail { font-weight: normal; }
 /* Project headings: title and tech stack are \\small, the date stays full size. */
 .row.project .title { font-size: 0.91em; }
-.sub { font-style: italic; font-size: 0.91em; }
-ul { margin: 0.05em 0 0 1.45em; padding: 0; }
-li { font-size: 0.91em; }
-li::marker { font-size: 0.75em; }
+.sub { font-style: italic; font-size: 0.91em; line-height: 1.36; }
+ul { margin: 0 0 0 2.2em; padding: 0; }
+li { font-size: 0.91em; line-height: 1.2; }
+li + li { margin-top: 0.06em; }
+li::marker { font-size: 0.9em; }
 /* No last line holding a single word. */
 li, .text p { text-wrap: pretty; }
-.text p { font-size: 0.91em; padding-left: 0.15in; margin-bottom: 0.15em; }
-.skills { font-size: 0.91em; padding-left: 0.15in; }
+.text p { font-size: 0.91em; line-height: 1.2; padding-left: 0.15in; margin-bottom: 0.15em; }
+.skills { font-size: 0.91em; line-height: 1.2; padding-left: 0.15in; }
 .skills b { font-weight: bold; }
 `;
 }
 
 function entry(e) {
-  const titleDetail = e.titleDetail ? ` <span class="title-detail">| ${esc(e.titleDetail)}</span>` : '';
-  const top = `<div class="row${e.titleDetail ? ' project' : ''}"><span class="title">${inline(e.title)}${titleDetail}</span><span>${esc(e.date)}</span></div>`;
+  // A web address in the tech stack ("React | example.com") is linked, like the template's \\href.
+  const detail = e.titleDetail.split(' | ').map((p) => (isWeb(p) && !isEmail(p) ? contactItem(p) : esc(p))).join(' | ');
+  const titleDetail = e.titleDetail ? ` <span class="title-detail">| ${detail}</span>` : '';
+  const top = `<div class="row${e.titleDetail ? ' project' : ''}"><span class="title">${inline(e.title)}${titleDetail}</span><span>${dashes(esc(e.date))}</span></div>`;
   const sub = e.subtitle || e.location
     ? `<div class="row sub"><span>${inline(e.subtitle)}</span><span>${esc(e.location)}</span></div>`
     : '';

@@ -1,6 +1,6 @@
 // Turns a page into a list of logical fields: one entry per question, with
 // radio/checkbox/button groups collapsed and widget internals ignored.
-import { closestDeep, composedElements, isHoneypot, isVisible, parentOf, queryAllDeep } from './dom';
+import { closestDeep, composedElements, isHoneypot, isVisible, parentOf, queryAllDeep, reactSelectControl } from './dom';
 import { groupLabelFor, labelFor, optionText, splSelectedValues, type FieldLabel } from './labels';
 
 export type FieldKind =
@@ -204,7 +204,7 @@ export function currentValue(field: Field): string {
       if (el instanceof HTMLInputElement) {
         // In react-select this input is a search query, never the selected
         // value. A leftover "science" must not make autofill skip the field.
-        if (el.getAttribute('aria-autocomplete') === 'list' && el.closest('[class*="__control"], [class*="css-"][class*="-control"]')) return '';
+        if (el.getAttribute('aria-autocomplete') === 'list' && reactSelectControl(el)) return '';
         return el.value.trim();
       }
       if (!(el instanceof HTMLInputElement)) {

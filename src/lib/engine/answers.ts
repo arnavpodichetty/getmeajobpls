@@ -505,6 +505,8 @@ const DEFS: Def[] = [
   {
     key: 'currentStudent',
     re: /currently (enrolled|a student|pursuing)|are you a (current )?student|(?:working|studying) (?:towards?|on) (?:a |an |your )?(?:\w+ ){0,5}degree|pursuing (?:a |an )?(?:\w+ ){0,5}degree/,
+    // "What type of degree program are you currently enrolled in?" asks which degree, not whether you study.
+    not: /\b(?:what|which)\b.{0,30}\b(?:type|kind|level)\b.{0,30}\bdegree\b|\bdegree (?:program )?(?:type|level)\b/,
     value: currentStudentAnswer,
     // Full-time / Part-time / Not attending option lists answer with your enrollment status.
     tiers: (c, label) => {
@@ -626,7 +628,9 @@ const DEFS: Def[] = [
     re: /current (company|employer|organi[sz]ation)|most recent (company|employer)|^(company|employer|organi[sz]ation)( name)?$/,
     value: (c) => latestJob(c.profile)?.company || null,
   },
-  { key: 'currentTitle', short: true, re: /current (job )?(title|role|position)|most recent (job )?(title|role)|^(job )?title$/, value: (c) => latestJob(c.profile)?.title || null },
+  // A bare "Title" choice is an honorific (Mr. / Ms. / Dr.), as on Oracle Recruiting; only a text box wants your job title.
+  { key: 'currentTitle', short: true, textOnly: true, re: /^title$/, value: (c) => latestJob(c.profile)?.title || null },
+  { key: 'currentTitle', short: true, re: /current (job )?(title|role|position)|most recent (job )?(title|role)|^job title$/, value: (c) => latestJob(c.profile)?.title || null },
   {
     key: 'school',
     re: /school|university|college|institution/,

@@ -130,6 +130,22 @@ describe('Workday My Experience', () => {
   });
 });
 
+describe('Workday My Experience with renamed sections (capture D)', () => {
+  it('fills jobs under "Professional Experience" and links under "Portfolio"', async () => {
+    loadFixture('workday-d');
+    const ctx = context();
+    await workday.fill(ctx);
+    const job = ctx.profile.experience[0];
+    expect(document.querySelector<HTMLInputElement>('input[name="jobTitle"]')!.value).toBe(job.title);
+    expect(document.querySelector<HTMLInputElement>('input[name="companyName"]')!.value).toBe(job.company);
+    expect(document.querySelector<HTMLInputElement>('input[name="location"]')!.value).toBe(job.location);
+    expect(document.querySelector<HTMLInputElement>('input[name="currentlyWorkHere"]')!.checked).toBe(true);
+    const urls = [...document.querySelectorAll<HTMLInputElement>('input[name="url"]')].map((i) => i.value);
+    const { portfolio, github } = ctx.profile.links;
+    expect(urls).toEqual([portfolio, github]);
+  });
+});
+
 describe('Workday Application Questions', () => {
   it('reads each question from the legend, not the dropdown value, and ignores helper boxes and the header', async () => {
     const { scanFields } = await import('../src/lib/engine/scan');

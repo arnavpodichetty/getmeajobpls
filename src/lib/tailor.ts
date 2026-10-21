@@ -5,6 +5,7 @@
 import { browser } from 'wxt/browser';
 import { uid } from './defaults';
 import { pageContext } from './orchestrate';
+import { findPosting } from './posting';
 import { base64ToBlob, blobToBase64, deleteResume, getResume, listResumes, putResume } from './resumeDb';
 import { loadProfile } from './storage';
 import { findTailored, jobLabel } from './tailorMatch';
@@ -85,6 +86,10 @@ export async function tailorForTab(tabId: number, resumeId: string): Promise<Tai
   }
 
   const page = await pageContext(tabId);
+  // Application pages often leave the description out (Workday's steps, Lever's /apply): put it first.
+  const posting = await findPosting(tabId, url);
+  const text = posting ? `${posting.text}\n\n${page.text}` : page.text;
+  const name = posting?.title ? jobLabel(posting.title) : label;
   // Your profile is extra source material: Claude may use its Experience and
   // Projects descriptions and skills, and swap in entries that aren't on the resume.
   const p = await loadProfile();
@@ -97,7 +102,7 @@ export async function tailorForTab(tabId: number, resumeId: string): Promise<Tai
   const reply = await sendHost({
     type: 'tailor',
     resume: { name: base.name, base64: await blobToBase64(base.blob) },
-    page: { title: tab.title ?? page.title, url, text: page.text },
+    page: { title: posting?.title || tab.title || page.title, url, text },
     profile,
   });
   if (!reply.ok || !reply.base64) throw new Error(reply.error ?? 'Tailoring failed.');
@@ -107,7 +112,7 @@ export async function tailorForTab(tabId: number, resumeId: string): Promise<Tai
   const id = uid();
   await putResume({
     id,
-    name: `${base.name} · tailored for ${label}`,
+    name: `${base.name} · tailored for ${name}`,
     tags: [],
     skills: base.skills,
     // Same file name as the original: employers see this name.
@@ -117,12 +122,12 @@ export async function tailorForTab(tabId: number, resumeId: string): Promise<Tai
     uploadedAt: Date.now(),
     isDefault: false,
     tailoredFrom: base.id,
-    tailoredFor: label,
+    tailoredFor: name,
     tailoredUrl: url,
     tailorNotes: notes,
     blob,
   });
   const tailored = (await listResumes()).filter((r) => r.tailoredFrom).sort((a, b) => b.uploadedAt - a.uploadedAt);
   for (const old of tailored.slice(KEEP_TAILORED)) await deleteResume(old.id);
-  return { resumeId: id, name: label, ...notes, reused: false };
+  return { resumeId: id, name, ...notes, reused: false };
 }

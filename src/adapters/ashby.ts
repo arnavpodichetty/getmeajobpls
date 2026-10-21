@@ -1,5 +1,6 @@
 import { fillPage, type Override } from '../lib/engine/fill';
 import { fullName } from '../lib/engine/answers';
+import { waitForAshbySaves } from '../lib/ashbySaves';
 import type { Adapter } from './types';
 
 const NAME_INPUT = 'input:is([type="text"], :not([type]))';
@@ -39,6 +40,9 @@ export const ashby: Adapter = {
       overrides: OVERRIDES,
       incremental: ctx.incremental,
       resumeTarget: () => document.querySelector<HTMLElement>(SELECTORS.resume),
+      // Ashby saves each answer to its server as it changes; saves that overlap
+      // overwrite each other there and the answer is "missing" on submit.
+      afterField: waitForAshbySaves,
     });
   },
 };

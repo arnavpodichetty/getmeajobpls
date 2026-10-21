@@ -7,6 +7,7 @@ import { uid } from './defaults';
 import { mergeSavedAnswers } from './engine/capture';
 import { sendToFrame, type FrameInfo } from './messages';
 import { listResumes } from './resumeDb';
+import { rememberPosting } from './posting';
 import { pickResume, pickSkillSetFor, skillSetForResume } from './resumeRules';
 import { findTailored, jobLabel } from './tailorMatch';
 import { loadProfile, loadRules, loadSettings, saveProfile } from './storage';
@@ -85,11 +86,16 @@ export async function tabState(tabId: number): Promise<TabState> {
   const knownAts = targets.some((f) => f.atsId !== 'generic');
 
   const page = await pageContext(tabId, targets);
+  // Known ATS with a form, or a form elsewhere that looks like a job application
+  // (not a sign-up, checkout, settings or contact form).
+  const isApplication = (knownAts && fields > 0) || (fields >= MIN_FORM_FIELDS && targets.some((f) => f.jobForm));
+  const tab = await browser.tabs.get(tabId).catch(() => null);
+  // A posting page: keep its text for tailoring on the application steps that follow.
+  if (!isApplication && tab?.url) await rememberPosting(tabId, tab.url, page);
   const library = await listResumes();
   let pick = pickResume(library, await loadRules(), page);
   // Back on a job you already tailored for: pick that copy.
   if (pick) {
-    const tab = await browser.tabs.get(tabId).catch(() => null);
     const done = tab?.url ? findTailored(library, pick.resumeId, tab.url, tab.title ? jobLabel(tab.title) : '') : undefined;
     if (done) pick = { resumeId: done.id, reason: 'tailoring this job earlier' };
   }
@@ -108,9 +114,7 @@ export async function tabState(tabId: number): Promise<TabState> {
     skillSetByResume,
     connected: true,
     atsLabel: describe(targets),
-    // Known ATS with a form, or a form elsewhere that looks like a job application
-    // (not a sign-up, checkout, settings or contact form).
-    isApplication: (knownAts && fields > 0) || (fields >= MIN_FORM_FIELDS && targets.some((f) => f.jobForm)),
+    isApplication,
     resumes,
     pickedResumeId: pick?.resumeId ?? null,
     pickReason: pick ? `Picked by ${pick.reason}` : '',

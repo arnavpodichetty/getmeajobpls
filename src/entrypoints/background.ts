@@ -3,6 +3,7 @@ import { browser } from 'wxt/browser';
 import type { BackgroundRequest, PanelRequest, PanelResponse, ResumeFilePayload } from '../lib/messages';
 import { captureTab, fillTab, saveAnswersFromTab, tabState } from '../lib/orchestrate';
 import { blobToBase64, getResume } from '../lib/resumeDb';
+import { forgetPostings } from '../lib/posting';
 import { REOPEN_KEY, tailorForTab } from '../lib/tailor';
 
 export default defineBackground(() => {
@@ -15,6 +16,8 @@ export default defineBackground(() => {
       await browser.tabs.create({ url: browser.runtime.getURL(`/options.html#${section}`) });
     }
   });
+
+  browser.tabs.onRemoved.addListener((tabId) => { void forgetPostings(tabId); });
 
   browser.runtime.onMessage.addListener((msg: BackgroundRequest | PanelRequest, sender, sendResponse) => {
     if (typeof msg?.type === 'string' && msg.type.startsWith('panel:')) {

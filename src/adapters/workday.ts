@@ -26,12 +26,13 @@ const SELECTORS = {
 } as const;
 
 /**
- * One "Work Experience N" / "Education N" panel each. Fields are looked up
- * inside their panel (verified against a live Workday capture).
+ * One panel per job / school / website ("Work Experience 1", "Education 1",
+ * "Websites 1"). Companies rename sections ("Professional Experience",
+ * "Portfolio"), so a panel is recognized by the fields in it, not its heading.
+ * Fields are looked up inside their panel (verified against live Workday captures).
  */
 const PANEL = {
-  jobs: '[role="group"][aria-labelledby^="Work-Experience-"][aria-labelledby$="-panel"]',
-  schools: '[role="group"][aria-labelledby^="Education-"][aria-labelledby$="-panel"]',
+  any: '[role="group"][aria-labelledby$="-panel"]',
   job: {
     title: 'input[name="jobTitle"], [data-automation-id="formField-jobTitle"] input',
     company: 'input[name="companyName"], [data-automation-id="formField-companyName"] input',
@@ -49,7 +50,6 @@ const PANEL = {
     start: '[data-automation-id="formField-firstYearAttended"]',
     end: '[data-automation-id="formField-lastYearAttended"]',
   },
-  websites: '[role="group"][aria-labelledby^="Websites-"][aria-labelledby$="-panel"]',
   url: 'input[name="url"], [data-automation-id="formField-url"] input',
   dateWrapper: '[data-automation-id="dateInputWrapper"]',
   day: 'input[data-automation-id="dateSectionDay-input"]',
@@ -84,8 +84,9 @@ function currentStep(): string {
   return normalize(text);
 }
 
-/** "Add" / "Add Another" button belonging to a section (work experience, education, languages…). */
-function addButtonFor(section: RegExp): HTMLElement | null {
+/** "Add" / "Add Another" button belonging to a section: the one holding this kind of panel, else by its heading. */
+function addButtonFor(kind: Kind | RegExp): HTMLElement | null {
+  const { field, section } = kind instanceof RegExp ? { field: null, section: kind } : KINDS[kind];
   const buttons = queryAllDeep<HTMLElement>(`${SELECTORS.addButton}, button`).filter(
     (b) => isVisible(b) && (/^add( another)?$/i.test((b.textContent ?? '').trim()) || b.matches(SELECTORS.addButton)),
   );
@@ -93,24 +94,39 @@ function addButtonFor(section: RegExp): HTMLElement | null {
     const aria = b.getAttribute('aria-label') ?? '';
     const group = b.closest('[role="group"]:not([aria-labelledby$="-panel"]), section, [data-automation-id*="Section" i]');
     const heading = group?.querySelector('h2, h3, h4, legend')?.textContent ?? '';
+    if (field && group?.querySelector(field)) return b;
     if (section.test(`${aria} ${heading} ${group?.getAttribute('aria-labelledby') ?? ''}`)) return b;
   }
   return null;
 }
 
-const panels = (selector: string) => queryAllDeep<HTMLElement>(selector).filter(isVisible);
+/** What identifies each kind of panel, and the section names its Add button may sit under. */
+const KINDS = {
+  jobs: { field: `${PANEL.job.title}, ${PANEL.job.company}`, section: /work experience|professional experience|employment|work history/i },
+  schools: { field: PANEL.school.school, section: /education/i },
+  websites: { field: PANEL.url, section: /websites?|portfolio|links/i },
+} as const;
+type Kind = keyof typeof KINDS;
+
+const panels = (kind: Kind) => queryAllDeep<HTMLElement>(PANEL.any).filter((p) => isVisible(p) && !!p.querySelector(KINDS[kind].field));
+
+/** The job/school/website panel an element sits in, if any. */
+const panelOf = (el: Element, ...kinds: Kind[]) => {
+  const panel = el.closest(PANEL.any);
+  return !!panel && kinds.some((k) => !!panel.querySelector(KINDS[k].field));
+};
 
 /** Click the section's Add button until there are `count` panels. */
-async function ensurePanels(section: RegExp, selector: string, count: number): Promise<HTMLElement[]> {
-  for (let guard = 0; panels(selector).length < count && guard < count + 2; guard++) {
-    const add = addButtonFor(section);
+async function ensurePanels(kind: Kind, count: number): Promise<HTMLElement[]> {
+  for (let guard = 0; panels(kind).length < count && guard < count + 2; guard++) {
+    const add = addButtonFor(kind);
     if (!add) break;
-    const before = panels(selector).length;
+    const before = panels(kind).length;
     realClick(add);
-    await waitForElement(() => (panels(selector).length > before ? document.body : null), 3000);
+    await waitForElement(() => (panels(kind).length > before ? document.body : null), 3000);
     await sleep(300);
   }
-  return panels(selector);
+  return panels(kind);
 }
 
 const ym = (iso: string) => ({ month: iso ? iso.split('-')[1] ?? '' : '', year: iso ? iso.split('-')[0] : '' });
@@ -186,11 +202,11 @@ async function setDate(field: Element | null, iso: string, results: FieldResult[
 
 async function fillJobs(jobs: Experience[], results: FieldResult[]): Promise<void> {
   if (!jobs.length) return;
-  const found = await ensurePanels(/work experience/i, PANEL.jobs, jobs.length);
+  const found = await ensurePanels('jobs', jobs.length);
   // Panels Workday pre-filled from your resume keep their job; empty panels take the rest in order.
   const order = assignJobs(found, jobs);
   for (let i = 0; i < order.length; i++) {
-    const panel = panels(PANEL.jobs)[i] ?? found[i]; // re-query: panels re-render as they're filled
+    const panel = panels('jobs')[i] ?? found[i]; // re-query: panels re-render as they're filled
     const job = order[i];
     if (!job) continue;
     const tag = `Job ${i + 1} (${job.company})`;
@@ -225,10 +241,10 @@ function assignJobs(found: HTMLElement[], jobs: Experience[]): (Experience | und
 
 /** One Websites panel per link (portfolio/website, then GitHub), each with a different URL. */
 async function fillWebsites(links: string[], results: FieldResult[]): Promise<void> {
-  if (!links.length || !addButtonFor(/websites?/i) && !panels(PANEL.websites).length) return;
-  const found = await ensurePanels(/websites?/i, PANEL.websites, links.length);
+  if (!links.length || !addButtonFor('websites') && !panels('websites').length) return;
+  const found = await ensurePanels('websites', links.length);
   for (let i = 0; i < Math.min(found.length, links.length); i++) {
-    const panel = panels(PANEL.websites)[i] ?? found[i];
+    const panel = panels('websites')[i] ?? found[i];
     await setText(panel, PANEL.url, links[i], results, `Website ${i + 1}`);
   }
 }
@@ -237,7 +253,7 @@ async function fillWebsites(links: string[], results: FieldResult[]): Promise<vo
 async function fillStandaloneDates(ctx: FillContext, results: FieldResult[]): Promise<void> {
   const answers = { profile: ctx.profile, skills: ctx.profile.skills };
   for (const wrapper of queryAllDeep<HTMLElement>(PANEL.dateWrapper).filter(isVisible)) {
-    if (wrapper.closest(`${PANEL.jobs}, ${PANEL.schools}`)) continue;
+    if (panelOf(wrapper, 'jobs', 'schools')) continue;
     const field = wrapper.closest('[data-automation-id^="formField"]') ?? wrapper.parentElement;
     const label = (field?.querySelector('legend, label')?.textContent ?? '').replace(/\*/g, '').trim();
     const answer = resolveAnswer(label || 'Date', '', null, answers, false).answer;
@@ -264,9 +280,9 @@ function workdaySchoolOrder(variants: string[]): string[] {
 
 async function fillSchools(schools: Education[], results: FieldResult[]): Promise<void> {
   if (!schools.length) return;
-  const found = await ensurePanels(/education/i, PANEL.schools, schools.length);
+  const found = await ensurePanels('schools', schools.length);
   for (let i = 0; i < Math.min(found.length, schools.length); i++) {
-    const panel = panels(PANEL.schools)[i] ?? found[i];
+    const panel = panels('schools')[i] ?? found[i];
     const ed = schools[i];
     const tag = `School ${i + 1}`;
     const schoolEl = panel.querySelector<HTMLElement>(PANEL.school.school);
@@ -351,7 +367,7 @@ export const workday: Adapter = {
       // Panel fields are filled below, one panel per entry.
       skip: (f) =>
         f.el.matches(SELECTORS.source) ||
-        !!f.el.closest(PANEL.websites) ||
+        panelOf(f.el, 'websites') ||
         /workexperience|education-\d|\beducation\b|skills/i.test(`${f.el.id} ${f.el.getAttribute('data-automation-id') ?? ''}`),
     });
 

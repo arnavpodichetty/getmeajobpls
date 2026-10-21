@@ -10,6 +10,7 @@ import {
   pressKey,
   queryAllDeep,
   queryDeep,
+  reactSelectControl,
   realClick,
   setNativeValue,
   sleep,
@@ -19,7 +20,7 @@ import {
 import { bestAvailabilityOption } from './availability';
 import { optionText, splSelectedValues } from './labels';
 import { bestLocationOption, locationSearchTerms, type LocationPreference } from './locationPreferences';
-import { bestOption, bestOptionTiered, CONFIDENT_OPTION_SCORE, DECLINE, isPlaceholderOption, MIN_OPTION_SCORE, optionScore, searchTextFor } from './text';
+import { bestOption, bestOptionTiered, CONFIDENT_OPTION_SCORE, DECLINE, isPlaceholderOption, MIN_OPTION_SCORE, normalize, optionScore, searchTextFor } from './text';
 
 const pickBest = <T>(options: T[], text: (o: T) => string, value: string, tiers?: string[][], locationPreference?: LocationPreference, availabilityDate?: string) =>
   availabilityDate ? bestAvailabilityOption(options, text, availabilityDate) : locationPreference ? bestLocationOption(options, text, locationPreference) : tiers?.length ? bestOptionTiered(options, text, tiers) : bestOption(options, text, value);
@@ -233,8 +234,9 @@ export function fillButtons(members: HTMLElement[], value: string, tiers?: strin
 /** Waits for dropdown options, in ms. Tests shorten these (fixtures have no live JS). */
 export const TIMING = { open: 1200, search: 4000, multi: 5000 };
 
+// Grid popups (Oracle Recruiting's cx-select, aria-haspopup="grid") list each choice as a selectable gridcell.
 const OPTION_SELECTOR =
-  '[role="option"], [data-automation-id="promptOption"], [data-automation-id="menuItem"], .select__option, li[class*="option" i], spl-select-option';
+  '[role="option"], [data-automation-id="promptOption"], [data-automation-id="menuItem"], .select__option, li[class*="option" i], spl-select-option, [role="gridcell"][aria-selected]';
 const NON_OPTIONS = /^(no (results|options|matches)|loading|searching|type to search|start typing|no items)/i;
 
 function listboxFor(el: Element): Element | null {
@@ -374,12 +376,20 @@ export async function fillCombobox(
     close(el, input);
     return fail('The dropdown did not accept the selected option.');
   }
+  // Oracle's cx-select writes the chosen option (or its short name, like a
+  // city without its county) into its own input; anything else means the click was ignored.
+  const shown = el instanceof HTMLInputElement ? normalize(el.value) : '';
+  if (el instanceof HTMLInputElement && el.getAttribute('aria-haspopup') === 'grid'
+    && !(shown && normalize(chosenText).includes(shown)) && optionScore(el.value, chosenText) < CONFIDENT_OPTION_SCORE) {
+    close(el, null);
+    return fail('The dropdown did not accept the selected option.');
+  }
   if (el.matches('button[aria-haspopup="listbox"]') && isPlaceholderOption(el.textContent ?? '')) {
     close(el, input);
     return fail('The dropdown did not accept the selected option.');
   }
   const reactControl = el instanceof HTMLInputElement && el.getAttribute('aria-autocomplete') === 'list'
-    ? el.closest('[class*="__control"], [class*="css-"][class*="-control"]') : null;
+    ? reactSelectControl(el) : null;
   const selected = reactControl?.querySelectorAll('[class*="single-value" i], [class*="singleValue" i], [class*="multi-value" i], [class*="multiValue" i], [data-automation-id="selectedItem"]');
   if (reactControl && ![...(selected ?? [])].some((item) => optionScore(item.textContent ?? '', chosenText) >= CONFIDENT_OPTION_SCORE)) {
     close(el, input);

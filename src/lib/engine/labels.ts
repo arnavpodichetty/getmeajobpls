@@ -14,6 +14,8 @@ export interface FieldLabel {
 }
 
 const REQUIRED_MARK = /[*✱]|\(required\)/i;
+/** A class like "required" or Ashby's hashed "_required_f7cvd_91". */
+const isRequiredClass = (cls: string) => /(?:^|[\s_-])required(?:$|[\s_-])/i.test(cls) && !/not[\s_-]?required/i.test(cls);
 
 function pick(candidates: (() => string)[]): { label: string; marked: boolean } {
   for (const get of candidates) {
@@ -92,14 +94,24 @@ const LABELISH =
 
 const isOptionLabel = (el: Element) => el.matches('label') && !!el.querySelector('input[type=radio], input[type=checkbox]');
 
+/**
+ * Help text under a question that only matched LABELISH by class name, like
+ * Ashby's "ashby-application-form-question-description" ("(If hired,
+ * verification will be required…)"). It comes after the title, so it would
+ * otherwise win as the nearest heading.
+ */
+const isHelpText = (el: Element) =>
+  !el.matches('label, legend, h1, h2, h3, h4, h5, h6') && /descri|help|hint|instruction|subtitle|caption/i.test(el.getAttribute('class') ?? '');
+
 /** Last label-like element inside `container` that comes before `el` in the page. */
 function headingBefore(container: Element, el: Element): string {
   let found = '';
   for (const cand of container.querySelectorAll(LABELISH)) {
-    if (cand.contains(el) || isOptionLabel(cand)) continue;
+    if (cand.contains(el) || isOptionLabel(cand) || isHelpText(cand)) continue;
     if (!(cand.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
     const text = ownText(cand);
-    if (text && text.length <= 600 && !isGenericLabel(cleanLabel(text))) found = text;
+    // Ashby marks required questions with a class (its asterisk is CSS), not a "*" in the text.
+    if (text && text.length <= 600 && !isGenericLabel(cleanLabel(text))) found = isRequiredClass(cand.getAttribute('class') ?? '') ? `${text} *` : text;
   }
   return found;
 }
