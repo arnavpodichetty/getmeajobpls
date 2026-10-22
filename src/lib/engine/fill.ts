@@ -228,7 +228,11 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
     resumeAttachedOn = null;
   }
 
+  // Dropdowns marked filled, re-checked at the end: Workday re-renders a
+  // questionnaire as it's answered and can put an earlier pick back to "Select One".
+  const picked: { field: Field; index: number }[] = [];
   const record = (field: Field, status: FieldResult['status'], reason?: string) => {
+    if (status === 'filled' && field.el.matches('button[aria-haspopup="listbox"], select')) picked.push({ field, index: results.length });
     results.push({ label: displayLabel(field), status, reason });
     if (status !== 'skipped') highlight(field, status, ctx.settings.highlightFields);
     if (status === 'filled') filled++;
@@ -334,6 +338,14 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
       await sleep(30);
     }
     await sleep(400);
+  }
+
+  for (const { field, index } of picked) {
+    const shown = field.el instanceof HTMLSelectElement ? currentValue(field) : (field.el.textContent ?? '').trim();
+    if (!field.el.isConnected || (shown && !isPlaceholderOption(shown))) continue;
+    results[index] = { ...results[index], status: 'review', reason: 'The site cleared this answer after it was picked. Pick it again.' };
+    highlight(field, 'review', ctx.settings.highlightFields);
+    filled--;
   }
 
   for (const { field, question } of open) {

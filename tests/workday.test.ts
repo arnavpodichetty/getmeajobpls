@@ -130,6 +130,88 @@ describe('Workday My Experience', () => {
   });
 });
 
+describe('Workday picks the site clears afterwards', () => {
+  it('flags a dropdown that went back to "Select One" instead of leaving it green', async () => {
+    document.body.innerHTML = `
+      <div data-automation-id="formField-q1"><fieldset><legend><label>Are you willing to relocate?*</label></legend>
+        <button id="q1" aria-haspopup="listbox" aria-label="Select One Required">Select One</button><input /></fieldset></div>
+      <div data-automation-id="formField-q2"><fieldset><legend><label>Will you now or in the future require sponsorship?*</label></legend>
+        <button id="q2" aria-haspopup="listbox" aria-label="Select One Required">Select One</button><input /></fieldset></div>`;
+    const q1 = document.getElementById('q1')!;
+    document.querySelectorAll<HTMLButtonElement>('button[aria-haspopup="listbox"]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const menu = document.createElement('div');
+        menu.setAttribute('role', 'listbox');
+        for (const label of ['Yes', 'No']) {
+          const option = document.createElement('div');
+          option.setAttribute('role', 'option');
+          option.textContent = label;
+          option.addEventListener('click', () => {
+            button.textContent = label;
+            menu.remove();
+            // Answering the second question re-renders the form and loses the first pick.
+            if (button.id === 'q2') q1.textContent = 'Select One';
+          });
+          menu.append(option);
+        }
+        document.body.append(menu);
+      });
+    });
+    resetLayoutCache();
+    const report = await fillPage(context({ resume: null }), { ats: 'Workday' });
+    const relocate = report.fields.find((f) => /relocate/.test(f.label))!;
+    expect(relocate.status).toBe('review');
+    expect(q1.getAttribute('data-getmeajobpls')).toBe('review');
+    expect(report.fields.find((f) => /sponsorship/.test(f.label))!.status).toBe('filled');
+  });
+});
+
+describe('Workday education with a "school" field (not "schoolName")', () => {
+  // Markup as on some tenants: formField-school, input id "education-N--school", no name.
+  const panel = (n: number) => `
+    <div role="group" aria-labelledby="Education-${n}-panel">
+      <h5 id="Education-${n}-panel">Education ${n}</h5>
+      <div data-automation-id="formField-school"><label for="education-${n}--school">School or University</label>
+        <div data-automation-id="multiSelectContainer"><div data-automation-id="multiselectInputContainer">
+          <input id="education-${n}--school" placeholder="Search" aria-required="true"></div></div></div>
+      <div data-automation-id="formField-gradeAverage"><label for="education-${n}--gpa">Overall Result (GPA)</label>
+        <input type="text" id="education-${n}--gpa" name="gradeAverage"></div>
+    </div>`;
+
+  function page(rows: number) {
+    document.body.innerHTML = `
+      <ol><li data-automation-id="progressBarActiveStep"><label>My Experience</label></li></ol>
+      <div role="group" aria-labelledby="Education-section"><h4 id="Education-section">Education</h4>
+        <div id="rows">${Array.from({ length: rows }, (_, i) => panel(i + 1)).join('')}</div>
+        <button data-automation-id="add-button">Add Another</button></div>`;
+    document.querySelector('[data-automation-id="add-button"]')!.addEventListener('click', () => {
+      document.getElementById('rows')!.insertAdjacentHTML('beforeend', panel(document.querySelectorAll('[aria-labelledby$="-panel"]').length + 1));
+      resetLayoutCache();
+    });
+    resetLayoutCache();
+  }
+  const count = () => document.querySelectorAll('[data-automation-id="formField-school"]').length;
+
+  it('fills the existing entry instead of adding more', async () => {
+    page(1);
+    const ctx = context();
+    ctx.profile.education = ctx.profile.education.slice(0, 1);
+    ctx.profile.education[0].gpa = '3.9';
+    const r = await workday.fill(ctx);
+    expect(count()).toBe(1);
+    expect((document.getElementById('education-1--gpa') as HTMLInputElement).value).toBe('3.9');
+    expect(r.fields.some((f) => f.label === 'School 1: school')).toBe(true);
+  });
+
+  it('adds only as many entries as you have schools', async () => {
+    page(1);
+    const ctx = context();
+    ctx.profile.education = [ctx.profile.education[0], { ...ctx.profile.education[0], id: 'e2', school: 'Example Community College' }];
+    await workday.fill(ctx);
+    expect(count()).toBe(2);
+  });
+});
+
 describe('Workday My Experience with renamed sections (capture D)', () => {
   it('fills jobs under "Professional Experience" and links under "Portfolio"', async () => {
     loadFixture('workday-d');

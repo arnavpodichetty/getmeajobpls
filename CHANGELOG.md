@@ -19,10 +19,15 @@
 - **"Title" with Mr. / Ms. / Dr.:** was answered with your job title. It's left for you now.
 - **"What type of degree program are you enrolled in?":** was answered "Yes". It picks your degree now.
 - **Graduation month and year asked separately:** the month dropdown gets "June" and the year dropdown "2028", not a full date.
+- **Dates with a format in the question:** "month and year … as MM/YYYY" got "May 2028". A format the question spells out is used now: "05/2028".
 - **On-page panel position:** starts in the top-right corner. A spot you dragged it to is still remembered.
 - **SuccessFactors "From Date" / "To Date":** job and school dates labeled this way were left empty. They fill now.
 - **"Are you capable of performing the essential functions of the job…?":** was left for you because "performing" wasn't recognized. It's answered "Yes" now.
 - **Tailored resume skills:** skills the posting names, like Jira or Codex, were often left out even when they were in your profile. They're listed now, first in their line, and the least relevant items make room so lines don't get longer.
+- **Workday schools on some sites:** where the field is called "School or University" (not "School Name"), schools were never filled and extra empty Education entries kept getting added. Schools fill now, and an Add click that doesn't produce an entry is never repeated.
+- **Workday dropdowns that reset themselves:** Workday can put an earlier answer back to "Select One" while you fill the rest, and it stayed green. It's flagged for you now.
+- **More application questions answered:** "Minimum Pay Desired", "Are you willing to travel?" as Yes/No, agreements not to compete or solicit, "under investigation by your current employer", "Are you a California resident?" (from your state) and "consider your application for other roles… Opt In".
+- **Acknowledgements that quote legal text:** an "I acknowledge" dropdown was answered as an "essential functions" question because of a state notice inside it. It's answered as an acknowledgement now.
 
 ## 1.1.0 (2026-10-18)
 

@@ -135,7 +135,9 @@ function stillStudying(p: Profile): boolean | null {
 const YES_NO_CLEARANCE = /^(?:\d+ )?(have|do|are|did|is|does|will|would|can)\b|\b(?:do|have|are|did) you (?:\w+ )?(?:hold|have|possess|held|had)\b/;
 
 /** Order matters. Patterns run against normalize(label). */
-const STATE_RESIDENCY = new RegExp(`\\b(?:resident (?:of|in)|(?:reside|residing|live|living) in) (?:the )?(?:state of )?(${[...Object.values(US_STATES), ...Object.keys(US_STATES)].join('|')})\\b`);
+const STATE_NAMES = [...Object.values(US_STATES), ...Object.keys(US_STATES)].join('|');
+// "Are you a resident of California?" / "Do you live in CA?" / "Are you a California resident?"
+const STATE_RESIDENCY = new RegExp(`\\b(?:resident (?:of|in)|(?:reside|residing|live|living) in) (?:the )?(?:state of )?(${STATE_NAMES})\\b|\\bare you an? (${STATE_NAMES}) resident\\b`);
 
 /** A rule's answer for "leave this box empty" (don't fill it, don't flag it). */
 export const LEAVE_EMPTY = '__leave_empty__';
@@ -252,6 +254,12 @@ const DEFS: Def[] = [
     key: 'travelPercentage',
     re: /(?:willing|able|available|availability|how much|percentage|percent|amount).{0,60}\btravel\b|\btravel\b.{0,60}(?:percentage|percent|willing|availability)|^travel(?: required| preference)?$/,
     value: (c) => c.profile.answers.travelPercentage || null,
+    // A Yes/No dropdown ("Are you willing to travel?") gets Yes, or No when you'd travel none.
+    tiers: (c) => {
+      const t = c.profile.answers.travelPercentage.trim();
+      if (!t) return [];
+      return [[t], [/^(?:0\s*%?|none|no travel|no)$/i.test(t) ? 'No' : 'Yes']];
+    },
   },
   // Explicit application preferences come before general terms/phone/address rules.
   {
@@ -272,6 +280,14 @@ const DEFS: Def[] = [
         ? [['Yes'], ['I consent', 'I agree', 'I accept', 'Consent', 'Agree', 'Accept', 'Allow', 'Opt in']]
         : [],
   },
+  // "We may consider your application for other roles… opt out below." Being considered for more roles only helps.
+  {
+    key: 'otherRolesConsent',
+    re: /\b(?:consider|match)\w* (?:your )?(?:application|profile|candidacy)\b.{0,80}\b(?:additional|other|future|further) (?:opportunit\w*|roles?|positions?|openings?|jobs?)\b(?=.*\bopt ?(?:out|in)\b)/,
+    choiceOnly: true,
+    value: () => 'Yes',
+    tiers: () => [['Yes'], ['Opt in', 'I consent', 'I agree', 'Allow']],
+  },
   // Email about your application is how most employers reach you.
   {
     key: 'emailContactConsent',
@@ -284,7 +300,7 @@ const DEFS: Def[] = [
   // and finance firms ask these). Not driving: a suspended driver's license is a different question.
   {
     key: 'disciplinaryHistory',
-    re: /\bhave you (?:ever )?been (?:\w+ ){0,3}(?:discharged|terminated|fired|dismissed|let go)\b|\basked to resign\b|\bresign(?:ed)? (?:in lieu of|after being (?:offered|given|asked))|\bseparated by mutual agreement\b|\blicen[cs]es?\b.{0,120}\b(?:revoked|suspended|surrendered|cancell?ed|disciplined|reprimanded|sanctioned|investigated)\b|\b(?:revoked|suspended|surrendered)\b.{0,60}\blicen[cs]es?\b|\b(?:subject of|party to)\b.{0,40}\b(?:pending )?(?:action|investigation|proceeding|complaint)s?\b.{0,80}\b(?:regulat\w*|licensing board|sec|finra|pcaob|irs)\b|\bconsent (?:decree|order)\b/,
+    re: /\bhave you (?:ever )?been (?:\w+ ){0,3}(?:discharged|terminated|fired|dismissed|let go)\b|\binvoluntarily (?:discharged|terminated)\b|\bunder investigation by your (?:current )?employer\b|\basked to resign\b|\bresign(?:ed)? (?:in lieu of|after being (?:offered|given|asked))|\bseparated by mutual agreement\b|\blicen[cs]es?\b.{0,120}\b(?:revoked|suspended|surrendered|cancell?ed|disciplined|reprimanded|sanctioned|investigated)\b|\b(?:revoked|suspended|surrendered)\b.{0,60}\blicen[cs]es?\b|\b(?:subject of|party to)\b.{0,40}\b(?:pending )?(?:action|investigation|proceeding|complaint)s?\b.{0,80}\b(?:regulat\w*|licensing board|sec|finra|pcaob|irs)\b|\bconsent (?:decree|order)\b/,
     not: /driv(?:er s|ers|ing|er) ?licen[cs]e|\bwilling\b/,
     choiceOnly: true,
     value: (c) => yesNo(c.profile.answers.disciplinaryHistory),
@@ -322,7 +338,8 @@ const DEFS: Def[] = [
     value: (c, label) => {
       const home = normalize(c.profile.personal.state);
       if (!home) return null;
-      const asked = label.match(STATE_RESIDENCY)?.[1] ?? '';
+      const m = label.match(STATE_RESIDENCY);
+      const asked = m?.[1] ?? m?.[2] ?? '';
       return (US_STATES[asked] ?? asked) === (US_STATES[home] ?? home) ? 'Yes' : 'No';
     },
   },
@@ -386,6 +403,8 @@ const DEFS: Def[] = [
   {
     key: 'essentialFunctions',
     re: /\b(?:perform(?:ing)?|able to do|carry(?:ing)? out)\b.{0,30}\bessential (?:functions|duties|job functions)\b/,
+    // Legal boilerplate in an acknowledgement ("…your ability to perform the essential functions…").
+    not: /\backnowledg|\bi certify\b/,
     choiceOnly: true,
     value: () => 'Yes',
   },
@@ -466,7 +485,7 @@ const DEFS: Def[] = [
     choiceOnly: true,
     value: (c) => yesNo(c.profile.answers.agreeToTerms),
   },
-  { key: 'nonCompete', re: /non ?compete|restrictive covenant|non ?solicit/, value: (c) => yesNo(c.profile.answers.nonCompete) },
+  { key: 'nonCompete', re: /non ?compete|restrictive covenant|non ?solicit|agreements? not to (?:compete|solicit)/, value: (c) => yesNo(c.profile.answers.nonCompete) },
   {
     key: 'locatedInUS',
     re: /(currently )?(located|based|reside|residing|living|live) in (the )?(us|u s|united states|usa)\b/,
@@ -709,7 +728,7 @@ const DEFS: Def[] = [
   {
     // Hourly by default; annual only when the question asks for a yearly figure.
     key: 'salaryExpectation',
-    re: /salary|compensation|pay (expectation|range|requirement)|desired pay|expected pay|rate expectation|hourly rate|desired rate|expected rate/,
+    re: /salary|compensation|pay (expectation|range|requirement|desired)|(?:desired|expected|minimum) pay|rate expectation|hourly rate|desired rate|expected rate/,
     value: (c, label) => {
       const { hourly, annual } = payExpectation(c.profile);
       if (!hourly) return null;

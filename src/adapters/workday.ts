@@ -43,7 +43,8 @@ const PANEL = {
     end: '[data-automation-id="formField-endDate"]',
   },
   school: {
-    school: 'input[name="schoolName"], [data-automation-id="formField-schoolName"] input',
+    // Some tenants call it "school" (id "education-49--school") instead of "schoolName".
+    school: 'input[name="schoolName"], [data-automation-id="formField-schoolName"] input, [data-automation-id="formField-school"] input',
     degree: 'button[name="degree"], [data-automation-id="formField-degree"] button[aria-haspopup="listbox"]',
     field: '[data-automation-id="formField-fieldOfStudy"] input[data-automation-id="searchBox"], [data-automation-id="formField-fieldOfStudy"] input',
     gpa: 'input[name="gradeAverage"], [data-automation-id="formField-gradeAverage"] input',
@@ -123,7 +124,8 @@ async function ensurePanels(kind: Kind, count: number): Promise<HTMLElement[]> {
     if (!add) break;
     const before = panels(kind).length;
     realClick(add);
-    await waitForElement(() => (panels(kind).length > before ? document.body : null), 3000);
+    // No new panel of this kind: clicking again would only stack up empty entries.
+    if (!(await waitForElement(() => (panels(kind).length > before ? document.body : null), 3000))) break;
     await sleep(300);
   }
   return panels(kind);
@@ -286,7 +288,8 @@ async function fillSchools(schools: Education[], results: FieldResult[]): Promis
     const ed = schools[i];
     const tag = `School ${i + 1}`;
     const schoolEl = panel.querySelector<HTMLElement>(PANEL.school.school);
-    if (schoolEl && ed.school && !(schoolEl as HTMLInputElement).value) {
+    const picked = !!schoolEl?.closest('[data-automation-id^="formField-"]')?.querySelector('[data-automation-id="selectedItem"]');
+    if (schoolEl && ed.school && !(schoolEl as HTMLInputElement).value && !picked) {
       const outcome =
         schoolEl.getAttribute('role') === 'combobox' || schoolEl.closest(SELECTORS.multiselect)
           ? await firstMatch(schoolEl, [workdaySchoolOrder(schoolVariants(ed.school))]).then((ok) => ({ ok, review: ok ? undefined : 'Pick your school from the list.' }))
@@ -367,7 +370,7 @@ export const workday: Adapter = {
       // Panel fields are filled below, one panel per entry.
       skip: (f) =>
         f.el.matches(SELECTORS.source) ||
-        panelOf(f.el, 'websites') ||
+        panelOf(f.el, 'jobs', 'schools', 'websites') ||
         /workexperience|education-\d|\beducation\b|skills/i.test(`${f.el.id} ${f.el.getAttribute('data-automation-id') ?? ''}`),
     });
 

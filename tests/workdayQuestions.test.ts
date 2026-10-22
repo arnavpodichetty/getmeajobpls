@@ -65,6 +65,26 @@ describe('Workday application questions (capture C)', () => {
     expect(answer('Will you now or in the future require sponsorship for employment visa status?').answer?.value).toBe('No');
   });
 
+  it('answers a bank application questionnaire', () => {
+    const cases: [string, string, string | null][] = [
+      ['Minimum Pay Desired*', 'salaryExpectation', '$40/hr'],
+      ['Are you subject to any restrictions in the scope of your contemplated employment activities as a result of your current or prior employment, such as agreements to protect confidential or proprietary information, or agreements not to compete or not to solicit former customers or employees?*', 'nonCompete', 'No'],
+      ['Select yes if you: (1) are under investigation by your current employer for alleged violation of (a) any company policies, or (b) any laws, rules or regulations applicable to the financial services industry, (2) have previously resigned your employment while under such investigation, or (3) have ever been involuntarily discharged from any former employment.*', 'disciplinaryHistory', 'No'],
+      ['APPLICATION ACKNOWLEDGEMENT: I certify that the answers given are true. FOR RHODE ISLAND APPLICANTS: IF YOU PROVIDE FALSE INFORMATION ABOUT YOUR ABILITY TO PERFORM THE ESSENTIAL FUNCTIONS OF THE JOB, YOU MAY BE BARRED FROM FILING A CLAIM. By selecting "I acknowledge" from the drop-down field below, you are acknowledging, certifying, agreeing, and authorizing as described above.*', 'agreeToTerms', 'Yes'],
+      ['Are you a California resident?*', 'stateResidency', 'Yes'],
+      ['Are you a Texas resident?*', 'stateResidency', 'No'],
+      ['If you are not selected for this position, Example Bank may wish to consider your application for additional opportunities. You may elect to opt out of this search by selecting "Opt Out" below.', 'otherRolesConsent', 'Yes'],
+    ];
+    for (const [label, key, value] of cases) {
+      const r = answer(label, (p) => { p.answers.hourlyRate = '40'; p.personal.state = 'California'; });
+      expect([label.slice(0, 40), r.matchedKey, r.answer?.value ?? null]).toEqual([label.slice(0, 40), key, value]);
+    }
+    // Percentage options get your percentage; a Yes/No dropdown falls back to Yes (No for none).
+    expect(answer('Are you willing to travel?*').answer?.tiers).toEqual([['25-50%'], ['Yes']]);
+    expect(answer('Are you willing to travel?', (p) => { p.answers.travelPercentage = '0%'; }).answer?.tiers).toEqual([['0%'], ['No']]);
+    expect(pick(['Opt In', 'Opt Out'], 'Opt in')).toBe('Opt In');
+  });
+
   it('answers the essential-functions question Yes', () => {
     const r = answer('To your knowledge, are you capable of performing the essential functions of the job for which you are applying, with or without reasonable accommodations?*');
     expect([r.matchedKey, r.answer?.value]).toEqual(['essentialFunctions', 'Yes']);
