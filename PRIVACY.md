@@ -22,6 +22,16 @@ If you turn on **Resume tailoring** and install its local helper, clicking **Tai
 
 Application pages often leave out the job description (Workday's steps, Lever's /apply page). When you click **Tailor resume** on a Workday, Lever, Ashby or Greenhouse page, the extension asks that site's public job listing for the posting's description. The request contains only the job's address, never your information, and goes to the same company's applicant tracking system you are already on. This is the only network request the extension makes itself. The helper keeps a structured copy of each resume it has read on your computer (in `~/Library/Application Support/getmeajobpls/tailor/`, or `~/.config/getmeajobpls/tailor/` on Linux) so it doesn't have to read it again.
 
+## Filling your profile with Claude (optional, off by default)
+
+This uses the same local helper as resume tailoring, and only works once tailoring is set up. On the options page, **Fill my profile** can read up to three sources you choose, when you click **Read**:
+
+- **A resume** from your library: the PDF is sent to the helper, as for tailoring.
+- **A profile page**: on a page about you (for example your Simplify, LinkedIn or Handshake profile, or your website), clicking **Use this page for my profile** in the toolbar popup reads that page's visible text. The text is held in the browser's session storage, which is cleared when the browser closes, and is removed as soon as you apply or remove it. The extension reads only the page you have open; it does not sign in anywhere or load other pages.
+- **Text you paste** into the box.
+
+The helper passes the source to Claude Code under your own Claude account, as for tailoring. The answer comes back to the extension, which checks every value against the source's own text and shows you each proposed change. Nothing is saved to your profile until you tick it and click **Apply**. Your standard answers and EEO answers are never changed.
+
 ## Page snapshots
 
 If you turn on **Settings → Developer → Show "Capture page" button**, the button saves an HTML snapshot of the current form to your computer's Downloads folder, without the values typed into it. The snapshot is not sent anywhere.
@@ -31,7 +41,7 @@ If you turn on **Settings → Developer → Show "Capture page" button**, the bu
 - **Read and change data on websites:** to find application forms on the many sites employers use (including forms embedded in other sites) and fill them when you ask. Before you start a fill, the extension only looks at a page's form fields to decide whether to show its Fill button; nothing about the pages you visit is stored or sent anywhere.
 - **Storage / unlimited storage:** to keep your profile and resume files on your computer.
 - **Web navigation:** to find the frame of a page that holds the application form.
-- **Native messaging (optional):** requested only when you turn on resume tailoring, to talk to the helper on your computer.
+- **Native messaging (optional):** requested only when you turn on resume tailoring, to talk to the helper on your computer (for tailoring and for filling your profile).
 
 ## Your control
 

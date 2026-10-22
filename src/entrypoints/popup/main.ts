@@ -10,6 +10,7 @@ import { pickResume, pickSkillSetFor, skillSetForResume } from '../../lib/resume
 import { findTailored, jobLabel } from '../../lib/tailorMatch';
 import { loadProfile, loadRules, loadSettings, saveProfile } from '../../lib/storage';
 import { downloadCapture } from '../../lib/captureDownload';
+import { PAGE_SOURCE_KEY, PAGE_SOURCE_LIMIT, type PageSource } from '../../lib/profileImport';
 import type { FillReport } from '../../lib/types';
 
 const atsEl = $('#ats');
@@ -22,6 +23,7 @@ const fillBtn = $('#fill') as HTMLButtonElement;
 const summaryEl = $('#summary');
 const saveBtn = $('#save-answers') as HTMLButtonElement;
 const captureBtn = $('#capture') as HTMLButtonElement;
+const usePageBtn = $('#use-page') as HTMLButtonElement;
 
 $('#open-options').addEventListener('click', (e) => {
   e.preventDefault();
@@ -68,6 +70,8 @@ async function init(): Promise<void> {
   );
 
   captureBtn.hidden = !settings.showCaptureButton;
+  // Reading a profile page needs the same local helper as resume tailoring.
+  usePageBtn.hidden = !settings.tailorEnabled;
   skillSel.replaceChildren(
     ...(profile.skillSets.length
       ? profile.skillSets.map((x) => h('option', { value: x.id }, x.name || 'Unnamed'))
@@ -117,6 +121,23 @@ async function init(): Promise<void> {
   fillBtn.disabled = false;
   saveBtn.disabled = false;
   captureBtn.disabled = false;
+  usePageBtn.disabled = false;
+
+  // Hand this page's text to Options → Fill my profile, where Claude reads it and you review the changes.
+  usePageBtn.addEventListener('click', async () => {
+    usePageBtn.disabled = true;
+    try {
+      const page = await sendToFrame(tabId, 0, { type: 'pageText', limit: PAGE_SOURCE_LIMIT });
+      if (!page?.text.trim()) throw new Error('This page has no text to read.');
+      const source: PageSource = { title: tab.title || page.title, url: tab.url ?? '', text: page.text };
+      await browser.storage.session.set({ [PAGE_SOURCE_KEY]: source });
+      await browser.tabs.create({ url: browser.runtime.getURL('/options.html#import') });
+      window.close();
+    } catch (err) {
+      showError(`Couldn't read this page: ${err instanceof Error ? err.message : String(err)}`);
+      usePageBtn.disabled = false;
+    }
+  });
 
   fillBtn.addEventListener('click', async () => {
     fillBtn.disabled = true;

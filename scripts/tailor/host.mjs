@@ -7,6 +7,10 @@
 //   { type: 'tailor', resume: { name, base64 }, page: { title, url, text },
 //     profile: { experience, projects, skills } }   (see library.mjs)
 //     → { ok, base64, changes, warnings, pages }
+//   { type: 'profile', resume: { name, base64 } }
+//     → { ok, draft, dropped }   (profile fields found on the resume; see profile.mjs)
+//   { type: 'profileText', source: { kind: 'page' | 'paste', title, url, text } }
+//     → { ok, draft, dropped }   (the same, from a profile page or pasted text)
 //
 // The first time a resume file is seen, Claude reads it into a ResumeDoc
 // (cached by file hash in the app-data folder below, never in the repo).
@@ -14,9 +18,10 @@ import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, platform, tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { claudeVersion, extractResume, findClaude, tailorResume } from './claude.mjs';
+import { claudeVersion, extractResume, findClaude, sortProfile, sortProfileText, tailorResume } from './claude.mjs';
 import { applyTailoring } from './guard.mjs';
 import { normalizeLibrary } from './library.mjs';
+import { checkProfile, checkProfileText } from './profile.mjs';
 import { normalizeDoc } from './schema.mjs';
 import { pageFill, renderOnePage } from './pdf.mjs';
 
@@ -112,12 +117,46 @@ export async function tailor(msg) {
   }
 }
 
+/** Fill the profile from a resume: everything kept is checked against the resume's own text. */
+export async function profileFromResume(msg) {
+  const bin = findClaude();
+  if (!bin) throw new Error('Claude Code is not installed. Install it (see Options → Resume tailoring), run `claude` once to log in, then try again.');
+  const pdf = Buffer.from(msg.resume?.base64 ?? '', 'base64');
+  if (!pdf.length) throw new Error('No resume file was sent.');
+  const work = mkdtempSync(join(tmpdir(), 'getmeajobpls-profile-'));
+  try {
+    const base = await baseDoc(bin, pdf, work);
+    const raw = await sortProfile(bin, work, base.doc);
+    return { ok: true, ...checkProfile(base.doc, raw) };
+  } finally {
+    rmSync(work, { recursive: true, force: true });
+  }
+}
+
+/** Fill the profile from a page or pasted text: entries count only when their quoted text is really there. */
+export async function profileFromText(msg) {
+  const bin = findClaude();
+  if (!bin) throw new Error('Claude Code is not installed. Install it (see Options → Resume tailoring), run `claude` once to log in, then try again.');
+  const kind = msg.source?.kind === 'paste' ? 'paste' : 'page';
+  const source = { kind, title: String(msg.source?.title ?? ''), url: String(msg.source?.url ?? ''), text: String(msg.source?.text ?? '') };
+  if (source.text.trim().length < 20) throw new Error(kind === 'page' ? 'That page had no text to read.' : 'The pasted text is empty.');
+  const work = mkdtempSync(join(tmpdir(), 'getmeajobpls-profile-'));
+  try {
+    const raw = await sortProfileText(bin, work, source);
+    return { ok: true, ...checkProfileText(source.text, raw, kind) };
+  } finally {
+    rmSync(work, { recursive: true, force: true });
+  }
+}
+
 async function handle(msg) {
   if (msg?.type === 'ping') {
     const bin = findClaude();
     return { ok: true, claude: bin, claudeVersion: bin ? await claudeVersion(bin).catch(() => '') : '' };
   }
   if (msg?.type === 'tailor') return tailor(msg);
+  if (msg?.type === 'profile') return profileFromResume(msg);
+  if (msg?.type === 'profileText') return profileFromText(msg);
   throw new Error(`Unknown request: ${msg?.type}`);
 }
 

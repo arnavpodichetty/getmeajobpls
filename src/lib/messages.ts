@@ -29,7 +29,8 @@ export interface ResumeFilePayload {
 /** Popup → content script (sent per frame). */
 export type ContentRequest =
   | { type: 'detect' }
-  | { type: 'pageText' }
+  /** `limit`: characters of page text (default 20,000). */
+  | { type: 'pageText'; limit?: number }
   | { type: 'fill'; resumeId: string | null; skillSetId?: string | null }
   | { type: 'capture' }
   | { type: 'collectAnswers' };

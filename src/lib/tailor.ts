@@ -7,6 +7,7 @@ import { uid } from './defaults';
 import { pageContext } from './orchestrate';
 import { findPosting } from './posting';
 import { base64ToBlob, blobToBase64, deleteResume, getResume, listResumes, putResume } from './resumeDb';
+import type { PageSource, ProfileDraft } from './profileImport';
 import { loadProfile } from './storage';
 import { findTailored, jobLabel } from './tailorMatch';
 
@@ -28,6 +29,8 @@ export interface TailorResult {
 interface HostReply {
   ok: boolean;
   error?: string;
+  draft?: ProfileDraft;
+  dropped?: string[];
   base64?: string;
   changes?: string[];
   warnings?: string[];
@@ -68,6 +71,22 @@ export async function pingHelper(): Promise<{ claude: string | null; claudeVersi
   const reply = await sendHost({ type: 'ping' });
   if (!reply.ok) throw new Error(reply.error ?? 'The helper did not answer.');
   return { claude: reply.claude ?? null, claudeVersion: reply.claudeVersion ?? '' };
+}
+
+/** Read a resume into profile fields (Options → Fill from resume). Every value is checked against the resume by the helper. */
+export async function readResumeForProfile(resumeId: string): Promise<{ draft: ProfileDraft; dropped: string[] }> {
+  const rec = await getResume(resumeId);
+  if (!rec) throw new Error('That resume is no longer in your library.');
+  const reply = await sendHost({ type: 'profile', resume: { name: rec.name, base64: await blobToBase64(rec.blob) } });
+  if (!reply.ok || !reply.draft) throw new Error(reply.error ?? 'Claude could not read this resume.');
+  return { draft: reply.draft, dropped: reply.dropped ?? [] };
+}
+
+/** Read a profile page or pasted text into profile fields; entries count only when their quoted text is really there. */
+export async function readTextForProfile(source: PageSource & { kind: 'page' | 'paste' }): Promise<{ draft: ProfileDraft; dropped: string[] }> {
+  const reply = await sendHost({ type: 'profileText', source });
+  if (!reply.ok || !reply.draft) throw new Error(reply.error ?? 'Claude could not read this text.');
+  return { draft: reply.draft, dropped: reply.dropped ?? [] };
 }
 
 export async function tailorForTab(tabId: number, resumeId: string): Promise<TailorResult> {

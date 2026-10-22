@@ -33,7 +33,7 @@ describe('options page', () => {
   it('renders every section', () => {
     const ids = [...document.querySelectorAll('section')].map((s) => s.id);
     expect(ids).toEqual([
-      'personal', 'links', 'education', 'experience', 'projects', 'skills', 'languages', 'answers', 'eeo',
+      'import', 'personal', 'links', 'education', 'experience', 'projects', 'skills', 'languages', 'answers', 'eeo',
       'saved-answers', 'resumes', 'rules', 'tailoring', 'settings', 'backup', 'credits',
     ]);
   });

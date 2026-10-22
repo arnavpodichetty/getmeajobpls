@@ -142,6 +142,9 @@ export const emptyProject = (): Project => ({
 
 export const emptySkillSet = (): SkillSet => ({ id: uid(), name: '', keywords: [], skills: [], isDefault: false, resumeId: '' });
 
+/** The proficiency levels offered under Languages, highest first. */
+export const LANGUAGE_LEVELS = ['Native or bilingual', 'Fluent', 'Expert', 'Advanced', 'Professional working', 'Intermediate', 'Conversational', 'Limited working', 'Beginner', 'Elementary'];
+
 export const emptyLanguage = (): Language => ({ id: uid(), language: '', proficiency: '', fluent: false });
 
 export const emptySavedAnswer = (): SavedAnswer => ({ id: uid(), question: '', answer: '' });

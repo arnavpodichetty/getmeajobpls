@@ -37,6 +37,7 @@ Upload the zip under **Package**. The first upload can use the current version; 
 > • Save your answers to custom questions and they're filled the next time a similar one appears.
 > • Highlights what it filled in green and what needs your review in orange.
 > • Optional: tailor a resume to the posting with your own Claude account, through Claude Code on your computer. Off by default.
+> • Optional: set up your profile in a minute. Claude reads your resume, a profile page or pasted text, and you review every change before it's saved.
 >
 > It never clicks Submit: you review every application before sending it.
 >
@@ -63,7 +64,7 @@ Upload the zip under **Package**. The first upload can use the current version; 
 | `storage` | Saves the user's profile, answers and settings locally in the browser. |
 | `unlimitedStorage` | Stores the user's resume PDFs locally (IndexedDB) so they can be attached to applications; several resumes can exceed the default quota. |
 | `webNavigation` | Lists the frames of the current tab to find the one that holds the application form. Many employers embed their application form (Greenhouse, iCIMS, Workday) in an iframe on their own careers site. |
-| `nativeMessaging` (optional) | Requested only when the user turns on resume tailoring in Options. It lets the extension talk to a helper program the user installs on their own computer, which runs Claude Code (signed in with the user's own Claude account) to rewrite the selected resume for the job posting. Not requested otherwise. |
+| `nativeMessaging` (optional) | Requested only when the user turns on resume tailoring in Options. It lets the extension talk to a helper program the user installs on their own computer, which runs Claude Code (signed in with the user's own Claude account) to rewrite the selected resume for the job posting, and, when the user asks, to read their resume, a profile page they choose or text they paste into profile fields for them to review. Not requested otherwise. |
 | Host permission (`<all_urls>`) | Employers host application forms on thousands of different domains (their own careers sites, and Workday, Greenhouse, Lever, iCIMS and other applicant tracking systems, often embedded in iframes). The content script must run on those pages to detect the form and fill it when the user clicks Fill. Before that it only looks at the page's form fields to decide whether to show its Fill button; it changes nothing on the page and sends nothing anywhere. |
 
 **Remote code:** No, I am not using remote code.
@@ -71,7 +72,7 @@ Upload the zip under **Package**. The first upload can use the current version; 
 **Data usage** — check these boxes:
 
 - [x] **Personally identifiable information** (name, address, email, phone, resume): stored locally; filled into application forms only when the user starts a fill.
-- [x] **Website content** (the job posting's text): read to pick a resume; with optional resume tailoring, sent with the resume to the user's own Claude Code on their computer when they click Tailor resume.
+- [x] **Website content** (the job posting's text, or a profile page the user picks): read to pick a resume; with the optional Claude features, sent to the user's own Claude Code on their computer only when they click Tailor resume, or Use this page for my profile and then Read.
 
 Leave everything else unchecked (health, financial, authentication, personal communications, location, web history, user activity).
 

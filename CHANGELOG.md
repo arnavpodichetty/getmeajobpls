@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0 (2026-10-21)
+
+### New
+- **Fill my profile:** set up your profile from your resume, a profile page or pasted text instead of typing it in. Your own Claude account reads them through the resume tailoring helper (Options → Fill my profile). For a page such as your Simplify, LinkedIn or Handshake profile, open it and click **Use this page for my profile** in the toolbar popup.
+  - Only what the source says is used: every value must appear in its text, in the entry it belongs to; dates must match that entry's dates; a role is current only if it says Present; a GPA is never taken from its scale ("3.9/4.0" gives 3.9). Descriptions and skills are copied word for word. Anything that fails a check is listed under "Left out".
+  - You review each change first. Empty fields and new entries start ticked; anything that would replace what you wrote starts unticked. Schools, jobs and projects you already have are matched, not added again.
+  - Standard answers and EEO are never changed.
+
 ## 1.2.0 (2026-10-20)
 
 ### New

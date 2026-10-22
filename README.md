@@ -16,6 +16,7 @@ A Chrome extension that autofills job applications. Open an application, click *
 - **Standard and EEO questions**: work authorization, sponsorship, relocation, start dates, referral source and more, all editable. Blank EEO answers become "decline to answer".
 - **Every kind of field**, including searchable dropdowns, rich-text editors, date pickers and shadow DOM.
 - **Resume tailoring (optional)**: rewrites a resume for the posting with your own Claude account. See [below](#resume-tailoring).
+- **Fill my profile (optional)**: Claude reads your resume, a profile page (Simplify, LinkedIn, your website) or pasted text into your profile. Every value is checked against the source, and you review each change before it's saved.
 
 ## Supported sites
 
@@ -48,7 +49,7 @@ Optional. **Tailor resume** rewrites the selected resume for a posting from your
 
 ## Privacy
 
-Everything is stored only in your browser, and the extension makes no network requests of its own. Resume tailoring, if you turn it on, sends the resume, the job page's text and your profile to Claude through your own Claude Code. See [PRIVACY.md](PRIVACY.md).
+Everything is stored only in your browser. The optional Claude features (resume tailoring and Fill my profile) send what you choose to Claude through your own Claude Code, only when you click their buttons; tailoring may also fetch the posting's description from the job site's public listing. See [PRIVACY.md](PRIVACY.md).
 
 ## Credits
 

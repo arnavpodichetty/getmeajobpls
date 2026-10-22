@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { namedIn } from './guard.mjs';
 import { isCurrent, isEducation, linkLibrary } from './library.mjs';
 import { resumeDocSchema, tailoringSchema } from './schema.mjs';
+import { profilePrompt, profileSchema, textProfilePrompt, textProfileSchema } from './profile.mjs';
 
 const TIMEOUT_MS = 4 * 60_000;
 
@@ -200,4 +201,14 @@ JOB POSTING PAGE (title: ${page.title || 'unknown'}; URL: ${page.url || 'unknown
 ${page.text.slice(0, 30_000)}
 """`;
   return ask(bin, { prompt, schema: tailoringSchema, tools: '', cwd });
+}
+
+/** Sort a resume (already read into a ResumeDoc) into profile fields; checked afterwards by profile.mjs. */
+export function sortProfile(bin, cwd, doc) {
+  return ask(bin, { prompt: profilePrompt(doc), schema: profileSchema, tools: '', cwd });
+}
+
+/** Sort a profile page or pasted text into profile fields; checked afterwards by profile.mjs. */
+export function sortProfileText(bin, cwd, source) {
+  return ask(bin, { prompt: textProfilePrompt(source), schema: textProfileSchema, tools: '', cwd });
 }

@@ -65,4 +65,5 @@ footer { display: flex; justify-content: center; align-items: center; gap: 8px; 
 .sep { color: var(--faint); }
 button.link { background: none; border: none; color: var(--accent); padding: 0; font: inherit; font-weight: 500; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
 button.link:hover:not(:disabled) { text-decoration: underline; }
+button.link.use-page { display: block; margin: 8px auto 0; }
 button.link:disabled { color: var(--faint); cursor: default; }

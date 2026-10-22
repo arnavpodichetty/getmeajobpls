@@ -44,9 +44,9 @@ export default defineContentScript({
       }
     }
 
-    function pageText(): PageText {
+    function pageText(limit = PAGE_TEXT_LIMIT): PageText {
       const h1 = document.querySelector('h1')?.textContent?.trim() ?? '';
-      return { title: `${document.title} ${h1}`.trim(), text: (document.body?.innerText ?? '').slice(0, PAGE_TEXT_LIMIT) };
+      return { title: `${document.title} ${h1}`.trim(), text: (document.body?.innerText ?? '').slice(0, limit) };
     }
 
     /** Visible fields, and whether they look like a job application on an unrecognized site. */
@@ -231,7 +231,7 @@ export default defineContentScript({
           return { atsId: a.id, atsName: a.name, url: location.href, isTop: window === window.top, ...formInfo() } satisfies FrameInfo;
         }
         case 'pageText':
-          return pageText();
+          return pageText(msg.limit);
         case 'fill':
           return fill(msg.resumeId, msg.skillSetId ?? null);
         case 'capture':

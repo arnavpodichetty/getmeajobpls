@@ -4,13 +4,15 @@ import { TIME_ZONES } from '../../lib/clock';
 import { ACADEMIC_YEARS } from '../../lib/engine/academicYear';
 import { payExpectation } from '../../lib/engine/answers';
 import { $, h } from '../../lib/dom';
-import { emptyEducation, emptyExperience, emptyLanguage, emptyProject, emptySavedAnswer, emptySkillSet } from '../../lib/defaults';
+import { LANGUAGE_LEVELS, emptyEducation, emptyExperience, emptyLanguage, emptyProject, emptySavedAnswer, emptySkillSet } from '../../lib/defaults';
 import { listResumes } from '../../lib/resumeDb';
 import { loadProfile, loadRules, loadSettings, saveProfile, saveSettings } from '../../lib/storage';
 import type { Profile, ResumeMeta, Settings } from '../../lib/types';
 import { backupSection } from './backup';
 import { checkboxField, grid, listField, selectField, textArea, textField } from './fields';
 import { resumeSection, rulesSection } from './resumes';
+import { PAGE_SOURCE_KEY, type PageSource } from '../../lib/profileImport';
+import { importSection } from './profileImport';
 import { tailoringSection } from './tailoring';
 import { debounce } from './toast';
 
@@ -49,7 +51,7 @@ const eeoOptions = (values: string[]): [string, string][] => [['', DECLINE], ...
 const REFERRAL_SUGGESTIONS = ['LinkedIn', 'Company careers website', 'Company website', 'Referral', 'Indeed', 'Glassdoor', 'Handshake', 'Job board'];
 const PROFICIENCY: [string, string][] = [
   ['', '—'],
-  ...['Native or bilingual', 'Fluent', 'Expert', 'Advanced', 'Professional working', 'Intermediate', 'Conversational', 'Limited working', 'Beginner', 'Elementary'].map((v): [string, string] => [v, v]),
+  ...LANGUAGE_LEVELS.map((v): [string, string] => [v, v]),
 ];
 const EXPERIENCE_TYPES: [string, string][] = [
   ['', '—'],
@@ -517,6 +519,7 @@ function themeToggle(): HTMLElement {
 
 const NAV: [string, string][] = [
   ['#Profile', ''],
+  ['import', 'Fill my profile'],
   ['personal', 'Personal'],
   ['links', 'Links'],
   ['education', 'Education'],
@@ -540,7 +543,11 @@ const NAV: [string, string][] = [
 
 export async function renderAll(): Promise<void> {
   [profile, settings] = await Promise.all([loadProfile(), loadSettings()]);
-  ownResumes = (await listResumes()).filter((r) => !r.tailoredFrom);
+  const library = await listResumes();
+  // A profile page handed over by the toolbar popup ("Use this page for my profile").
+  const stored: Record<string, unknown> = await browser.storage.session.get(PAGE_SOURCE_KEY).catch(() => ({}));
+  const page = (stored[PAGE_SOURCE_KEY] as PageSource | undefined) ?? null;
+  ownResumes = library.filter((r) => !r.tailoredFrom);
   const rules = await loadRules();
   $('#nav').replaceChildren(
     h('div', { class: 'brand' }, h('img', { class: 'logo', src: '/icon/48.png', alt: '' }), 'getmeajobpls'),
@@ -556,6 +563,7 @@ export async function renderAll(): Promise<void> {
       h('div', {}, h('h1', {}, 'Your profile'), h('p', {}, 'Everything here stays in this browser.')),
       h('div', { class: 'save-state' }, 'Changes save automatically'),
     ),
+    importSection({ resumes: library, page, enabled: settings.tailorEnabled, profile: () => profile, onApplied: renderAll }),
     ...profileSections(),
     await resumeSection(),
     await rulesSection(rules),
