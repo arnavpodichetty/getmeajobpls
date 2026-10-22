@@ -1,21 +1,11 @@
 # Changelog
 
-## 1.2.0 (2026-10-21)
+## 1.2.0 (2026-10-20)
 
 ### New
 - **Job details on the panel:** the role, company, location, pay and posting date, read from the posting and kept on its application pages. Locations show as city and state; hover over "+ 2 more" for the rest.
 - **Panel on job postings:** shows on the posting page before you apply, so you can see the details and tailor your resume first.
 - **Oracle Recruiting Education and Experience:** adds one entry per job and one for your latest school, fills each from that entry and saves it. Entries already listed are skipped.
-
-### Fixes
-- **Oracle Recruiting dropdowns:** Country, City, State, Postal Code, phone code, graduation dates and EEO dropdowns all showed "no options". They fill now, and existing values are kept.
-- **Oracle entry forms you open yourself:** were filled with your latest job every time. They now get the next job that isn't listed yet.
-- **"Title" with Mr. / Ms. / Dr.:** was answered with your job title. It's left for you now.
-- **"What type of degree program are you enrolled in?":** was answered "Yes". It picks your degree now.
-- **Graduation month and year asked separately:** the month dropdown gets "June" and the year dropdown "2028", not a full date.
-- **Dates with a format in the question:** "month and year … as MM/YYYY" got "May 2028". A format the question spells out is used now: "05/2028".
-
-## 1.1.1 (2026-10-19)
 
 ### Fixes
 - **Ashby "Missing entry for required field" on submit:** answers saved at the same moment overwrote each other. The filler now waits for each save before the next answer.
@@ -24,7 +14,15 @@
 - **Tailored resumes no longer look squished:** line spacing, heading gaps, bullet indent and right-aligned dates now match Jake's LaTeX template.
 - **Tailored resume details:** a plain bold name, en dashes in dates, no italics on a project's tech stack, and linked web addresses.
 - **Tailoring without a job description on the page:** Workday's steps, Lever's /apply and Ashby's Application tab now get it from the job listing or the posting you opened before.
+- **Oracle Recruiting dropdowns:** Country, City, State, Postal Code, phone code, graduation dates and EEO dropdowns all showed "no options". They fill now, and existing values are kept.
+- **Oracle entry forms you open yourself:** were filled with your latest job every time. They now get the next job that isn't listed yet.
+- **"Title" with Mr. / Ms. / Dr.:** was answered with your job title. It's left for you now.
+- **"What type of degree program are you enrolled in?":** was answered "Yes". It picks your degree now.
+- **Graduation month and year asked separately:** the month dropdown gets "June" and the year dropdown "2028", not a full date.
 - **On-page panel position:** starts in the top-right corner. A spot you dragged it to is still remembered.
+- **SuccessFactors "From Date" / "To Date":** job and school dates labeled this way were left empty. They fill now.
+- **"Are you capable of performing the essential functions of the job…?":** was left for you because "performing" wasn't recognized. It's answered "Yes" now.
+- **Tailored resume skills:** skills the posting names, like Jira or Codex, were often left out even when they were in your profile. They're listed now, first in their line, and the least relevant items make room so lines don't get longer.
 
 ## 1.1.0 (2026-10-18)
 
@@ -52,7 +50,7 @@
 - **Resume uploaded twice:** the resume is attached once per page, and an upload box that already lists a file is left alone. A resume you remove by hand stays removed.
 - **Degree on Workday:** lists like "Bachelor Degree/Int'l Equiv" now match a specific degree such as "Bachelor of Arts", and a BA is never filed as a Bachelor of Science.
 - **Closing the panel:** × keeps the panel closed for the rest of the page and stops filling fields that appear later.
-- **Multi-campus school names:** "University of California, Berkeley", "UC Berkeley" and "University of California-Berkeley" are treated as the same school, and the same goes for other systems.
+- **Multi-campus school names:** "University of California, Los Angeles", "UC Los Angeles" and "University of California-Los Angeles" are treated as the same school, and the same goes for other systems.
 - **Summer availability:** "available for 10 to 12 weeks during the summer" questions answer from your availability setting instead of being flagged.
 - **Work authorization:** "legal right and necessary documentation to work" questions answer from your work-authorization setting.
 - **High school or GED:** answered Yes/No instead of with your highest degree.

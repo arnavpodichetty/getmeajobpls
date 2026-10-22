@@ -385,7 +385,7 @@ const DEFS: Def[] = [
   },
   {
     key: 'essentialFunctions',
-    re: /(?:perform|able to do|carry out)\b.{0,30}\bessential (?:functions|duties|job functions)\b/,
+    re: /\b(?:perform(?:ing)?|able to do|carry(?:ing)? out)\b.{0,30}\bessential (?:functions|duties|job functions)\b/,
     choiceOnly: true,
     value: () => 'Yes',
   },

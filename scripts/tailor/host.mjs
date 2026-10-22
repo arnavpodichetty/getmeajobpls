@@ -84,7 +84,7 @@ export async function tailor(msg) {
     // Your profile's Experience, Projects and skills, sent along by the extension.
     const lib = normalizeLibrary(msg.profile);
     const tailoring = await tailorResume(bin, work, base.doc, page, lib, fill);
-    const { doc, warnings, swaps } = applyTailoring(base.doc, tailoring, lib);
+    const { doc, warnings, swaps } = applyTailoring(base.doc, tailoring, lib, page.text);
     // Always one page: smaller font first (down to 10pt), then the least relevant bullets and projects.
     const out = await renderOnePage(doc);
     warnings.push(...out.cuts);

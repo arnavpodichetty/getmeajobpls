@@ -8,6 +8,8 @@
 //     (never education, a current role or a section's last entry)
 //   - reorder or drop items in a project's tech list, and use skills from the
 //     resume or your profile's skill sets in the skill lines
+// Skills the posting names outright (and that you have) are always listed, first
+// in their line; a line they grow drops its unnamed items from the end.
 // Names, contact details, headings, employers, titles, dates, locations,
 // schools and text sections (publications) always come from the base resume.
 //
@@ -124,7 +126,7 @@ function rewrite(proposed, sources, header, label, warnings) {
  * @param lib your profile (library.mjs normalizeLibrary); optional
  * @returns { doc, warnings, swaps } — swaps describe entries added from your profile or removed
  */
-export function applyTailoring(base, tailoring, lib = { experience: [], projects: [], skills: [] }) {
+export function applyTailoring(base, tailoring, lib = { experience: [], projects: [], skills: [] }, posting = '') {
   const doc = clone(base);
   const warnings = [];
   const swaps = [];
@@ -216,5 +218,76 @@ export function applyTailoring(base, tailoring, lib = { experience: [], projects
     doc.sections[ts.section].skills = lines;
   }
 
+  const named = postingSkills(base, doc, lib, posting);
+  if (named.length) swaps.push(`Added ${named.join(', ')} to your skills because the posting names ${named.length === 1 ? 'it' : 'them'}.`);
+
   return { doc, warnings, swaps };
+}
+
+const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// Tool names that are also everyday words ("excel in", "a linear model", "react quickly").
+const PROPER = /^[A-Z][a-z]+$/;
+
+/** Whether the posting names this skill: "Agile/Scrum" counts for "agile"; "Excel" must be capitalized. */
+export function namedIn(skill, posting) {
+  const parts = [skill, ...(skill.includes('/') ? skill.split('/').filter((p) => p.trim().length >= 4) : [])];
+  return parts.some((part) => {
+    const p = part.trim();
+    const re = new RegExp(`(?<![A-Za-z0-9])${escape(p)}(?![A-Za-z0-9+#])`, p === skill && PROPER.test(p) ? '' : 'i');
+    return re.test(posting);
+  });
+}
+
+/** Line for a profile skill that isn't on the resume: the tools/other line, else the last non-language line. */
+function lineFor(lines) {
+  const general = lines.filter((l) => /tool|software|technolog|platform|other|skill|framework/i.test(l.label));
+  if (general.length) return general[general.length - 1];
+  const rest = lines.filter((l) => !/language/i.test(l.label));
+  return rest[rest.length - 1] ?? lines[lines.length - 1];
+}
+
+const width = (items) => items.join(', ').length;
+
+/**
+ * Makes sure skills the posting names are listed. Returns the profile skills it
+ * added that the tailored resume left out.
+ */
+function postingSkills(base, doc, lib, posting) {
+  if (!posting) return [];
+  const added = [];
+  doc.sections.forEach((sec, si) => {
+    if (sec.kind !== 'skills' || !sec.skills.length) return;
+    const baseLines = base.sections[si].skills;
+    const listed = () => new Set(sec.skills.flatMap((l) => l.items.map(key)));
+    const grown = new Set();
+    const tailored = new Map(sec.skills.map((l) => [l, width(l.items)]));
+    // A posting-named item the tailoring dropped goes back into its own line.
+    baseLines.forEach((bl) => {
+      const line = sec.skills.find((l) => key(l.label) === key(bl.label));
+      if (!line) return;
+      for (const item of bl.items) {
+        if (!listed().has(key(item)) && namedIn(item, posting)) {
+          line.items.push(item);
+          grown.add(line);
+        }
+      }
+    });
+    for (const skill of lib.skills ?? []) {
+      if (listed().has(key(skill)) || !namedIn(skill, posting)) continue;
+      const line = lineFor(sec.skills);
+      line.items.push(skill);
+      grown.add(line);
+      added.push(skill);
+    }
+    for (const line of sec.skills) {
+      // Named skills first, keeping the tailored order within each group.
+      const named = line.items.filter((i) => namedIn(i, posting));
+      line.items = [...named, ...line.items.filter((i) => !named.includes(i))];
+      if (!grown.has(line)) continue;
+      // Keep a grown line no longer than it was by dropping unnamed items from the end.
+      const was = Math.max(tailored.get(line) ?? 0, width(baseLines.find((bl) => key(bl.label) === key(line.label))?.items ?? []));
+      while (width(line.items) > was && line.items.length > named.length) line.items.pop();
+    }
+  });
+  return added;
 }

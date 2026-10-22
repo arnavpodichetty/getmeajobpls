@@ -26,6 +26,10 @@ function cloneWithShadow(node: Element): Element {
  */
 function liveRows() {
   loadFixture('successfactors-2');
+  liveRowsFromLoaded();
+}
+
+function liveRowsFromLoaded() {
   for (const section of document.querySelectorAll<HTMLElement>('.rcmFormSection')) {
     const add = section.querySelector<HTMLElement>('.addRowButton');
     const row = section.querySelector<HTMLElement>('.rcmSectionComponent');
@@ -105,6 +109,23 @@ describe('SAP SuccessFactors', () => {
     // Filling again doesn't add more rows.
     await successfactors.fill(ctx);
     expect(sectionNamed('Previous Employment').querySelectorAll('.rcmSectionComponent')).toHaveLength(2);
+  });
+
+  it('fills row dates labeled "From Date" / "To Date"', async () => {
+    loadFixture('successfactors-2');
+    // Some companies label the row dates this way instead of "Date Begin" / "End Date".
+    for (const label of sectionNamed('Previous Employment').querySelectorAll('label.rcmFormFieldLabel')) {
+      const text = [...label.childNodes].find((n) => n.nodeType === Node.TEXT_NODE && /date begin|end date/i.test(n.textContent!));
+      if (text) text.textContent = /begin/i.test(text.textContent!) ? ' From Date' : ' To Date';
+    }
+    liveRowsFromLoaded();
+    const ctx = context({ resume: null });
+    ctx.profile.experience.push({ id: 'x2', company: 'Difference Engines', title: 'Research Assistant', type: 'Research', location: 'London', start: '2024-05', end: '2024-07', current: false, description: 'Tables.' });
+    await successfactors.fill(ctx);
+    const second = sectionNamed('Previous Employment').querySelectorAll('.rcmSectionComponent')[1];
+    const date = (title: string) => queryDeep<HTMLInputElement>('input', second.querySelector<HTMLElement>(`[data-testid="datePicker"][title="${title}"]`)!.shadowRoot!)!.value;
+    expect(date('Date Begin')).toBe('05/01/2024');
+    expect(date('End Date')).toBe('07/01/2024');
   });
 });
 

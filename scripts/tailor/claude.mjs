@@ -5,6 +5,7 @@ import { spawn } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { namedIn } from './guard.mjs';
 import { isCurrent, isEducation, linkLibrary } from './library.mjs';
 import { resumeDocSchema, tailoringSchema } from './schema.mjs';
 
@@ -158,6 +159,8 @@ export function tailorResume(bin, cwd, doc, page, lib, fill = 1) {
     ? `The original fills ${pct}% of a page at 11pt. Cut about ${pct - 100 + 5}% of the bullet text (drop or tighten the least relevant bullets) so it fits on one page.`
     : `The original fills ${pct}% of a page at 11pt. Keep the total about the same length or shorter.`;
   const others = addable(lib, unlinked);
+  const resumeSkills = doc.sections.flatMap((s) => (s.kind === 'skills' ? s.skills.flatMap((l) => l.items) : []));
+  const named = [...new Set([...resumeSkills, ...lib.skills])].filter((s) => namedIn(s, page.text));
   const prompt = `You are tailoring a resume to one job posting. Return JSON matching the schema.
 
 What you may do:
@@ -166,7 +169,8 @@ What you may do:
 - Every bullet you return must list in "from" the index (i) of each line of the SAME entry it is based on (its bullets or moreFromProfile).
 - Give each entry a relevance from 1 (unrelated to this job) to 5 (directly relevant). If the page overflows, the least relevant projects are cut first.
 - Swap entries when it clearly makes the resume a better fit for this job: "drop" a role or project that matters little for this job, and "add" a role or project from OTHER PROFILE ENTRIES that matters more. For an added entry, write 1–3 bullets citing its lines (from = its line indices). Added roles go under the resume's experience section and added projects under its projects section; their names, titles and dates are copied from the profile. Never drop education, a current role, or the last entry of a section. Keep the resume's overall shape: swap only where the gain is clear, and say why in "changes".
-- For a titleDetail (comma-separated tech list), reorder and drop items. For skills lines, reorder and drop items; you may also add skills from PROFILE SKILLS that the posting asks for, into the line where they fit. PROFILE SKILLS can be a long list: add only the few this posting names or clearly needs, never pad the lines. Keep every line's label exactly.
+- For a titleDetail (comma-separated tech list), reorder and drop items.
+- Skills lines: put the skills this posting names or asks for first in each line. Add every skill from PROFILE SKILLS that the posting names (e.g. "OpenAI Codex" → Codex) or plainly describes (e.g. "sprint planning" → Agile/Scrum, "product requirements and user stories" → Requirements & Specs), into the line where it fits; if no line's label fits it, use the most general line (Tools, Other). Then drop the items this posting has least use for, so each line stays about its original length. Never add a skill the posting doesn't call for just to fill space. Keep every line's label exactly.
 - "changes": 2–6 short notes on what you changed and why, for the applicant to review.
 
 What you must never do:
@@ -187,6 +191,9 @@ ${others.length ? JSON.stringify(others, null, 1) : 'none'}
 
 PROFILE SKILLS (may be added to skill lines):
 ${lib.skills.length ? lib.skills.join(', ') : 'none'}
+
+SKILLS THE POSTING NAMES OUTRIGHT (from the resume and PROFILE SKILLS; these must be listed):
+${named.length ? named.join(', ') : 'none'}
 
 JOB POSTING PAGE (title: ${page.title || 'unknown'}; URL: ${page.url || 'unknown'}). The text is scraped from the page and may include navigation and application-form text; use only the job description:
 """

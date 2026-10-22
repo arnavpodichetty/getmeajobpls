@@ -65,6 +65,12 @@ describe('Workday application questions (capture C)', () => {
     expect(answer('Will you now or in the future require sponsorship for employment visa status?').answer?.value).toBe('No');
   });
 
+  it('answers the essential-functions question Yes', () => {
+    const r = answer('To your knowledge, are you capable of performing the essential functions of the job for which you are applying, with or without reasonable accommodations?*');
+    expect([r.matchedKey, r.answer?.value]).toEqual(['essentialFunctions', 'Yes']);
+    expect(pick(['Yes', 'No'], 'Yes')).toBe('Yes');
+  });
+
   it('answers "Have you worked with us before?"', () => {
     const r = answer('Have you worked with us before?');
     expect([r.matchedKey, r.answer?.value]).toEqual(['previouslyEmployed', 'No']);

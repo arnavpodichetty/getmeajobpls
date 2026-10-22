@@ -237,6 +237,8 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Have you ever applied with Example Group previously?', 'No'],
     ['If hired, will you be able to provide documentation required under applicable laws showing that you are legally able to work in the US?', 'Yes'],
     ['Are you able, with or without reasonable workplace accommodations, to perform the essential functions of the job for which you are applying?', 'Yes'],
+    ['To your knowledge, are you capable of performing the essential functions of the job for which you are applying, with or without reasonable accommodations?*', 'Yes'],
+    ['Are you capable of carrying out the essential duties of this position?', 'Yes'],
   ],
   'international student': [
     ['Are you an international student?', 'No'],

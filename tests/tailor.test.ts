@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error plain JS helper module (scripts/tailor runs in Node, outside the extension build)
-import { applyTailoring, terms, unsupported } from '../scripts/tailor/guard.mjs';
+import { applyTailoring, namedIn, terms, unsupported } from '../scripts/tailor/guard.mjs';
 // @ts-expect-error plain JS helper module
 import { contactItem, contactLines, inline, renderHtml } from '../scripts/tailor/render.mjs';
 // @ts-expect-error plain JS helper module
@@ -355,6 +355,47 @@ describe('tailoring from the resume plus your profile', async () => {
     expect(doc.sections[3].skills).toEqual([
       { label: 'Languages', items: ['Python', 'SQL'] },
       { label: 'Tools', items: ['Airflow', 'Docker'] },
+    ]);
+  });
+});
+
+describe('skills the posting names', async () => {
+  // @ts-expect-error plain JS helper module
+  const { normalizeLibrary } = await import('../scripts/tailor/library.mjs');
+  const lib = normalizeLibrary({ skills: ['Jira', 'Codex', 'Notion', 'Linear', 'Agile/Scrum', 'Product Analytics', 'Kubernetes'] });
+  const posting = 'Use AI tools such as OpenAI Codex. Familiarity with Jira and product analytics is a plus. You will excel in linear algebra and take notes. Join sprint planning with agile teams.';
+
+  it('matches names as the posting writes them, not everyday words', () => {
+    expect(namedIn('Codex', posting)).toBe(true);
+    expect(namedIn('Product Analytics', posting)).toBe(true);
+    expect(namedIn('Agile/Scrum', posting)).toBe(true);
+    expect(namedIn('Linear', posting)).toBe(false); // "linear algebra"
+    expect(namedIn('Git', 'GitLab experience')).toBe(false);
+    expect(namedIn('Excel', 'You will excel here')).toBe(false);
+    expect(namedIn('Excel', 'Experience with Excel')).toBe(true);
+  });
+
+  it('adds profile skills the tailoring left out, first in the line, without growing it', () => {
+    const { doc, swaps } = applyTailoring(base, {
+      skills: [{ section: 3, lines: [{ label: 'Languages', items: ['Python', 'SQL', 'Java'] }, { label: 'Tools', items: ['Docker', 'Git'] }] }],
+    }, lib, posting);
+    const tools = doc.sections[3].skills[1];
+    expect(tools.label).toBe('Tools');
+    expect(tools.items.slice(0, 4)).toEqual(['Jira', 'Codex', 'Agile/Scrum', 'Product Analytics']);
+    expect(tools.items).not.toContain('Kubernetes');
+    expect(tools.items).not.toContain('Linear');
+    expect(tools.items.join(', ').length).toBeLessThanOrEqual(Math.max(16, 'Jira, Codex, Agile/Scrum, Product Analytics'.length));
+    expect(doc.sections[3].skills[0].items).toEqual(['Python', 'SQL', 'Java']);
+    expect(swaps).toContain('Added Jira, Codex, Agile/Scrum, Product Analytics to your skills because the posting names them.');
+  });
+
+  it('puts back a named resume skill the tailoring dropped, in its own line', () => {
+    const { doc } = applyTailoring(base, {
+      skills: [{ section: 3, lines: [{ label: 'Languages', items: ['SQL'] }, { label: 'Tools', items: ['Git'] }] }],
+    }, { experience: [], projects: [], skills: [] }, 'We use Java and Docker.');
+    expect(doc.sections[3].skills).toEqual([
+      { label: 'Languages', items: ['Java', 'SQL'] },
+      { label: 'Tools', items: ['Docker', 'Git'] },
     ]);
   });
 });

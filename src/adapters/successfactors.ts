@@ -152,8 +152,9 @@ const RE = {
   company: /^(?:company|employer|organi[sz]ation)(?: name)?$/i,
   jobTitle: /^(?:job |position )?title$|^position$|^role$/i,
   location: /^(?:location|city|job location)$/i,
-  start: /^(?:date begin|start date|begin date|from|date from|start)$/i,
-  end: /^(?:end date|date end|to|date to|end|completion date)$/i,
+  // "Start Date", "Date Begin", "From Date"…
+  start: /^(?:(?:start|begin|from)(?: date)?|date (?:begin|from|start))$/i,
+  end: /^(?:(?:end|to|completion)(?: date)?|date (?:end|to))$/i,
   description: /^(?:impact|description|responsibilities|duties|achievements)/i,
   school: /^(?:school|institution|university|college|school name)$/i,
   major: /^(?:major|field of study|concentration|discipline)$/i,
