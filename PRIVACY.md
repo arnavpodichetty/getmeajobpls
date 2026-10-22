@@ -1,6 +1,6 @@
 # Privacy policy
 
-_Last updated: October 18, 2026_
+_Last updated: October 21, 2026_
 
 getmeajobpls is a browser extension that fills in job applications for you. This policy explains what it does with your information.
 
@@ -14,11 +14,13 @@ All of it is stored **only in your browser**, in the extension's local storage a
 
 Only when **you** start a fill on an application page. The extension then types your information into that page's form and attaches the resume you picked. What happens next is between you and that employer: the information is sent to them only if you submit the application yourself. The extension never clicks Submit.
 
-The extension makes no other network requests. It has no analytics, tracking, advertising or remote code.
+Apart from resume tailoring (below), the extension makes no other network requests. It has no analytics, tracking, advertising or remote code.
 
 ## Resume tailoring (optional, off by default)
 
-If you turn on **Resume tailoring** and install its local helper, clicking **Tailor resume** sends the selected resume PDF, the text of the current job page, and your profile's Experience, Projects and skills to a helper program on your computer. The helper passes them to Claude Code, which you install and sign in to with your own Claude account, so they are processed by Anthropic under your account's terms. The tailored resume is saved back in the extension. Nothing is sent until you click the button, and the extension still makes no network requests itself. The helper keeps a structured copy of each resume it has read on your computer (in `~/Library/Application Support/getmeajobpls/tailor/`, or `~/.config/getmeajobpls/tailor/` on Linux) so it doesn't have to read it again.
+If you turn on **Resume tailoring** and install its local helper, clicking **Tailor resume** sends the selected resume PDF, the text of the current job page, and your profile's Experience, Projects and skills to a helper program on your computer. The helper passes them to Claude Code, which you install and sign in to with your own Claude account, so they are processed by Anthropic under your account's terms. The tailored resume is saved back in the extension. Nothing is sent until you click the button.
+
+Application pages often leave out the job description (Workday's steps, Lever's /apply page). When you click **Tailor resume** on a Workday, Lever, Ashby or Greenhouse page, the extension asks that site's public job listing for the posting's description. The request contains only the job's address, never your information, and goes to the same company's applicant tracking system you are already on. This is the only network request the extension makes itself. The helper keeps a structured copy of each resume it has read on your computer (in `~/Library/Application Support/getmeajobpls/tailor/`, or `~/.config/getmeajobpls/tailor/` on Linux) so it doesn't have to read it again.
 
 ## Page snapshots
 
