@@ -12,7 +12,7 @@ All of it is stored **only in your browser**, in the extension's local storage a
 
 ## When your information leaves your browser
 
-Only when **you** start a fill on an application page. The extension then types your information into that page's form and attaches the resume you picked. What happens next is between you and that employer: the information is sent to them only if you submit the application yourself. The extension never clicks Submit.
+Only when **you** ask: when you start a fill on an application page, or when you use one of the optional Claude features below. For a fill, the extension types your information into that page's form and attaches the resume you picked. What happens next is between you and that employer: the information is sent to them only if you submit the application yourself. The extension never clicks Submit.
 
 Apart from resume tailoring (below), the extension makes no other network requests. It has no analytics, tracking, advertising or remote code.
 
@@ -38,18 +38,18 @@ If you turn on **Settings → Developer → Show "Capture page" button**, the bu
 
 ## Permissions
 
-- **Read and change data on websites:** to find application forms on the many sites employers use (including forms embedded in other sites) and fill them when you ask. Before you start a fill, the extension only looks at a page's form fields to decide whether to show its Fill button; nothing about the pages you visit is stored or sent anywhere.
+- **Read and change data on websites:** to find application forms on the many sites employers use (including forms embedded in other sites) and fill them when you ask. Before you start a fill, the extension reads the page to decide whether to show its panel, to pick a resume, and to show the posting's role, company, location and pay. On a job posting, it keeps the posting's text and details for that tab in the browser's session storage, which is cleared when the browser closes, so they are still available on the application pages that follow (for example for tailoring). None of this is sent anywhere.
 - **Storage / unlimited storage:** to keep your profile and resume files on your computer.
 - **Web navigation:** to find the frame of a page that holds the application form.
 - **Native messaging (optional):** requested only when you turn on resume tailoring, to talk to the helper on your computer (for tailoring and for filling your profile).
 
 ## Your control
 
-You can change or delete anything on the options page at any time. **Backup → Export JSON** saves a copy for you. Removing the extension deletes everything it stored.
+You can change or delete anything on the options page at any time. **Backup → Export JSON** saves a copy for you. Removing the extension deletes everything it stored in your browser. If you installed the tailoring helper, `npm run tailor-install -- --uninstall` removes it; its cached resume reads are in the folder named above, which you can delete.
 
 ## Selling and sharing
 
-Your information is not sold, shared, or used for anything other than filling in applications you choose to fill.
+Your information is not sold, shared, or used for anything other than helping you apply: filling in applications you choose to fill, and the optional Claude features you use.
 
 ## Contact
 

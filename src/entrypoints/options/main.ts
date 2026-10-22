@@ -199,7 +199,7 @@ function profileSections(): HTMLElement[] {
       'Most recent first. The first entry answers "school", "degree", "GPA" questions; Workday adds one panel per entry. Major fallbacks are tried in order after your major and its variations when those are unavailable.',
       repeatable(p.education, emptyEducation, 'School', (e) =>
         grid(
-          textField('School', e, 'school', s, { wide: true, placeholder: 'University of California, Berkeley' }),
+          textField('School', e, 'school', s, { wide: true, placeholder: 'University of Michigan' }),
           textField('Degree', e, 'degree', s, { placeholder: 'Bachelor of Arts' }),
           textField('Major', e, 'major', s, { placeholder: 'Mathematics' }),
           listField('Major fallbacks, in order (comma-separated)', e, 'majorFallbacks', s, { placeholder: 'Computer Science, Statistics' }),
@@ -492,7 +492,7 @@ function creditsSection(): HTMLElement {
         {},
         'Tailored resumes follow the layout of ',
         link('https://github.com/jakegut/resume', "Jake's resume template"),
-        ' (MIT), rebuilt in HTML and CSS; no code was copied.',
+        ' (MIT), rebuilt in HTML and CSS.',
       ),
       h(
         'li',
@@ -566,7 +566,7 @@ export async function renderAll(): Promise<void> {
     h(
       'div',
       { class: 'page-head' },
-      h('div', {}, h('h1', {}, 'Your profile'), h('p', {}, 'Everything here stays in this browser.')),
+      h('div', {}, h('h1', {}, 'Your profile'), h('p', {}, 'Everything here is stored in this browser.')),
       h('div', { class: 'save-state' }, 'Changes save automatically'),
     ),
     importSection({ resumes: library, page, enabled: settings.tailorEnabled, profile: () => profile, onApplied: renderAll }),

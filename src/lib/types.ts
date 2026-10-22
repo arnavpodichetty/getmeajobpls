@@ -1,5 +1,5 @@
 // Shared data model. Everything here is persisted locally (chrome.storage.local
-// for JSON, IndexedDB for resume files) and never leaves the browser.
+// for JSON, IndexedDB for resume files); only the optional Claude features send any of it out, when you click.
 
 export type YesNo = '' | 'Yes' | 'No';
 export type YesNoNA = YesNo | 'N/A';

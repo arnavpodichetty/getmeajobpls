@@ -167,3 +167,11 @@ describe('job details for the panel', () => {
     expect(postingKey(new URL(`${workday}/apply`))).not.toBe(postingKey(new URL('https://acme.wd5.myworkdayjobs.com/Careers/job/Austin-TX/Analyst_R-10')));
   });
 });
+
+describe('company from a logo', () => {
+  it('drops "logo" from the logo\'s alt text', () => {
+    const doc = page('<div class="main-header-logo"><img alt="Initech logo"></div><div class="posting-headline"><h2>Data Analyst</h2></div>');
+    expect(readJobInfo(doc, new URL('https://jobs.lever.co/initech/abc')).company).toBe('Initech');
+  });
+});
+

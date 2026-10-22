@@ -275,7 +275,7 @@ async function firstMatch(input: HTMLElement, tiers: string[][]): Promise<boolea
   return false;
 }
 
-/** Workday's school list spells campuses "University of California-Berkeley": search that first. */
+/** Workday's school list spells campuses "University of California-Irvine": search that first. */
 function workdaySchoolOrder(variants: string[]): string[] {
   return [...variants.filter((v) => /\S-\S/.test(v)), ...variants.filter((v) => !/\S-\S/.test(v))];
 }

@@ -1,6 +1,6 @@
 {
   "name": "getmeajobpls",
-  "description": "Personal job-application autofill extension",
+  "description": "Apply faster: one-click autofill for Workday, Greenhouse, Lever and more, plus tailored resumes. No account; data stored on-device.",
   "private": true,
   "author": "Arnav Podichetty",
   "version": "1.3.0",

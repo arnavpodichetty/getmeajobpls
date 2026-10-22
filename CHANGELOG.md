@@ -7,7 +7,11 @@
   - Only what the source says is used: every value must appear in its text, in the entry it belongs to; dates must match that entry's dates; a role is current only if it says Present; a GPA is never taken from its scale ("3.9/4.0" gives 3.9). Descriptions and skills are copied word for word. Anything that fails a check is listed under "Left out".
   - You review each change first. Empty fields and new entries start ticked; anything that would replace what you wrote starts unticked. Schools, jobs and projects you already have are matched, not added again.
   - Standard answers and EEO are never changed.
+- **New logo:** a resume with a check mark and a cursor, on a mint square, in the toolbar, the extensions page and the store.
 - **Phone numbers are digits only:** the Phone box takes only digits, and a pasted "+1 (415) 555-0100" becomes 4155550100 (the country code has its own box). Sites format the number themselves as it's filled. Numbers you saved before are converted the same way.
+
+### Fixes
+- **Company on the panel:** Lever postings showed "Spotify logo" instead of "Spotify". The word "logo" from the site's logo is dropped now.
 
 ## 1.2.0 (2026-10-20)
 

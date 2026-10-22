@@ -1,6 +1,13 @@
 # getmeajobpls
 
-A Chrome extension that autofills job applications. Open an application, click **Fill page**, and it uploads your resume and answers the form from your profile. It never clicks Submit, and everything stays in your browser.
+A Chrome extension that autofills job applications, built to fill them faster and more completely than tools like Simplify and Jobright. Open an application on Workday, Greenhouse, Lever or another site, click **Fill page**, and it uploads your resume and answers the form from your profile. It never clicks Submit.
+
+What sets it apart:
+
+- **Fills the parts that usually take longest**: Workday's multi-step forms, searchable dropdowns, forms embedded in a company's careers site, and custom questions you've answered before.
+- **Honest about what it filled**: green means filled; anything it isn't sure of is flagged orange instead of guessed.
+- **Tailors your resume to each job** with your own Claude account, and can set up your whole profile from your resume.
+- **No account, no subscription**: your profile and resumes are stored on your device.
 
 ![A form filled by getmeajobpls, with filled fields outlined in green and the Fill page panel on the right](store/screenshot-4-filled-form.png)
 

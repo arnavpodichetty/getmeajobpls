@@ -6,7 +6,7 @@ export default defineConfig({
   imports: false,
   manifest: {
     name: 'getmeajobpls — Autofill',
-    description: 'Fill job applications on Workday, Greenhouse, Lever and more from one profile. Never submits. Your data stays in your browser.',
+    description: 'Apply faster: one-click autofill for Workday, Greenhouse, Lever and more, plus tailored resumes. No account; data stored on-device.',
     permissions: ['storage', 'unlimitedStorage', 'webNavigation'],
     // Only requested when you turn on resume tailoring (Options → Resume tailoring),
     // to talk to the local helper that runs Claude Code.
