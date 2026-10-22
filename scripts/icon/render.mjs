@@ -2,7 +2,7 @@
 // the document-and-cursor mark (without the wordmark, which is unreadable at
 // toolbar sizes) centered on the logo's mint rounded square.
 //
-//   node scripts/icon/render.mjs   → public/icon/{16,32,48,128}.png
+//   node scripts/icon/render.mjs   → public/icon/{16,32,48,128}.png, docs/logo.png
 //
 // The 128 px store icon keeps 16 px of clear space per side (96 px artwork), as
 // the Chrome Web Store asks; the smaller ones fill their box so they stay legible.
@@ -15,6 +15,8 @@ const MARK = { x: 140, y: 150, w: 1010, h: 740 };
 /** Just the document and cursor, for toolbar sizes where the cloud and click lines would shrink them to a smudge. */
 const TIGHT = { x: 270, y: 155, w: 785, h: 710 };
 const BG = 'rgb(238, 254, 245)';
+/** The whole logo (wordmark included) for the README: its rounded square, with the corners outside it made transparent. */
+const FULL = { x: 11, y: 19, w: 1216, h: 1208, radius: 212, width: 512 };
 const SIZES = [
   { size: 16, pad: 0, mark: TIGHT },
   { size: 32, pad: 0, mark: TIGHT },
@@ -69,6 +71,28 @@ try {
       return { size, data: out.toDataURL('image/png').split(',')[1] };
     });
   }, logo, BG, SIZES);
+  const full = await page.evaluate(async (src, f) => {
+    const img = new Image();
+    img.src = src;
+    await img.decode();
+    const out = document.createElement('canvas');
+    out.width = f.w;
+    out.height = f.h;
+    const c = out.getContext('2d');
+    c.beginPath();
+    c.roundRect(0, 0, f.w, f.h, f.radius);
+    c.clip();
+    c.drawImage(img, f.x, f.y, f.w, f.h, 0, 0, f.w, f.h);
+    const small = document.createElement('canvas');
+    small.width = f.width;
+    small.height = Math.round((f.h / f.w) * f.width);
+    const s = small.getContext('2d');
+    s.imageSmoothingQuality = 'high';
+    s.drawImage(out, 0, 0, small.width, small.height);
+    return small.toDataURL('image/png').split(',')[1];
+  }, logo, FULL);
+  writeFileSync(new URL('../../docs/logo.png', import.meta.url), Buffer.from(full, 'base64'));
+  console.log('docs/logo.png');
   for (const { size, data } of icons) {
     writeFileSync(new URL(`../../public/icon/${size}.png`, import.meta.url), Buffer.from(data, 'base64'));
     console.log(`public/icon/${size}.png`);
