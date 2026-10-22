@@ -81,7 +81,7 @@ export interface Profile {
     pronouns: string;
     email: string;
     universityEmail: string;
-    phone: string; // as you'd type it, e.g. "(415) 555-0100"
+    phone: string; // digits only, without the country code, e.g. "4155550100"
     phoneCountryCode: string; // e.g. "+1"
     street: string;
     addressLine2: string;

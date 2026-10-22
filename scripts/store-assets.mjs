@@ -22,7 +22,7 @@ const SIZE = { width: 1280, height: 800 };
 const PROFILE = {
   personal: {
     firstName: 'Ada', middleName: '', lastName: 'Lovelace', fullName: '', preferredName: 'Ada', pronouns: 'she/her',
-    email: 'ada.lovelace@example.com', universityEmail: '', phone: '(415) 555-0100', phoneCountryCode: '+1',
+    email: 'ada.lovelace@example.com', universityEmail: '', phone: '4155550100', phoneCountryCode: '+1',
     street: '1 Analytical Way', addressLine2: '', city: 'San Francisco', state: 'CA', zip: '94105', country: 'United States',
   },
   links: { linkedin: 'https://linkedin.com/in/ada-lovelace', github: 'https://github.com/ada-lovelace', website: 'https://adalovelace.dev', portfolio: '', twitter: '', other: '' },

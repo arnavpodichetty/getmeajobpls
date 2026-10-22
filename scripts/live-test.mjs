@@ -28,7 +28,7 @@ if (!urls.length) {
 const PROFILE = {
   personal: {
     firstName: 'Ada', middleName: '', lastName: 'Lovelace', preferredName: 'Ada', pronouns: 'she/her',
-    email: 'ada.lovelace.test@example.com', phone: '(415) 555-0100', phoneCountryCode: '+1',
+    email: 'ada.lovelace.test@example.com', phone: '4155550100', phoneCountryCode: '+1',
     street: '1 Analytical Way', addressLine2: '', city: 'Los Angeles', state: 'CA', zip: '90024', country: 'United States',
   },
   links: { linkedin: 'https://www.linkedin.com/in/ada-test', github: 'https://github.com/ada-test', website: 'https://example.com', portfolio: 'https://example.com/work', twitter: '', other: '' },

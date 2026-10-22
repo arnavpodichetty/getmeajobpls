@@ -35,7 +35,7 @@ describe('application disclosure preferences', () => {
   ])('%s → %s', (label, answer) => expect(ask(label)).toBe(answer));
 
   it('keeps phone, state, work authorization and general agreements separate', () => {
-    expect(ask('Phone Number')).toBe('(415) 555-0100');
+    expect(ask('Phone Number')).toBe('4155550100');
     expect(ask('State / Province')).toBe('CA');
     expect(ask('Are you legally authorized to work in the United States?')).toBe('Yes');
     expect(ask('I agree to the terms and conditions')).toBe('Yes');

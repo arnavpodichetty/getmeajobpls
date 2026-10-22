@@ -4,7 +4,7 @@
 // proposed changes for you to review. Fields you already filled are never
 // changed unless you tick them, and entries already in your profile are matched
 // so they aren't added twice.
-import { emptyEducation, emptyExperience, emptyLanguage, emptyProject, LANGUAGE_LEVELS } from './defaults';
+import { emptyEducation, emptyExperience, emptyLanguage, emptyProject, LANGUAGE_LEVELS, phoneDigits } from './defaults';
 import type { Education, Experience, Language, Profile, Project } from './types';
 
 export interface ProfileDraft {
@@ -135,7 +135,8 @@ export function planImport(profile: Profile, draft: ProfileDraft): ImportItem[] 
   const items: ImportItem[] = [];
 
   for (const [field, label] of PERSONAL) {
-    const proposed = draft.personal[field];
+    // Phone numbers are kept as digits only.
+    const proposed = field === 'phone' ? phoneDigits(draft.personal.phone, profile.personal.phoneCountryCode) : draft.personal[field];
     const current = profile.personal[field];
     // The country starts out as "United States"; only a different one on the resume is worth showing.
     if (!proposed || same(current, proposed)) continue;

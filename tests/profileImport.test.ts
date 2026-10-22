@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { appearsIn, checkProfile, checkProfileText, dateSupported, gpaSupported } from '../scripts/tailor/profile.mjs';
 // @ts-expect-error plain JS helper module
 import { normalizeDoc } from '../scripts/tailor/schema.mjs';
-import { emptyEducation, emptyExperience, emptyProfile } from '../src/lib/defaults';
+import { emptyEducation, emptyExperience, emptyProfile, normalizeProfile, phoneDigits } from '../src/lib/defaults';
 import { applyImport, languageLevel, mergeDrafts, planImport, type ProfileDraft } from '../src/lib/profileImport';
 
 const doc = normalizeDoc({
@@ -186,6 +186,14 @@ describe('reviewing what the resume adds', () => {
     expect(profile.experience.find((x) => x.id === 'x1')).toMatchObject({ start: '2025-09', end: '2025-12', description: 'My own words' });
   });
 
+  it('proposes the phone as digits only, and sees a saved number as the same', () => {
+    const empty = emptyProfile();
+    expect(planImport(empty, draft()).find((i) => i.id === 'personal:phone')?.proposed).toBe('4155550100');
+    const saved = emptyProfile();
+    saved.personal.phone = '4155550100';
+    expect(planImport(saved, draft()).some((i) => i.id === 'personal:phone')).toBe(false);
+  });
+
   it('adds only the skills you do not have yet', () => {
     const profile = emptyProfile();
     profile.skills = ['python'];
@@ -331,5 +339,23 @@ describe('spoken languages', () => {
     const items = planImport(profile, d);
     applyImport(profile, items, new Set(items.map((i) => i.id)));
     expect(profile.languages[0]).toMatchObject({ language: 'Italian', proficiency: 'Professional working', fluent: false });
+  });
+});
+
+describe('phone numbers are digits only', () => {
+  it('keeps only the digits, without the country code', () => {
+    expect(phoneDigits('(415) 555-0100', '+1')).toBe('4155550100');
+    expect(phoneDigits('+1 (415) 555-0100', '+1')).toBe('4155550100');
+    expect(phoneDigits('1-415-555-0100', '+1')).toBe('4155550100');
+    expect(phoneDigits('0044 20 7946 0958', '+44')).toBe('2079460958');
+    expect(phoneDigits('+44 20 7946 0958', '+44')).toBe('2079460958');
+    // A number that only starts with the same digits as the country code is left alone.
+    expect(phoneDigits('4415550100', '+44')).toBe('4415550100');
+    expect(phoneDigits('', '+1')).toBe('');
+  });
+
+  it('converts a number saved before this change when the profile loads', () => {
+    const p = normalizeProfile({ personal: { phone: '+1 (415) 555-0100', phoneCountryCode: '+1' } });
+    expect(p.personal.phone).toBe('4155550100');
   });
 });

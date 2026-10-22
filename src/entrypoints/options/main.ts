@@ -4,7 +4,7 @@ import { TIME_ZONES } from '../../lib/clock';
 import { ACADEMIC_YEARS } from '../../lib/engine/academicYear';
 import { payExpectation } from '../../lib/engine/answers';
 import { $, h } from '../../lib/dom';
-import { LANGUAGE_LEVELS, emptyEducation, emptyExperience, emptyLanguage, emptyProject, emptySavedAnswer, emptySkillSet } from '../../lib/defaults';
+import { LANGUAGE_LEVELS, phoneDigits, emptyEducation, emptyExperience, emptyLanguage, emptyProject, emptySavedAnswer, emptySkillSet } from '../../lib/defaults';
 import { listResumes } from '../../lib/resumeDb';
 import { loadProfile, loadRules, loadSettings, saveProfile, saveSettings } from '../../lib/storage';
 import type { Profile, ResumeMeta, Settings } from '../../lib/types';
@@ -160,7 +160,13 @@ function profileSections(): HTMLElement[] {
         textField('Pronouns', p.personal, 'pronouns', s, { placeholder: 'e.g. she/her' }),
         textField('Email', p.personal, 'email', s, { type: 'email', placeholder: 'ada.lovelace@example.com' }),
         textField('University email', p.personal, 'universityEmail', s, { type: 'email', placeholder: 'Blank uses your main email only if it ends in .edu' }),
-        textField('Phone', p.personal, 'phone', s, { type: 'tel', placeholder: '(415) 555-0100' }),
+        // Digits only: sites format the number themselves. A pasted "+1 (415) 555-0100" becomes 4155550100.
+        textField('Phone (digits only)', p.personal, 'phone', s, {
+          type: 'tel',
+          inputMode: 'numeric',
+          placeholder: '4155550100',
+          sanitize: (v) => phoneDigits(v, p.personal.phoneCountryCode),
+        }),
         textField('Phone country code', p.personal, 'phoneCountryCode', s, { placeholder: '+1' }),
       ),
       h('h3', {}, 'Address'),

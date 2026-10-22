@@ -9,6 +9,10 @@ interface InputOpts {
   placeholder?: string;
   list?: string;
   wide?: boolean;
+  /** Keyboard to show on touch screens, e.g. "numeric". */
+  inputMode?: string;
+  /** Cleans what's typed or pasted before it's saved (and shows the cleaned value). */
+  sanitize?: (value: string) => string;
 }
 
 export function textField(
@@ -23,8 +27,12 @@ export function textField(
     value: obj[key] ?? '',
     placeholder: opts.placeholder,
     list: opts.list,
+    inputmode: opts.inputMode,
     onInput: (e: Event) => {
-      obj[key] = (e.target as HTMLInputElement).value;
+      const el = e.target as HTMLInputElement;
+      const value = opts.sanitize ? opts.sanitize(el.value) : el.value;
+      if (value !== el.value) el.value = value;
+      obj[key] = value;
       onChange();
     },
   });

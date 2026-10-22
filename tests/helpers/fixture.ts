@@ -11,7 +11,7 @@ export function testProfile() {
   const p = emptyProfile();
   Object.assign(p.personal, {
     firstName: 'Ada', middleName: 'K', lastName: 'Lovelace', preferredName: 'Ada', pronouns: 'she/her',
-    email: 'ada@example.com', phone: '(415) 555-0100', street: '1 Analytical Way', city: 'Los Angeles', state: 'CA',
+    email: 'ada@example.com', phone: '4155550100', street: '1 Analytical Way', city: 'Los Angeles', state: 'CA',
     universityEmail: 'ada@university.edu',
     zip: '90024', country: 'United States',
   });

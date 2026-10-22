@@ -3,6 +3,21 @@ import { DEFAULT_TIME_ZONE } from './clock';
 
 export const uid = (): string => crypto.randomUUID();
 
+/**
+ * A phone number as digits only, without the country code (it has its own field):
+ * "+1 (415) 555-0100" → "4155550100". Sites format the number themselves as it's typed.
+ */
+export function phoneDigits(value: string, countryCode = ''): string {
+  const v = value.trim();
+  let d = v.replace(/\D/g, '');
+  // "00" is the international prefix, like "+".
+  const international = v.startsWith('+') || v.startsWith('00');
+  if (v.startsWith('00')) d = d.slice(2);
+  const cc = countryCode.replace(/\D/g, '');
+  if (cc && d.length > cc.length && d.startsWith(cc) && (international || (cc === '1' && d.length === 11))) d = d.slice(cc.length);
+  return d;
+}
+
 export function emptyProfile(): Profile {
   return {
     personal: {
@@ -182,7 +197,11 @@ export function normalizeProfile(raw: unknown): Profile {
   if (!raw || typeof raw !== 'object') return base;
   const p = raw as Partial<Profile>;
   return {
-    personal: { ...base.personal, ...p.personal },
+    personal: (() => {
+      const personal = { ...base.personal, ...p.personal };
+      // Older profiles could hold a formatted number; phone numbers are digits only now.
+      return { ...personal, phone: phoneDigits(String(personal.phone ?? ''), String(personal.phoneCountryCode ?? '')) };
+    })(),
     links: { ...base.links, ...p.links },
     education: (p.education ?? []).map((e) => ({ ...emptyEducation(), ...e, majorFallbacks: list(e.majorFallbacks) })),
     experience: (p.experience ?? []).map((e) => ({ ...emptyExperience(), ...e })),
