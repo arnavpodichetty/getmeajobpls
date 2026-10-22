@@ -90,9 +90,11 @@ Certify all three:
 
 **Privacy policy URL:** `https://github.com/arnavpodichetty/getmeajobpls/blob/main/PRIVACY.md`
 
-## Test instructions (Distribution → Test instructions)
+## Test instructions (Access → Test instructions, 500 characters max)
 
-> No account or login is needed. Open the options page (it opens on install), fill in a few Personal fields (or Backup → import any JSON export), and upload any PDF under Resumes. Then open a public job application, for example any job on boards.greenhouse.io or jobs.lever.co and its Apply form. A small "Fill page" panel appears at the top right; click it and the form is filled. The extension never clicks Submit. Resume tailoring and Fill my profile are optional and need a local helper plus Claude Code, so they can be left off for review (with them off, the extension never uses native messaging). The small script on jobs.ashbyhq.com (ashby-saves.js) runs in the page only to count Ashby's own in-flight save requests so fields are filled one save at a time; it sends nothing.
+> No login needed. In the options page (opens on install), fill a few Personal fields and upload any PDF under Resumes. Open a public application, e.g. any job on boards.greenhouse.io or jobs.lever.co, then Apply. Click "Fill page" in the panel at the top right; the form fills. Submit is never clicked. Tailoring and Fill my profile are optional (need Claude Code) and can stay off. ashby-saves.js only counts Ashby's in-flight saves so fields save one at a time; it sends nothing.
+
+Leave the username and password empty.
 
 ## Before submitting
 
