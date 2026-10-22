@@ -107,6 +107,10 @@ export const US_STATES: Record<string, string> = {
   wy: 'wyoming', dc: 'district of columbia', pr: 'puerto rico',
 };
 
+/** Full state name → abbreviation ("california" → "ca"), and every full name. */
+const STATE_ABBREVIATIONS = new Map(Object.entries(US_STATES).map(([abbr, full]) => [full, abbr]));
+const STATE_NAMES = new Set(Object.values(US_STATES));
+
 /** Words that mean the same thing in option lists. Each group is matched as a set. */
 const SYNONYM_GROUPS: string[][] = [
   ['united states', 'united states of america', 'usa', 'us', 'u s', 'u s a', 'america'],
@@ -155,7 +159,8 @@ function expand(value: string): string[] {
   const n = normalize(value);
   const out = new Set([n]);
   if (US_STATES[n]) out.add(US_STATES[n]);
-  for (const [abbr, full] of Object.entries(US_STATES)) if (full === n) out.add(abbr);
+  const abbr = STATE_ABBREVIATIONS.get(n);
+  if (abbr) out.add(abbr);
   for (const group of SYNONYM_GROUPS) {
     if (group.includes(n)) for (const g of group) out.add(g);
   }
@@ -341,8 +346,9 @@ export function optionScore(optionText: string, wanted: string): number {
   if (negated(normalize(optionText.replace(/\([^)]*\)/g, ' '))) !== negated(normalize(wanted.replace(/\([^)]*\)/g, ' ')))) return 0;
 
   let best = 0;
+  const optionForms = expand(optionText);
   for (const w of expand(wanted)) {
-    for (const o of expand(optionText)) {
+    for (const o of optionForms) {
       if (o === w) return 1; // a synonym ("USA" for "United States")
       // "Asian (Not Hispanic or Latino)" answers "Asian"; "Yes, but …" style extras are only a loose match.
       if (o.startsWith(`${w} `)) best = Math.max(best, HEDGE.test(o.slice(w.length)) ? 0.8 : 0.9);
@@ -356,7 +362,7 @@ export function optionScore(optionText: string, wanted: string): number {
   // place-like answers; for statements, sharing every word can still mean the opposite.
   const wantedTokens = w.split(' ').map((t) => US_STATES[t] ?? t).join(' ').split(' ');
   const optTokens = new Set(opt.split(' ').concat(...opt.split(' ').map((t) => (US_STATES[t] ?? t).split(' '))));
-  const placeLike = /,/.test(wanted) && w.split(' ').length <= 5 && w.split(' ').some((t) => US_STATES[t] || Object.values(US_STATES).includes(t) || expand(t).includes('united states'));
+  const placeLike = /,/.test(wanted) && w.split(' ').length <= 5 && w.split(' ').some((t) => US_STATES[t] || STATE_NAMES.has(t) || expand(t).includes('united states'));
   if (placeLike && wantedTokens.every((t) => optTokens.has(t))) best = Math.max(best, 0.9);
   // Fuzzy overlap alone is never confident (always below CONFIDENT_OPTION_SCORE).
   // Spelling-level similarity is for long names (schools, employers); on short answers
@@ -384,10 +390,11 @@ export function bestOption<T>(options: T[], text: (o: T) => string, wanted: stri
   let runnerUp = 0;
   const seen = new Set<string>();
   for (const option of options) {
-    const label = normalize(text(option));
+    const raw = text(option);
+    const label = normalize(raw);
     if (seen.has(label)) continue;
     seen.add(label);
-    const score = optionScore(text(option), wanted);
+    const score = optionScore(raw, wanted);
     if (score > (best?.score ?? 0)) {
       runnerUp = best?.score ?? 0;
       best = { option, score };
@@ -409,10 +416,17 @@ export const CONFIDENT_OPTION_SCORE = 0.85;
  * tier is a fallback used only if nothing in the earlier ones matches.
  */
 export function bestOptionTiered<T>(options: T[], text: (o: T) => string, tiers: string[][]): OptionPick<T> | null {
+  // Reading an option's text can mean DOM lookups; do it once per option, not once per spelling.
+  const texts = new Map<T, string>();
+  const cachedText = (o: T) => {
+    let t = texts.get(o);
+    if (t === undefined) texts.set(o, (t = text(o)));
+    return t;
+  };
   for (const tier of tiers) {
     let best: OptionPick<T> | null = null;
     for (const wanted of tier) {
-      const pick = bestOption(options, text, wanted);
+      const pick = bestOption(options, cachedText, wanted);
       if (pick && pick.score > (best?.score ?? 0)) best = pick;
     }
     if (best && best.score >= MIN_OPTION_SCORE) return best;

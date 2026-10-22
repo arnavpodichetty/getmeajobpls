@@ -60,14 +60,18 @@ export function reactSelectControl(el: Element): Element | null {
   return null;
 }
 
-/** True when the page has a layout engine (false under happy-dom in tests). */
-let layoutKnown: boolean | null = null;
+/**
+ * True when the page has a layout engine (false under happy-dom in tests).
+ * Only a yes is remembered: a frame that is still hidden or empty when first
+ * checked gets its layout later, and must not stay in no-layout mode.
+ */
+let layoutKnown = false;
 function hasLayout(): boolean {
-  if (layoutKnown === null) layoutKnown = (document.body?.getBoundingClientRect().height ?? 0) > 0;
+  if (!layoutKnown) layoutKnown = (document.body?.getBoundingClientRect().height ?? 0) > 0;
   return layoutKnown;
 }
 export function resetLayoutCache(): void {
-  layoutKnown = null;
+  layoutKnown = false;
 }
 
 export function isVisible(el: Element): boolean {
@@ -75,14 +79,17 @@ export function isVisible(el: Element): boolean {
     if (cur.hasAttribute('hidden') || cur.getAttribute('aria-hidden') === 'true') return false;
     if (cur instanceof HTMLElement && cur.hasAttribute('inert')) return false;
   }
-  const style = getComputedStyle(el);
-  if (style.display === 'none' || style.visibility === 'hidden') return false;
-  if (!hasLayout()) return true;
+  if (!hasLayout()) {
+    const style = getComputedStyle(el);
+    return style.display !== 'none' && style.visibility !== 'hidden';
+  }
+  // No boxes means hidden; checked first because it's cheaper than every ancestor's style.
+  if (!el.getClientRects().length) return false;
   for (let cur: Element | null = el; cur; cur = parentOf(cur)) {
     const s = getComputedStyle(cur);
     if (s.display === 'none' || s.visibility === 'hidden') return false;
   }
-  return el.getClientRects().length > 0;
+  return true;
 }
 
 /**

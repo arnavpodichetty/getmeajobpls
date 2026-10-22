@@ -4,7 +4,7 @@ import { uid } from '../../lib/defaults';
 import { $, h } from '../../lib/dom';
 import { mergeSavedAnswers } from '../../lib/engine/capture';
 import { sendToFrame } from '../../lib/messages';
-import { describe, detectFrames, targetFrames } from '../../lib/orchestrate';
+import { describe, detectFrames, pageContext, targetFrames } from '../../lib/orchestrate';
 import { listResumes } from '../../lib/resumeDb';
 import { pickResume, pickSkillSetFor, skillSetForResume } from '../../lib/resumeRules';
 import { findTailored, jobLabel } from '../../lib/tailorMatch';
@@ -55,16 +55,19 @@ function showOk(text: string): void {
 }
 
 async function init(): Promise<void> {
-  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-  const resumes = await listResumes();
+  const [[tab], resumes, profile, settings] = await Promise.all([
+    browser.tabs.query({ active: true, currentWindow: true }),
+    listResumes(),
+    loadProfile(),
+    loadSettings(),
+  ]);
 
   resumeSel.replaceChildren(
     h('option', { value: '' }, resumes.length ? 'None (skip upload)' : 'None uploaded'),
     ...resumes.map((r) => h('option', { value: r.id }, r.name)),
   );
 
-  const profile = await loadProfile();
-  captureBtn.hidden = !(await loadSettings()).showCaptureButton;
+  captureBtn.hidden = !settings.showCaptureButton;
   skillSel.replaceChildren(
     ...(profile.skillSets.length
       ? profile.skillSets.map((x) => h('option', { value: x.id }, x.name || 'Unnamed'))
@@ -93,15 +96,8 @@ async function init(): Promise<void> {
   subEl.textContent = fields > 0 ? `${fields} field${fields === 1 ? '' : 's'} found` : 'No form fields on this page yet';
 
   // Resume preselection: job title and text from the top frame plus any form frames.
-  const textFrames = [...new Set([0, ...targets.map((f) => f.frameId)])];
-  const texts = await Promise.allSettled(textFrames.map((id) => sendToFrame(tabId, id, { type: 'pageText' })));
-  const page = { title: '', text: '' };
-  for (const t of texts) {
-    if (t.status !== 'fulfilled' || !t.value) continue;
-    page.title += ` ${t.value.title}`;
-    page.text += `\n${t.value.text}`;
-  }
-  let pick = pickResume(resumes, await loadRules(), page);
+  const [page, rules] = await Promise.all([pageContext(tabId, targets), loadRules()]);
+  let pick = pickResume(resumes, rules, page);
   // Back on a job you already tailored for: pick that copy, like the on-page panel does.
   const done = pick ? findTailored(resumes, pick.resumeId, tab.url, tab.title ? jobLabel(tab.title) : '') : undefined;
   if (done) pick = { resumeId: done.id, reason: 'tailoring this job earlier' };

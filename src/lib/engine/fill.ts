@@ -239,8 +239,9 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
   };
 
   // 1. Resume first: many ATSs parse it and overwrite fields afterwards.
-  const initial = scanFields(root);
-  const resumeEl = opts.resumeTarget?.() ?? findResumeTarget(initial);
+  // Only look for the upload when there's a resume this page hasn't had yet; that
+  // spares a full scan on every pass that watches a wizard for new steps.
+  const resumeEl = ctx.resume && resumeAttachedOn !== pageKey() ? opts.resumeTarget?.() ?? findResumeTarget(scanFields(root)) : null;
   if (ctx.resume && resumeEl && !handled.has(resumeEl) && resumeAttachedOn !== pageKey()) {
     handled.add(resumeEl);
     const hasFile = (resumeEl instanceof HTMLInputElement && !!resumeEl.files?.length) || uploadShowsFile(resumeEl);

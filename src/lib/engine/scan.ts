@@ -1,6 +1,6 @@
 // Turns a page into a list of logical fields: one entry per question, with
 // radio/checkbox/button groups collapsed and widget internals ignored.
-import { closestDeep, composedElements, isHoneypot, isVisible, parentOf, queryAllDeep, reactSelectControl } from './dom';
+import { closestDeep, composedElements, isHoneypot, isVisible, parentOf, reactSelectControl } from './dom';
 import { groupLabelFor, labelFor, optionText, splSelectedValues, type FieldLabel } from './labels';
 
 export type FieldKind =
@@ -81,8 +81,12 @@ export function scanFields(root: ParentNode = document): Field[] {
     fields.push({ kind, el, members, ...label, required: isRequired(el, label, members) });
   };
 
+  // One walk of the page (shadow roots included) serves both lookups below and the final ordering.
+  const all = composedElements(root);
+
   // Toggle-button groups (Ashby yes/no): buttons with aria-pressed/data-option sharing a parent.
-  for (const button of queryAllDeep<HTMLButtonElement>('button[aria-pressed], button[data-option], [role="radio"]:not(input)', root)) {
+  const buttons = all.filter((el) => el.matches('button[aria-pressed], button[data-option], [role="radio"]:not(input)')) as HTMLButtonElement[];
+  for (const button of buttons) {
     const parent = parentOf(button);
     if (!parent || seen.has(button) || !isVisible(button)) continue;
     // SuccessFactors wraps each role="radio" in its own span; the radiogroup holds the set.
@@ -95,10 +99,9 @@ export function scanFields(root: ParentNode = document): Field[] {
     push('buttons', members[0], members, groupLabelFor([...members, ...hidden]));
   }
 
-  const controls = queryAllDeep<HTMLElement>(
-    'input, select, textarea, [role="combobox"], button[aria-haspopup="listbox"], [contenteditable="true"]',
-    root,
-  );
+  const controls = all.filter((el) =>
+    el.matches('input, select, textarea, [role="combobox"], button[aria-haspopup="listbox"], [contenteditable="true"]'),
+  ) as HTMLElement[];
   // A dropdown's own search box shares its menu id (aria-controls) with the dropdown button.
   const menuIds = new Set(
     controls.filter((c) => !(c instanceof HTMLInputElement) && c.getAttribute('aria-controls')).map((c) => c.getAttribute('aria-controls')),
@@ -172,7 +175,7 @@ export function scanFields(root: ParentNode = document): Field[] {
   for (const members of checkboxGroups.values()) push('checkboxes', members[0], members, groupLabelFor(members));
 
   // Rendered order (shadow roots included) so filling goes top to bottom like a person would.
-  const order = new Map(composedElements(root).map((el, i) => [el, i]));
+  const order = new Map(all.map((el, i) => [el, i]));
   return fields.sort((a, b) => (order.get(a.el) ?? 0) - (order.get(b.el) ?? 0));
 }
 

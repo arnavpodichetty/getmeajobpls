@@ -105,15 +105,17 @@ const isHelpText = (el: Element) =>
 
 /** Last label-like element inside `container` that comes before `el` in the page. */
 function headingBefore(container: Element, el: Element): string {
-  let found = '';
-  for (const cand of container.querySelectorAll(LABELISH)) {
+  // Walk backwards so the last match is found without reading every earlier candidate.
+  const candidates = container.querySelectorAll(LABELISH);
+  for (let i = candidates.length - 1; i >= 0; i--) {
+    const cand = candidates[i];
     if (cand.contains(el) || isOptionLabel(cand) || isHelpText(cand)) continue;
     if (!(cand.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)) continue;
     const text = ownText(cand);
     // Ashby marks required questions with a class (its asterisk is CSS), not a "*" in the text.
-    if (text && text.length <= 600 && !isGenericLabel(cleanLabel(text))) found = isRequiredClass(cand.getAttribute('class') ?? '') ? `${text} *` : text;
+    if (text && text.length <= 600 && !isGenericLabel(cleanLabel(text))) return isRequiredClass(cand.getAttribute('class') ?? '') ? `${text} *` : text;
   }
-  return found;
+  return '';
 }
 
 /**

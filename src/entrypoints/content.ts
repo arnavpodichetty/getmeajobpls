@@ -145,6 +145,10 @@ export default defineContentScript({
       let checking = false;
       let checkTimer: number | undefined;
       const stopAt = Date.now() + 15 * 60_000;
+      // Scanning a form on an unrecognized site reads every field's label. Busy pages
+      // (mail, chat, docs) change constantly, so space those scans out; a later check still runs.
+      const FORM_SCAN_GAP = 1000;
+      let lastFormScan = 0;
 
       /** Local test before involving the background: ATS site, embedded ATS, or a form that looks like a job application. */
       const mightBeApplication = () => {
@@ -159,6 +163,12 @@ export default defineContentScript({
         if (embedded) return true;
         // Cheap count first; only scan the form when there's enough of one.
         if (document.querySelectorAll('input:not([type=hidden]):not([type=search]), select, textarea').length < 4) return false;
+        const wait = lastFormScan + FORM_SCAN_GAP - Date.now();
+        if (wait > 0) {
+          schedule(wait);
+          return false;
+        }
+        lastFormScan = Date.now();
         return formInfo().jobForm;
       };
       let lastCheck = 0;

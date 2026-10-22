@@ -17,6 +17,10 @@
 - **Workday dropdowns that reset themselves:** Workday can put an earlier answer back to "Select One" while you fill the rest, and it stayed green. It's flagged for you now.
 - **More application questions answered:** "Minimum Pay Desired", "Are you willing to travel?" as Yes/No, agreements not to compete or solicit, "under investigation by your current employer", "Are you a California resident?" (from your state) and "consider your application for other roles… Opt In".
 - **Acknowledgements that quote legal text:** an "I acknowledge" dropdown was answered as an "essential functions" question because of a state notice inside it. It's answered as an acknowledgement now.
+- **Options edits lost on close:** an edit made less than half a second before closing the Options tab wasn't saved. Pending edits are saved as soon as the tab is hidden or closed.
+- **Hidden fields on pages that drew late:** if a page (or an embedded form's frame) was still empty when first checked, fields inside hidden sections could count as visible for the rest of that page. Visibility is checked properly once the page has drawn.
+- **Faster:** each form scan reads the page once instead of three times; watching a multi-step form for new steps no longer rescans for the resume upload after it's attached; dropdown option matching does less repeated work; the panel and popup load their data in parallel; and on sites that aren't recognized, busy pages (mail, chat, docs) are checked for an application form at most once a second instead of after every change.
+- **Tailoring helper:** a malformed request from Chrome now gets an error reply instead of the helper exiting without an answer.
 
 ## 1.1.1 (2026-10-19)
 

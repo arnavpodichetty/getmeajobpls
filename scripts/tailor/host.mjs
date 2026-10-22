@@ -29,11 +29,22 @@ const MAX_REPLY = 1024 * 1024 - 1024;
 function readMessage() {
   return new Promise((resolve, reject) => {
     const chunks = [];
+    let received = 0;
+    let size = -1;
     process.stdin.on('data', (c) => {
       chunks.push(c);
-      const buf = Buffer.concat(chunks);
-      if (buf.length >= 4 && buf.length >= 4 + buf.readUInt32LE(0)) {
-        resolve(JSON.parse(buf.subarray(4, 4 + buf.readUInt32LE(0)).toString('utf8')));
+      received += c.length;
+      // Join chunks only once the whole message is here (resumes arrive in many chunks).
+      if (size < 0) {
+        if (received < 4) return;
+        size = Buffer.concat(chunks).readUInt32LE(0);
+      }
+      if (received < 4 + size) return;
+      try {
+        resolve(JSON.parse(Buffer.concat(chunks).subarray(4, 4 + size).toString('utf8')));
+      } catch (err) {
+        // Reply with the error instead of crashing without an answer.
+        reject(err);
       }
     });
     process.stdin.on('end', () => reject(new Error('No message from Chrome.')));

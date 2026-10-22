@@ -73,11 +73,10 @@ export async function pageContext(tabId: number, targets?: Frame[]): Promise<{ t
 }
 
 export async function tabState(tabId: number): Promise<TabState> {
-  const resumes = (await listResumes()).map(({ id, name, tags, tailoredFrom }) => ({ id, name, tags, tailoredFrom }));
-  const settings = await loadSettings();
+  const [library, settings, frames] = await Promise.all([listResumes(), loadSettings(), detectFrames(tabId)]);
+  const resumes = library.map(({ id, name, tags, tailoredFrom }) => ({ id, name, tags, tailoredFrom }));
   const showCapture = settings.showCaptureButton;
   const canTailor = settings.tailorEnabled;
-  const frames = await detectFrames(tabId);
   if (!frames.length) {
     return { connected: false, atsLabel: 'Not connected', isApplication: false, resumes, pickedResumeId: null, pickReason: '', skillSets: [], pickedSkillSetId: null, skillSetByResume: {}, showCapture, canTailor };
   }
@@ -85,21 +84,23 @@ export async function tabState(tabId: number): Promise<TabState> {
   const fields = targets.reduce((n, f) => n + f.fieldCount, 0);
   const knownAts = targets.some((f) => f.atsId !== 'generic');
 
-  const page = await pageContext(tabId, targets);
+  const [page, tab, rules, profile] = await Promise.all([
+    pageContext(tabId, targets),
+    browser.tabs.get(tabId).catch(() => null),
+    loadRules(),
+    loadProfile(),
+  ]);
   // Known ATS with a form, or a form elsewhere that looks like a job application
   // (not a sign-up, checkout, settings or contact form).
   const isApplication = (knownAts && fields > 0) || (fields >= MIN_FORM_FIELDS && targets.some((f) => f.jobForm));
-  const tab = await browser.tabs.get(tabId).catch(() => null);
   // A posting page: keep its text for tailoring on the application steps that follow.
   if (!isApplication && tab?.url) await rememberPosting(tabId, tab.url, page);
-  const library = await listResumes();
-  let pick = pickResume(library, await loadRules(), page);
+  let pick = pickResume(library, rules, page);
   // Back on a job you already tailored for: pick that copy.
   if (pick) {
     const done = tab?.url ? findTailored(library, pick.resumeId, tab.url, tab.title ? jobLabel(tab.title) : '') : undefined;
     if (done) pick = { resumeId: done.id, reason: 'tailoring this job earlier' };
   }
-  const profile = await loadProfile();
   const skillSetByResume: Record<string, string> = {};
   for (const r of library) {
     const id = skillSetForResume(profile.skillSets, library, r.id);
