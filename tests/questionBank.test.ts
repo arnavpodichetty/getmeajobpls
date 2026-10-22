@@ -152,6 +152,7 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Highest degree obtained', 'High School Diploma'],
     ['What is your expected graduation date?', '2028-06'],
     ['When do you expect to graduate?', '2028-06'],
+    ['What semester and year is your expected graduation date?', '2028-06'],
   ],
   'schedule and program availability': [
     ['Are you available for full-time employment for 10 to 12 (ten to twelve) weeks during the summer?', 'Yes'],
@@ -286,6 +287,10 @@ const CHOICES: [string, string[], string | null, boolean][] = [
   ['Have you served in the U.S. military?', ['Yes', 'No'], 'No', true],
   ['Do you have a disability?', ['Yes, I have a disability (or previously had a disability)', 'No, I do not have a disability and have not had one in the past', 'I do not want to answer'], 'No, I do not have a disability and have not had one in the past', true],
   ['What is your gender?', ['Male', 'Female', 'Non-binary', 'Decline to self-identify'], 'Female', true],
+  // A June graduation is the spring term, never the fall of the same year.
+  ['What semester and year is your expected graduation date?', ['Fall 2027', 'Fall 2028', 'Spring 2028', 'Summer 2028'], 'Spring 2028', true],
+  ['What semester and year is your expected graduation date?', ['Fall 2027', 'Fall 2028', 'Spring 2029'], null, false],
+  ['What is your expected graduation date for your current degree program?', ['Spring 2027', 'Winter 2027', 'Spring 2028', 'Winter 2028', 'Spring 2029', 'Winter 2029 or later'], 'Spring 2028', true],
   ['What is your gender?', ['Man', 'Woman', 'Prefer not to say'], 'Woman', true],
   ['Are you Hispanic or Latino?', ['Yes', 'No', 'Decline to answer'], 'No', true],
   ['Are you Hispanic or Latino?', ['Hispanic or Latino', 'Not Hispanic or Latino', 'Decline to self identify'], 'Not Hispanic or Latino', true],

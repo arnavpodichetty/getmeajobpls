@@ -93,6 +93,13 @@ describe('captured Greenhouse application (capture C)', () => {
     expect(optionScore('After June 2028', '2028-06-15')).toBe(0);
     expect(optionScore('Q2 2028', '2028-06-15')).toBe(1);
     expect(optionScore('June 2028', '2028-06-15')).toBe(1);
+    expect(optionScore('Spring 2028', '2028-05-13')).toBe(1);
+    expect(optionScore('Fall 2028', '2028-05-13')).toBe(0);
+    expect(optionScore('Fall 2027', '2027-12-15')).toBe(1);
+    // Winter is the March quarter at some schools and the December term at others.
+    expect(optionScore('Winter 2028', '2028-03-20')).toBe(0);
+    expect(optionScore('Winter 2027', '2027-12-15')).toBe(0);
+    expect(optionScore('Summer 2028', '2028-05-13')).toBe(0);
     expect(optionScore('I did not take the SAT', 'Not taken')).toBe(1);
     expect(optionScore('1500-1600', 'Not taken')).toBe(0);
   });
