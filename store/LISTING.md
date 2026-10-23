@@ -26,7 +26,7 @@ Upload the zip under **Package**. The first upload can use the current version; 
 
 **Description:**
 
-> Apply faster. getmeajobpls fills job applications in one click on Workday, Greenhouse, Lever, Ashby, SmartRecruiters, iCIMS, SAP SuccessFactors, Workable, Rippling, Jobvite, BambooHR, Taleo and more, plus any other form that labels its fields. That includes the parts that usually take longest: Workday's multi-step forms, searchable dropdowns, custom questions, and forms embedded in a company's own careers site. It can also tailor your resume to each posting.
+> Apply faster. getmeajobpls fills job applications in one click on the major hiring platforms, such as Workday and Greenhouse, and on any other application form that labels its fields. That includes the parts that usually take longest: multi-step forms, searchable dropdowns and custom questions. It can also tailor your resume to each posting.
 >
 > Your profile and resumes are stored on your device, in your browser. No account, no subscription, no tracking.
 >
