@@ -226,7 +226,7 @@ export function readJobInfo(doc: Document = document, url: URL = new URL(locatio
   if (site) {
     info.title ||= textOf(doc, site.title);
     const companyEl = site.company ? doc.querySelector(site.company) : null;
-    // A logo's alt text often says so ("Spotify logo").
+    // A logo's alt text often says so ("Acme logo").
     info.company ||= clean(companyEl?.getAttribute('alt') ?? companyEl?.textContent).replace(/^about\s+/i, '').replace(/\s+logo$/i, '');
     if (!info.posted && site.posted) {
       // Oracle: "Posting Date: 10/19/2026, 06:37 PM"; Workday: "Posted 3 Days Ago".

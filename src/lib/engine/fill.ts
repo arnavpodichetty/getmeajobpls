@@ -22,7 +22,7 @@ import {
   type Outcome,
 } from './controls';
 import { closestDeep, composedElements, sleep, waitForStable } from './dom';
-import { optionText } from './labels';
+import { optionText, textOfIds } from './labels';
 import { currentValue, scanFields, type Field } from './scan';
 import { DECLINE, isBareFieldHead, isPlaceholderOption, normalize } from './text';
 
@@ -292,6 +292,11 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
       if (field.kind === 'checkbox' && answer && !/^(yes|no)$/i.test(asText(answer.value))) {
         const binary = answer.tiers?.flat().find((value) => /^(yes|no)$/i.test(value));
         answer = binary ? { ...answer, value: binary } : null;
+      }
+      // 'Enter "N/A" if not' under a text box: a No answer is typed as N/A.
+      if (answer && (field.kind === 'text' || field.kind === 'textarea') && /^no$/i.test(asText(answer.value))
+        && /\b(?:enter|type|write|put|answer|respond(?: with)?)\s+["“'‘]?n\s*\/?\s*a\b/i.test(`${field.label} ${textOfIds(field.el, 'aria-describedby')}`)) {
+        answer = { ...answer, value: 'N/A' };
       }
       const existing = currentValue(field);
       if (answer?.value === LEAVE_EMPTY) continue; // a follow-up that doesn't apply

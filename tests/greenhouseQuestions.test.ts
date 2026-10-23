@@ -104,3 +104,25 @@ describe('captured Greenhouse application (capture C)', () => {
     expect(optionScore('1500-1600', 'Not taken')).toBe(0);
   });
 });
+
+// Help text under a Greenhouse box (linked by aria-describedby) can spell out the format or say
+// 'Enter "N/A" if not'. Both are followed.
+describe('Greenhouse help text under a question', () => {
+  const textQuestion = (id: string, label: string, help: string) => `<div class="field-wrapper"><div class="input-wrapper">
+    <label id="${id}-label" for="${id}" class="label">${label}<span aria-hidden="true">*</span></label>
+    <input id="${id}" class="input" aria-label="${label}" aria-describedby="${id}-description ${id}-error" aria-required="true" type="text"></div>
+    <div class="question-description" id="${id}-description"><p>${help}</p></div></div>`;
+
+  it('uses the format and N/A it asks for', async () => {
+    document.body.innerHTML = `<form id="application-form">
+      ${textQuestion('q1', 'What month and year did you begin your undergraduate studies?', 'MM/YYYY')}
+      ${textQuestion('q2', 'If you are a dual citizen, what other country are you a citizen of?', 'Enter "N/A" if you are not a dual citizen')}
+      ${textQuestion('q3', 'Do you have relatives who currently work for Example Group? Please provide their name(s).', 'Enter "N/A" if not.')}
+    </form>`;
+    await greenhouse.fill(context({ resume: null }));
+    const value = (id: string) => document.querySelector<HTMLInputElement>(`#${id}`)!.value;
+    expect(value('q1')).toBe('09/2024'); // when school started, not graduation
+    expect(value('q2')).toBe('N/A');
+    expect(value('q3')).toBe('N/A');
+  });
+});

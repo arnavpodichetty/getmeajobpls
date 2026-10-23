@@ -96,6 +96,15 @@ export const fullName = (p: Profile) => p.personal.fullName.trim() || [p.persona
 const optTiers = (value: string): string[][] => value === 'N/A' ? [['N/A', 'Not applicable', 'Does not apply'], ['No']] : value ? [[value]] : [];
 
 /** True when the question names a company from your experience ("…employed by Analytical Engines?"). */
+/** True unless your veteran status says you aren't one (or is blank / declined). */
+const isVeteran = (p: Profile) => {
+  const status = normalize(p.eeo.veteranStatus);
+  return !!status && !/\bnot\b|^no\b|decline|don t wish|prefer not|choose not/.test(status);
+};
+
+/** A job at a public university, school, or government body (it counts as "public agency or institution" work). */
+const PUBLIC_EMPLOYER = /\buniversity\b|\bcollege\b|\bschool\b|\bgovernment\b|\bagency\b|\bdepartment of\b|\b(?:city|county|state) of\b|\bpublic\b|\bmunicipal|\bauthority\b|\bdistrict\b/;
+
 function workedAt(p: Profile, label: string): boolean {
   return p.experience.some((x) => {
     const name = normalize(x.company).replace(/\b(inc|llc|ltd|co|corp|corporation|company|laboratories|labs)\b/g, '').trim();
@@ -190,6 +199,13 @@ const DEFS: Def[] = [
   // Legal introductions can mention unrelated facts before the actual EEO prompt.
   { key: 'raceEthnicity', re: /please indicate your (?:race|ethnicity)|select your (?:race|ethnicity)/, value: (c) => declineIfBlank(c.profile.eeo.raceEthnicity), tiers: (c) => raceTiers(c.profile.eeo.raceEthnicity) },
   { key: 'veteranStatus', re: /protected veterans?/, value: (c) => declineIfBlank(c.profile.eeo.veteranStatus) },
+  // Details of your service ("Newly Separated Veteran Discharge Date") only apply to
+  // veterans: empty when you aren't one, left for you when you are.
+  {
+    key: 'veteranDetails',
+    re: /\b(?:discharge|separation|release from (?:active )?duty) date\b|\bdate of (?:discharge|separation)\b|\bbranch of (?:service|the military)\b|\bdates? of (?:military )?service\b/,
+    value: (c) => (isVeteran(c.profile) ? null : LEAVE_EMPTY),
+  },
   { key: 'unlistedReferencesConsent', re: /(?:consent|authoriz|contact).{0,60}unlisted references|contact references.{0,60}not listed/, choiceOnly: true, value: (c) => yesNo(c.profile.answers.unlistedReferencesConsent) },
   {
     key: 'fullName',
@@ -370,7 +386,8 @@ const DEFS: Def[] = [
   {
     key: 'otherCitizenships',
     re: /citizen(?:ship)? (?:of|in) (?:any |a |another )?(?:other )?(?:country|countries|nation|nations)(?: other than| besides| apart from| outside)?|dual (?:citizen|national)|other citizenships?|additional citizenships?|multiple citizenships?|more than one (?:citizenship|country)/,
-    value: (c) => (c.profile.answers.citizenship ? 'No' : null),
+    // "What other country are you a citizen of?" wants a country, so with none it's N/A.
+    value: (c, label) => (c.profile.answers.citizenship ? (/\b(?:what|which|list|name|specify)\b/.test(label) ? 'N/A' : 'No') : null),
   },
   {
     // "Are you a Singapore citizen?" / "…permanent resident of Canada?" for a country you're not from.
@@ -454,12 +471,21 @@ const DEFS: Def[] = [
   {
     key: 'previouslyEmployed',
     re: /(previously|ever|before) (been )?(employed|worked)|(employed|worked) (by|for|at|with) .{0,40}(before|previously|in the past)|former employee|current or former|(?:currently|formerly|previously)(?: or (?:currently|formerly|previously))? (?:employed|working)\b|have you (ever )?worked (for|at)|(contingent|contract) work(er)?|contractor (for|at|with)|been a contractor|(?:currently|formerly|previously).{0,80}\b(?:independent contractor|contract labor|contingent worker|consultant)\b|\b(?:do|are) you (?:currently |presently |now )?work(?:ing)? (?:for|at)\b|\bare you an? (?:current|existing|former|past|previous)\b.{0,50}\bemployee/,
-    not: /government|public official|willing|able to|relatives?\b|family members?|related to|(?:towards?|pursuing|enrolled in|studying for)\b.{0,40}\bdegree/,
+    not: /government|public official|public (?:agenc|institution|sector)|willing|able to|relatives?\b|family members?|related to|(?:towards?|pursuing|enrolled in|studying for)\b.{0,40}\bdegree/,
     // "…or were you previously associated with the University as a student?" is Yes only for your own school.
     value: (c, label) => (workedAt(c.profile, label) || studiedAt(c.profile, label) ? 'Yes' : yesNo(c.profile.answers.previouslyEmployed)),
     // Company-list dropdowns ("select the most recent … company, or none") take None.
     // Only when the question asks you to pick a company from a list; plain Yes/No questions just get No.
     tiers: (c, label) => (workedAt(c.profile, label) || c.profile.answers.previouslyEmployed !== 'No' || !/\b(?:select|choose|pick|which)\b|\bnone\b/.test(label) ? [] : [['None', 'None of the above', 'N/A', 'Not applicable'], ['No']]),
+  },
+  // "Have you or do you currently work for a public agency or institution?" A public
+  // university job counts, so any school or government employer leaves it for you.
+  {
+    key: 'publicAgencyEmployment',
+    re: /\bwork(?:ed|ing)? (?:for|at|in) (?:a |an |any )?public (?:agenc|institution|sector|entit|bod)/,
+    not: /relat|family|spouse/,
+    choiceOnly: true,
+    value: (c) => (c.profile.experience.some((x) => PUBLIC_EMPLOYER.test(normalize(x.company))) ? null : yesNo(c.profile.answers.governmentOfficial)),
   },
   {
     key: 'governmentOfficial',
@@ -467,10 +493,25 @@ const DEFS: Def[] = [
     re: /public official|government (official|entity|employee|agency)|politically exposed|foreign official|state.owned|(?:employed|worked) (?:by|for) (?:a |the |any )?(?:(?:u s|us|federal|united states|state|local|foreign|or|and) )*government|post government employment|department of defen[cs]e|\bdod\b|(?:official|employee) of (?:the )?(?:u s |us |federal )?(?:government|armed forces)/,
     value: (c) => yesNo(c.profile.answers.governmentOfficial),
   },
+  // "If you join, will you also be involved in any other jobs, business investments, board
+  // memberships…?" Keeping a current job is exactly that, so with one it's left for you.
+  {
+    key: 'otherCommitments',
+    re: /\b(?:also|continue to) be (?:involved|engaged) in\b.{0,30}\b(?:other|outside|additional) (?:jobs?|employment|business)|\bother jobs?\b.{0,60}\b(?:business investments?|board memberships?|political positions?)/,
+    choiceOnly: true,
+    value: (c) => (c.profile.experience.some((x) => x.current) ? null : yesNo(c.profile.answers.conflictOfInterest)),
+  },
+  // Having awarded or overseen this company's work (as a client or public official) is a conflict of interest.
+  {
+    key: 'conflictOfInterest',
+    re: /\bawarded\b.{0,40}\b(?:work|contracts?)\b|\bawarding\b.{0,20}\b(?:work|contracts?)\b/,
+    choiceOnly: true,
+    value: (c) => yesNo(c.profile.answers.conflictOfInterest),
+  },
   { key: 'conflictOfInterest', re: /conflicts? of interest|outside (business|employment) (activit|interest)|outside employment|secondary employment|moonlighting|(?:will|would) you (?:also |continue to )?(?:perform|do|engage in|provide) (?:any )?(?:work|services)\b.{0,60}\b(?:other|another|outside) (?:company|companies|employer|entity|entities|organi[sz]ation)/, value: (c) => yesNo(c.profile.answers.conflictOfInterest) },
   {
     key: 'meetsRequirements',
-    re: /(minimum|basic|required|stated|listed|job|position|role) (qualifications|requirements)|meet (all |the )?(qualifications|requirements)|qualif(y|ied) for (this|the) (role|position|job)/,
+    re: /(minimum|basic|required|stated|listed|job|position|role) (qualifications|requirements)|meet (all |the )?(qualifications|requirements)|qualif(y|ied) for (this|the) (role|position|job)|meet (the )?minimum (years|amount|level) of experience/,
     value: (c) => yesNo(c.profile.answers.meetsRequirements),
   },
   {
@@ -485,7 +526,7 @@ const DEFS: Def[] = [
     choiceOnly: true,
     value: (c) => yesNo(c.profile.answers.agreeToTerms),
   },
-  { key: 'nonCompete', re: /non ?compete|restrictive covenant|non ?solicit|agreements? not to (?:compete|solicit)/, value: (c) => yesNo(c.profile.answers.nonCompete) },
+  { key: 'nonCompete', re: /non ?compete|restrictive covenant|non ?solicit|agreements? not to (?:compete|solicit)|\brestrictions?\b.{0,30}\b(?:former|previous|prior|current) employer|\b(?:former|previous|prior|current) employer\b.{0,40}\brestrict/, value: (c) => yesNo(c.profile.answers.nonCompete) },
   {
     key: 'locatedInUS',
     re: /(currently )?(located|based|reside|residing|living|live) in (the )?(us|u s|united states|usa)\b/,
@@ -616,7 +657,7 @@ const DEFS: Def[] = [
   {
     key: 'academicYear',
     re: /\b(?:current|academic|class|college|university|school) year\b|\byear (?:of|in) (?:your )?(?:study|studies|school|college|university|degree|education)\b|\byear (?:are|will) you\b.{0,30}\b(?:college|university|school|study|studies|program)\b|\b(?:class|student|academic) (?:standing|classification)\b|\b(?:level of education|education level)\b.*\b(?:during|semester|fall|spring|summer|winter|current)\b/,
-    not: /graduat(?:ion|e) (?:date|year)|high school|start date|end date/,
+    not: /\bgraduat(?:ion|e) (?:date|year)|high school|start date|end date/,
     value: (c) => c.profile.answers.academicYear || null,
   },
   // "Do you have a high school degree or GED?" is a Yes/No, not your highest degree.
@@ -653,7 +694,7 @@ const DEFS: Def[] = [
   {
     key: 'school',
     re: /school|university|college|institution/,
-    not: /high school|graduat|\bgpa\b|grade point/,
+    not: /high school|\bgraduat|\bgpa\b|grade point/,
     value: (c) => latestSchool(c.profile)?.school || null,
     tiers: (c) => [schoolVariants(latestSchool(c.profile)?.school ?? '')],
   },
@@ -674,11 +715,20 @@ const DEFS: Def[] = [
         : [['High School Diploma', 'High School Diploma/GED', 'High School or equivalent', 'High School', 'Secondary School', 'GED'], ['Some College', 'Some college coursework completed']];
     },
   },
+  // "What month and year did you begin your undergraduate studies?" asks when school started.
+  {
+    key: 'schoolStartDate',
+    re: /\b(?:begin|began|start|started|commence|commenced|enter|entered)\b.{0,40}\b(?:undergraduate|college|university|degree|studies)\b|\b(?:enrollment|matriculation) date\b/,
+    not: /\bgraduat|\bcomplet|\bfinish|\bend\b|internship|\bjob\b|position|\brole\b|\bwork|employment|availab|can you|could you|able to/,
+    isDate: true,
+    value: (c) => latestSchool(c.profile)?.start || null,
+  },
   { key: 'degree', re: /\bdegree\b|level of education|highest education|education level/, not: /\b(?:date|year|completion|gpa|coursework)\b|grade point/, value: (c) => latestSchool(c.profile)?.degree || null, tiers: (c) => degreeTiers(latestSchool(c.profile)?.degree ?? '') },
   { key: 'major', short: true, re: /\bmajor\b|field of study|discipline|area of study|concentration|program of study/, value: (c) => latestSchool(c.profile)?.major || null, tiers: (c) => majorTiers(c.profile) },
   { key: 'minor', short: true, re: /\bminor\b/, value: (c) => latestSchool(c.profile)?.minor || null },
   { key: 'gpa', re: /\bgpa\b|grade point|cumulative grade/, value: (c) => latestSchool(c.profile)?.gpa || null },
-  { key: 'graduationDate', re: /graduat|expected (completion|grad)|completion date|degree (end|completion)/, not: /(?<!month (?:and )?)year$/, isDate: true, value: (c) => c.profile.answers.graduationDate || latestSchool(c.profile)?.end || null },
+  // \bgraduat: "undergraduate" names your level, not your graduation date.
+  { key: 'graduationDate', re: /\bgraduat|expected (completion|grad)|completion date|degree (end|completion)/, not: /(?<!month (?:and )?)year$/, isDate: true, value: (c) => c.profile.answers.graduationDate || latestSchool(c.profile)?.end || null },
   { key: 'programmingLanguages', re: /programming languages|coding languages/, value: (c) => c.skills },
   // Language proficiency: Workday asks reading / writing / speaking / comprehension / overall separately.
   {
@@ -768,7 +818,7 @@ const DEFS: Def[] = [
   },
   {
     key: 'referredByEmployee',
-    re: /(were|are) you (being )?referred|employee referral|referred by (a|an) (current )?employee|did (someone|anyone) refer you/,
+    re: /(were|are) you (being )?referred|employee referral|referred by (a|an) (current )?employee|did (someone|anyone) refer you|did (a|an|any) .{0,30}\b(employee|staff member|team member) refer you/,
     value: (c) => (c.profile.answers.referralSource && /referr?al/i.test(c.profile.answers.referralSource) ? 'Yes' : 'No'),
   },
   { key: 'noticePeriod', re: /notice period/, value: (c) => c.profile.answers.noticePeriod || null },

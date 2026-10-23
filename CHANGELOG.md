@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.3.1 (2026-10-22)
+
+### Fixes
+- **Oracle required Yes/No questions:** required pill questions the filler couldn't answer were skipped silently, because Oracle marks them required with a class, not a "*". They're flagged for you now.
+- **"Have you or do you currently work for a public agency or institution?":** was answered as "worked for this company before". It's a government question now. If one of your jobs is at a university, school or public body, it's left for you.
+- **"Will you also be involved in any other jobs, business investments, board memberships…?":** is left for you when you have a current job, since keeping it counts.
+- **More conflict questions answered:** "restrictions from a former employer" (non-compete), "supervised, approved, evaluated or awarded <company> work", "selection committee … awarding work to <company>", "Did a <company> employee refer you?" and "Do you meet the minimum years of experience…?" use your standard answers.
+- **Veteran discharge date:** a non-veteran's "Newly Separated Veteran Discharge Date" was flagged for review. It's left empty now.
+- **"What month and year did you begin your undergraduate studies?":** got your graduation date, because "undergraduate" contains "graduate". It gets when your school started now. The same mix-up could leave "Which undergraduate university…?" empty; fixed too.
+- **Format and N/A from the help text under a question:** Greenhouse puts "MM/YYYY" or 'Enter "N/A" if not' under the box, and it was ignored ("May 2028", "No"). Both are followed now ("08/2024", "N/A").
+- **"What other country are you a citizen of?":** got "No". It's "N/A" now when you have one citizenship.
+- **Oracle extras left alone:** the data retention "I Agree" box (keep your data for future job alerts) is no longer ticked, and the hidden AI "Work Summary" popup is ignored.
+
 ## 1.3.0 (2026-10-21)
 
 ### New
@@ -11,7 +24,7 @@
 - **Phone numbers are digits only:** the Phone box takes only digits, and a pasted "+1 (415) 555-0100" becomes 4155550100 (the country code has its own box). Sites format the number themselves as it's filled. Numbers you saved before are converted the same way.
 
 ### Fixes
-- **Company on the panel:** Lever postings showed "Spotify logo" instead of "Spotify". The word "logo" from the site's logo is dropped now.
+- **Company on the panel:** Lever postings showed "Acme logo" instead of "Acme". The word "logo" from the site's logo is dropped now.
 
 ## 1.2.0 (2026-10-20)
 

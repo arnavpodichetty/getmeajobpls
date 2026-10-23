@@ -23,6 +23,9 @@ const SELECTORS = {
   tileEdit: '.apply-flow-profile-item-tile__edit-item-icon',
   add: 'button.apply-flow-profile-item-tile__new-tile',
   form: '.profile-item-content--form',
+  dialog: 'oj-dialog, minimal-dialog',
+  blockBody: '.apply-flow-block',
+  instructions: '.apply-flow-block__instructions',
   save: '.profile-item-footer .save-btn',
   job: { company: 'input[name="employerName"]', title: 'input[name="jobTitle"]', city: 'input[name="employerCity"]' },
   school: { school: 'input[name="educationalEstablishmentId"]' },
@@ -205,6 +208,17 @@ async function fillEntries(ctx: FillContext, report: FillReport): Promise<void> 
   }
 }
 
+/**
+ * An optional box whose question is only in its block's instructions, like a "DATA RETENTION"
+ * block ("keep my data for 24 months … future job opportunities"): its
+ * own label is just "I Agree", so it would read as agreeing to terms.
+ */
+function isOptInBox(field: Field): boolean {
+  if (field.kind !== 'checkbox' || field.required) return false;
+  const text = field.el.closest(SELECTORS.blockBody)?.querySelector(SELECTORS.instructions)?.textContent ?? '';
+  return /future (?:job )?opportunit|recruitment events|job alerts|marketing|talent (?:community|network)|kept for \d+ months/i.test(text);
+}
+
 export const oracle: Adapter = {
   id: 'oracle',
   name: 'Oracle Recruiting',
@@ -215,8 +229,9 @@ export const oracle: Adapter = {
     const report = await fillPage(ctx, {
       ats: this.name,
       incremental: ctx.incremental,
-      // Entry forms are filled below, one profile entry each.
-      skip: (field) => !!field.el.closest(SELECTORS.form),
+      // Entry forms are filled below, one profile entry each. Popups (AI "Work Summary")
+      // aren't part of the application, and opt-ins stay yours to tick.
+      skip: (field) => !!field.el.closest(SELECTORS.form) || !!field.el.closest(SELECTORS.dialog) || isOptInBox(field),
     });
     await fillEntries(ctx, report);
     report.filled = report.fields.filter((f) => f.status === 'filled').length;

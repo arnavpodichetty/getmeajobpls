@@ -29,6 +29,8 @@ const TEXT_TYPES = new Set(['', 'text', 'email', 'tel', 'url', 'number', 'search
 
 function isRequired(el: Element, label: FieldLabel, members: Element[] = [el]): boolean {
   if (label.marked) return true;
+  // Oracle's pill questions take their label from aria-label; the required star is a class on the row's label.
+  if (el.closest('.input-row')?.querySelector(':scope > form-element-label .input-row__label--required, :scope > .input-row__label--required')) return true;
   return members.some(
     (m) => (m as HTMLInputElement).required || m.getAttribute('aria-required') === 'true' || m.hasAttribute('data-required'),
   );

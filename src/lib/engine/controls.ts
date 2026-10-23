@@ -18,7 +18,7 @@ import {
   waitForElement,
 } from './dom';
 import { bestAvailabilityOption } from './availability';
-import { optionText, splSelectedValues } from './labels';
+import { optionText, splSelectedValues, textOfIds } from './labels';
 import { bestLocationOption, locationSearchTerms, type LocationPreference } from './locationPreferences';
 import { bestOption, bestOptionTiered, CONFIDENT_OPTION_SCORE, DECLINE, isPlaceholderOption, MIN_OPTION_SCORE, normalize, optionScore, searchTextFor } from './text';
 
@@ -49,7 +49,8 @@ export function formatDate(iso: string, el: Element, label = ''): string {
   if (type === 'date') return `${y}-${m}-${d}`;
   if (type === 'month') return `${y}-${m}`;
   // A format spelled out in the placeholder or question ("MM/YYYY") beats everything else.
-  const hint = `${el.getAttribute('placeholder') ?? ''} ${el.getAttribute('aria-label') ?? ''} ${label}`.toLowerCase();
+  // Greenhouse puts it in the help text under the box, linked by aria-describedby.
+  const hint = `${el.getAttribute('placeholder') ?? ''} ${el.getAttribute('aria-label') ?? ''} ${label} ${textOfIds(el, 'aria-describedby')}`.toLowerCase();
   if (/dd.?mm.?yyyy/.test(hint)) return `${d}/${m}/${y}`;
   if (/mm.?dd.?yyyy/.test(hint)) return `${m}/${d}/${y}`;
   if (/mm.?yyyy/.test(hint)) return `${m}/${y}`;

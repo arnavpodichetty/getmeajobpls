@@ -106,6 +106,7 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Are you a politically exposed person?', 'No'],
     ['Are you a current or former military spouse?', 'No'],
     ['Have you ever been debarred or suspended from government contracting?', 'No'],
+    ['Have you or do you currently work for a public agency or institution?', 'No'],
   ],
   'past employment with the employer': [
     ['Have you ever worked for Acme?', 'No'],
@@ -200,6 +201,11 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Are you subject to a non-compete agreement?', 'No'],
     ['Are you bound by any non-solicitation or restrictive covenant?', 'No'],
     ['Do you have any outside business activities that could present a conflict of interest?', 'No'],
+    ['Would you be subject to any restrictions from a former employer upon joining Example Group?', 'No'],
+    ['Within the past 2 years have you supervised, approved, evaluated or awarded Example Group work?', 'No'],
+    ['Are you currently or have you been involved in a selection committee process awarding work to Example Group?', 'No'],
+    // Keeping your current internship is another job, so this one is yours to answer.
+    ['If you join Example Group, will you also be involved in any other jobs, business investments, board memberships, municipal bodies or political positions?', null],
   ],
   'voluntary self-identification': [
     ['What is your gender?', 'Female'],
@@ -207,6 +213,9 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Please indicate your veteran status:', 'I am not a protected veteran'],
     ['Are you a protected veteran?', 'I am not a protected veteran'],
     ['Do you have a disability?', 'No, I do not have a disability'],
+    // Service details are blank for a non-veteran, not filled with the status.
+    ['Newly Separated Veteran Discharge Date', '__leave_empty__'],
+    ['Newly Separated Veteran Discharge Date Month', '__leave_empty__'],
   ],
   'how you heard': [
     ['How did you hear about this position?', 'LinkedIn'],
@@ -214,6 +223,7 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Where did you first learn about this job?', 'LinkedIn'],
     ['How did you find out about us?', 'LinkedIn'],
     ['Source', 'LinkedIn'],
+    ['Did an Example Group employee refer you to this job posting?', 'No'],
   ],
   'other names': [
     ['Have you ever been employed under any other name?', 'No'],
@@ -240,15 +250,27 @@ const BANK: Record<string, [string, string | null][]> = {
     ['To your knowledge, are you capable of performing the essential functions of the job for which you are applying, with or without reasonable accommodations?*', 'Yes'],
     ['Are you capable of carrying out the essential duties of this position?', 'Yes'],
   ],
+  'other citizenships': [
+    ['Are you a dual citizen?', 'No'],
+    ['If you are a dual citizen, what other country are you a citizen of?', 'N/A'],
+  ],
   'international student': [
     ['Are you an international student?', 'No'],
     ['Are you currently an international student?', 'No'],
     ['Are you currently on an F-1 student visa?', 'No'],
   ],
+  'school dates and "undergraduate"': [
+    // "undergraduate" contains "graduat" but is not a graduation question.
+    ['What month and year did you begin your undergraduate studies?', '2024-09'],
+    ['When did you start your degree program?', '2024-09'],
+    ['What is your expected graduation date?', '2028-06'],
+    ['What undergraduate university do you attend?', 'University of California, Los Angeles'],
+  ],
   'Oracle Recruiting': [
     ['Are you at least 18 years of age?', 'Yes'],
     ['For the position you are applying to, are you legally authorized to work in this country? Note: If hired, based upon the work location, you may be required to provide government issued documentation proving your work authorization, on or before your first day of employment.', 'Yes'],
     ['Will you now or in the future require sponsorship for an employment-based visa status?', 'No'],
+    ['Do you meet the minimum years of experience required for this role?', 'Yes'],
   ],
   'left for you (no guessing)': [
     // A "Title" choice lists honorifics (Mr. / Ms. / Dr.), not your job title.
@@ -398,6 +420,23 @@ describe('history questions answered blank in Options', () => {
     Object.assign(p.answers, { disciplinaryHistory: '', fiduciaryRoles: '', currentEmployerClient: '' });
     for (const q of ['Have you ever been terminated from employment?', 'Is your current employer an Example Firm client?', 'Do you currently hold a position, or have you been named to serve as a board member, trustee, trust protector, executor, or personal representative?']) {
       expect(resolveAnswer(q, '', null, { profile: p, skills: [] }, true).answer).toBeNull();
+    }
+  });
+});
+
+describe('work at a public university', () => {
+  it('is left for you on "public agency or institution" questions', () => {
+    const p = profile();
+    p.experience.push({ id: 'x2', company: 'University of California, Los Angeles', title: 'Research Assistant', type: 'Part-time', location: 'Los Angeles, CA', start: '2025-01', end: '', current: true, description: '' });
+    const r = resolveAnswer('Have you or do you currently work for a public agency or institution?', '', null, { profile: p, skills: [] }, true);
+    expect(r.answer).toBeNull();
+  });
+});
+
+describe('starting the job vs starting school', () => {
+  it('never answers a job start question with when school started', () => {
+    for (const q of ['When can you start the internship program?', 'When are you available to start working after your university term ends?']) {
+      expect(resolveAnswer(q, '', null, { profile: profile(), skills: [] }, false).matchedKey, q).not.toBe('schoolStartDate');
     }
   });
 });

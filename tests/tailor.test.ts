@@ -363,7 +363,7 @@ describe('skills the posting names', async () => {
   // @ts-expect-error plain JS helper module
   const { normalizeLibrary } = await import('../scripts/tailor/library.mjs');
   const lib = normalizeLibrary({ skills: ['Jira', 'Codex', 'Notion', 'Linear', 'Agile/Scrum', 'Product Analytics', 'Kubernetes'] });
-  const posting = 'Use AI tools such as OpenAI Codex. Familiarity with Jira and product analytics is a plus. You will excel in linear algebra and take notes. Join sprint planning with agile teams.';
+  const posting = 'Use AI tools such as Acme Codex. Familiarity with Jira and product analytics is a plus. You will excel in linear algebra and take notes. Join sprint planning with agile teams.';
 
   it('matches names as the posting writes them, not everyday words', () => {
     expect(namedIn('Codex', posting)).toBe(true);

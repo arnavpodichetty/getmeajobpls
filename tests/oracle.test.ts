@@ -109,6 +109,31 @@ describe('Oracle Recruiting', () => {
     expect(report.needsReview).toBe(0);
   });
 
+  it('flags required pill questions it cannot answer and leaves optional extras alone', async () => {
+    // As on the real page: the required star is a class on the label, the question is the radiogroup's aria-label.
+    const requiredPills = (label: string) => pills(label, ['Yes', 'No']).replace('class="input-row__label"', 'class="input-row__label input-row__label--required"');
+    document.body.innerHTML = `<form>
+      ${requiredPills('Do you currently have any professional certifications that apply to the role?')}
+      ${requiredPills('Would you be subject to any restrictions from a former employer upon joining Example Group?')}
+      ${cxSelect('month-US-DDF-militaryDischargeDate-18', 'Newly Separated Veteran Discharge Date Month', MONTHS)}
+      <div class="apply-flow-block"><p class="apply-flow-block__instructions">By clicking I agree below, I confirm that I would like my personal data to be kept for 24 months so that Example Group can notify me of future job opportunities.</p>
+        <div class="input-row input-row--checkbox"><input type="checkbox" class="input-row__hidden-control" id="af-checkbox-dataRetention-40" aria-labelledby="dataRetention-40-label">
+          <label for="af-checkbox-dataRetention-40"><span id="dataRetention-40-label">I Agree</span></label></div></div>
+      <oj-dialog><label for="summary">Work Summary</label><textarea id="summary" aria-required="true"></textarea></oj-dialog>
+    </form>`;
+    wireCxSelects();
+    wirePills();
+    resetLayoutCache();
+
+    const report = await oracle.fill(context({ resume: null }));
+    expect(report.fields.find((f) => /certifications/.test(f.label))).toEqual(expect.objectContaining({ status: 'review' }));
+    expect(chosen('Would you be subject to any restrictions from a former employer upon joining Example Group?')).toBe('No');
+    expect(document.querySelector<HTMLInputElement>('#month-US-DDF-militaryDischargeDate-18')!.value).toBe('');
+    expect(report.fields.find((f) => /Discharge/.test(f.label))).toBeUndefined();
+    expect(document.querySelector<HTMLInputElement>('#af-checkbox-dataRetention-40')!.checked).toBe(false);
+    expect(report.fields.find((f) => /Work Summary/.test(f.label))).toBeUndefined();
+  });
+
   it('flags a dropdown that ignores the click instead of marking it filled', async () => {
     document.body.innerHTML = cxSelect('country-20', 'Country', ['Canada', 'United States'], { required: true, ignoreClicks: true });
     wireCxSelects();
