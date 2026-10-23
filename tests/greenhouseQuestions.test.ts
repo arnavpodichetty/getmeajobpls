@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { greenhouse } from '../src/adapters/greenhouse';
+import { greenhouse, greenhousePhone } from '../src/adapters/greenhouse';
 import { resolveAnswer } from '../src/lib/engine/answers';
 import { currentValue, scanFields } from '../src/lib/engine/scan';
 import { optionScore } from '../src/lib/engine/text';
@@ -30,7 +30,8 @@ describe('captured Greenhouse application (capture C)', () => {
   it('fills the whole captured form with simulated dropdowns and correct range options', async () => {
     const menus: Record<string, string[]> = {
       ...questionOptions.choices,
-      country: ['Canada', 'United States'],
+      // Greenhouse's phone country lists "United States +1" but shows only "+1" once picked.
+      country: ['Canada +1', 'United States +1'],
       'candidate-location': ['Boston, Massachusetts, United States', 'Los Angeles, California, United States'],
       'school--0': ['Stanford University', 'University of California-Los Angeles'],
       'degree--0': ["Bachelor's Degree", "Master's Degree"],
@@ -49,7 +50,7 @@ describe('captured Greenhouse application (capture C)', () => {
           option.addEventListener('click', () => {
             const shown = document.createElement('div');
             shown.className = 'select__single-value';
-            shown.textContent = text;
+            shown.textContent = id === 'country' ? text.split(' ').pop()! : text;
             (input.closest('[class*="control"]') ?? input.parentElement)!.append(shown);
             input.value = '';
             menu.remove();
@@ -124,5 +125,28 @@ describe('Greenhouse help text under a question', () => {
     expect(value('q1')).toBe('09/2024'); // when school started, not graduation
     expect(value('q2')).toBe('N/A');
     expect(value('q3')).toBe('N/A');
+  });
+});
+
+describe('Greenhouse phone', () => {
+  it('is just the number next to its own country-code picker', async () => {
+    loadFixture('greenhouse-a');
+    await greenhouse.fill(context());
+    expect(document.querySelector<HTMLInputElement>('#phone')!.value).toBe('4155550100');
+  });
+
+  it('is country code, then the number in groups, in a lone phone box', async () => {
+    document.body.innerHTML = `<form id="application-form"><div class="input-wrapper"><label for="phone">Phone<span aria-hidden="true">*</span></label>
+      <input id="phone" class="input" aria-label="Phone" aria-required="true" type="tel"></div></form>`;
+    await greenhouse.fill(context({ resume: null }));
+    expect(document.querySelector<HTMLInputElement>('#phone')!.value).toBe('1-415-555-0100');
+  });
+
+  it('keeps a number that is not 10 digits as saved', () => {
+    const p = testProfile();
+    p.personal.phone = '2079460958';
+    expect(greenhousePhone(p)).toBe('1-207-946-0958');
+    p.personal.phone = '442079460958';
+    expect(greenhousePhone(p)).toBe('442079460958');
   });
 });

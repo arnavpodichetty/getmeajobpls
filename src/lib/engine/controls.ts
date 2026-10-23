@@ -393,7 +393,13 @@ export async function fillCombobox(
   const reactControl = el instanceof HTMLInputElement && el.getAttribute('aria-autocomplete') === 'list'
     ? reactSelectControl(el) : null;
   const selected = reactControl?.querySelectorAll('[class*="single-value" i], [class*="singleValue" i], [class*="multi-value" i], [class*="multiValue" i], [data-automation-id="selectedItem"]');
-  if (reactControl && ![...(selected ?? [])].some((item) => optionScore(item.textContent ?? '', chosenText) >= CONFIDENT_OPTION_SCORE)) {
+  // Some selects show a short form of the pick: Greenhouse's phone country shows "+1" for "United States +1".
+  const showsPick = (shownText: string) => {
+    const item = normalize(shownText);
+    const chosen = normalize(chosenText);
+    return optionScore(shownText, chosenText) >= CONFIDENT_OPTION_SCORE || (!!item && (chosen.endsWith(` ${item}`) || chosen.startsWith(`${item} `)));
+  };
+  if (reactControl && ![...(selected ?? [])].some((item) => showsPick(item.textContent ?? ''))) {
     close(el, input);
     return fail('The dropdown did not accept the selected option.');
   }

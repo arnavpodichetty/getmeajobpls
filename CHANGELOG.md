@@ -2,7 +2,11 @@
 
 ## 1.3.1 (2026-10-22)
 
+### New
+- **Greenhouse phone format:** a Greenhouse Phone box on its own gets your number as country code, then the number in groups: "1-415-555-0100". A Phone box next to its own country-code picker still gets just the number (the site adds the +1 and formats it). Other sites are unchanged.
+
 ### Fixes
+- **Greenhouse phone country flagged for review:** after picking "United States +1", Greenhouse shows only "+1", which looked like the pick hadn't stuck. It counts as picked now.
 - **Oracle required Yes/No questions:** required pill questions the filler couldn't answer were skipped silently, because Oracle marks them required with a class, not a "*". They're flagged for you now.
 - **"Have you or do you currently work for a public agency or institution?":** was answered as "worked for this company before". It's a government question now. If one of your jobs is at a university, school or public body, it's left for you.
 - **"Will you also be involved in any other jobs, business investments, board memberships…?":** is left for you when you have a current job, since keeping it counts.
