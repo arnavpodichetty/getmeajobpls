@@ -126,7 +126,6 @@ async function ensurePanels(kind: Kind, count: number): Promise<HTMLElement[]> {
     realClick(add);
     // No new panel of this kind: clicking again would only stack up empty entries.
     if (!(await waitForElement(() => (panels(kind).length > before ? document.body : null), 3000))) break;
-    await sleep(300);
   }
   return panels(kind);
 }
@@ -144,7 +143,6 @@ async function setText(root: ParentNode, selector: string, value: string, result
   realClick(el);
   const outcome = fillText(el, value);
   record(results, label, outcome.ok && !outcome.review, outcome.review);
-  await sleep(120);
 }
 
 /**
@@ -180,7 +178,15 @@ async function setDatePart(input: HTMLInputElement, value: string): Promise<bool
     if (section) realClick(section);
     input.focus();
     attempt();
-    await sleep(200);
+    if (await settles(ok, 200)) return true;
+  }
+  return false;
+}
+
+/** Check every 25ms until `ok` holds, giving up after `ms`. */
+async function settles(ok: () => boolean, ms: number): Promise<boolean> {
+  for (let waited = 0; waited < ms; waited += 25) {
+    await sleep(25);
     if (ok()) return true;
   }
   return false;

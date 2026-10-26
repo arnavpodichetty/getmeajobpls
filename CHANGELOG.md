@@ -7,6 +7,7 @@
 - **Exact job dates:** work experience Start and End take an optional day. Forms that ask for the full date (Workday, SuccessFactors date pickers) get it; most forms still get the month and year. When a form asks for the day and you haven't added one, the 1st is used and flagged for you.
 
 ### Fixes
+- **Faster Workday My Experience:** jobs, schools and websites fill about 2–3x faster. Dates move on as soon as Workday shows the value, instead of always waiting, and every value is still checked.
 - **"You must be currently pursuing a degree…":** Workday lists Bachelors / Masters / Doctorate as the choices, and it was flagged for review. It picks your "Degree you are pursuing" now (Standard answers, Bachelor's by default).
 - **Resume in a transcript box:** on Workday, the resume could go into an "upload your transcript" question. It never does now.
 
