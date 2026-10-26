@@ -217,3 +217,7 @@ code { font-size: 12px; padding: 1px 5px; background: var(--bg); border-radius: 
 #import a { color: var(--accent); }
 .import-source { display: flex; align-items: center; gap: 8px; margin: 14px 0; flex-wrap: wrap; }
 #import .field + .import-source + .field { margin-top: 0; }
+
+.month-day { display: flex; gap: 6px; }
+.month-day input { flex: 1; min-width: 0; }
+.month-day select { width: auto; flex: none; }

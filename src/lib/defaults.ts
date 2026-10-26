@@ -65,6 +65,7 @@ export function emptyProfile(): Profile {
       governmentConsulting: 'No',
       internationalStudent: 'No',
       enrollmentStatus: 'Full-time',
+      pursuingDegree: "Bachelor's",
       optStatus: 'N/A',
       stemOptEligible: 'N/A',
       highSchoolGraduationYear: '',

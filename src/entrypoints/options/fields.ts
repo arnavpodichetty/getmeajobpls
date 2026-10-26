@@ -39,6 +39,37 @@ export function textField(
   return h('label', { class: opts.wide ? 'field wide' : 'field' }, h('span', {}, label), input);
 }
 
+/**
+ * A month, plus an optional day for forms that ask for the exact date.
+ * Saved as "YYYY-MM", or "YYYY-MM-DD" when a day is picked.
+ */
+export function monthDayField(label: string, obj: Obj, key: string, onChange: () => void): HTMLElement {
+  const [y = '', m = '', d = ''] = String(obj[key] ?? '').split('-');
+  const month = h('input', { type: 'month', value: y && m ? `${y}-${m}` : '' });
+  const day = h(
+    'select',
+    { title: 'Day (optional): only used by forms that ask for the exact date' },
+    h('option', { value: '' }, 'Day'),
+    ...Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0')).map((v) => h('option', { value: v }, String(Number(v)))),
+  );
+  day.value = d;
+  const save = () => {
+    if (!month.value) {
+      obj[key] = '';
+    } else {
+      const [yy, mm] = month.value.split('-').map(Number);
+      // Feb 30 becomes Feb 28/29.
+      const last = new Date(yy, mm, 0).getDate();
+      if (day.value && Number(day.value) > last) day.value = String(last).padStart(2, '0');
+      obj[key] = day.value ? `${month.value}-${day.value}` : month.value;
+    }
+    onChange();
+  };
+  month.addEventListener('input', save);
+  day.addEventListener('change', save);
+  return h('label', { class: 'field' }, h('span', {}, label), h('div', { class: 'month-day' }, month, day));
+}
+
 export function textArea(
   label: string,
   obj: Obj,

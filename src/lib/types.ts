@@ -27,8 +27,8 @@ export interface Experience {
   title: string;
   type: ExperienceType;
   location: string;
-  start: string; // "YYYY-MM"
-  end: string; // "YYYY-MM", empty when current
+  start: string; // "YYYY-MM", or "YYYY-MM-DD" when you entered the day
+  end: string; // same; empty when current
   current: boolean;
   description: string;
 }
@@ -130,6 +130,8 @@ export interface Profile {
     internationalStudent: YesNo;
     /** "Full-time" or "Part-time" while enrolled; blank leaves full/part-time questions for you. */
     enrollmentStatus: string;
+    /** Degree you're working towards ("Bachelor's"), for "must be pursuing a degree" questions that list degree levels. */
+    pursuingDegree: string;
     optStatus: YesNoNA;
     stemOptEligible: YesNoNA;
     highSchoolGraduationYear: string;
@@ -203,6 +205,8 @@ export interface ResumeMeta {
   size: number;
   uploadedAt: number;
   isDefault: boolean;
+  /** Set on your transcript, which is stored next to the resumes but never picked as one. */
+  kind?: 'transcript';
   /** Set on resumes made by "Tailor resume": the resume it was tailored from. */
   tailoredFrom?: string;
   /** The job it was tailored for, e.g. "Data Engineering Intern · Hooli". */

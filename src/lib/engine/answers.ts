@@ -573,10 +573,16 @@ const DEFS: Def[] = [
       const s = stillStudying(c.profile);
       if (currentStudentAnswer(c, label) !== (s ? 'Yes' : 'No')) return [];
       if (s === false) return [['Not attending', 'Not enrolled', 'Not currently enrolled'], ['No']];
+      if (!s) return [];
       const status = c.profile.answers.enrollmentStatus;
-      if (!s || !status) return [];
-      const spellings = status === 'Part-time' ? ['Part-time', 'Part time', 'Yes, part-time'] : ['Full-time', 'Full time', 'Yes, full-time'];
-      return [spellings, ['Yes']];
+      const tiers = status
+        ? [status === 'Part-time' ? ['Part-time', 'Part time', 'Yes, part-time'] : ['Full-time', 'Full time', 'Yes, full-time'], ['Yes']]
+        : [['Yes']];
+      // "You must be currently pursuing a degree…" with Bachelors / Masters / Doctorate as the
+      // choices (Workday): the degree you're working towards. Never when the question names a level.
+      const pursuing = c.profile.answers.pursuingDegree;
+      if (pursuing && !/\b(?:bachelor|master|ph ?d|doctor|associate|mba)/.test(label)) tiers.push(...degreeTiers(pursuing));
+      return tiers;
     },
   },
 

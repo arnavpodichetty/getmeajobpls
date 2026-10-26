@@ -11,7 +11,7 @@ import { scanFields } from '../lib/engine/scan';
 import { looksLikeJobForm } from '../lib/engine/jobForm';
 import type { ContentRequest, FrameInfo, PageText } from '../lib/messages';
 import { requestResumeFile } from '../lib/messages';
-import { base64ToBlob } from '../lib/resumeDb';
+import { base64ToBlob, TRANSCRIPT_ID } from '../lib/resumeDb';
 import { loadProfile, loadSettings } from '../lib/storage';
 import type { FillReport } from '../lib/types';
 
@@ -61,16 +61,15 @@ export default defineContentScript({
 
     async function buildContext(resumeId: string | null, skillSetId: string | null): Promise<FillContext> {
       const [profile, settings] = await Promise.all([loadProfile(), loadSettings()]);
-      let resume: ResumeFile | null = null;
-      if (resumeId) {
-        const payload = await requestResumeFile(resumeId);
-        if (payload) {
-          const blob = base64ToBlob(payload.base64, payload.meta.mimeType);
-          resume = { meta: payload.meta, file: new File([blob], payload.meta.fileName, { type: payload.meta.mimeType }) };
-        }
-      }
+      const load = async (id: string | null): Promise<ResumeFile | null> => {
+        const payload = id ? await requestResumeFile(id) : null;
+        if (!payload) return null;
+        const blob = base64ToBlob(payload.base64, payload.meta.mimeType);
+        return { meta: payload.meta, file: new File([blob], payload.meta.fileName, { type: payload.meta.mimeType }) };
+      };
+      const [resume, transcript] = await Promise.all([load(resumeId), load(TRANSCRIPT_ID).catch(() => null)]);
       const skills = profile.skillSets.find((s) => s.id === skillSetId)?.skills;
-      return { profile, resume, settings, skills };
+      return { profile, resume, transcript, settings, skills };
     }
 
     async function fill(resumeId: string | null, skillSetId: string | null): Promise<FillReport> {

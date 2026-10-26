@@ -9,8 +9,8 @@ import { listResumes } from '../../lib/resumeDb';
 import { loadProfile, loadRules, loadSettings, saveProfile, saveSettings } from '../../lib/storage';
 import type { Profile, ResumeMeta, Settings } from '../../lib/types';
 import { backupSection } from './backup';
-import { checkboxField, grid, listField, selectField, textArea, textField } from './fields';
-import { resumeSection, rulesSection } from './resumes';
+import { checkboxField, grid, listField, monthDayField, selectField, textArea, textField } from './fields';
+import { resumeSection, rulesSection, transcriptSection } from './resumes';
 import { PAGE_SOURCE_KEY, type PageSource } from '../../lib/profileImport';
 import { importSection } from './profileImport';
 import { tailoringSection } from './tailoring';
@@ -216,7 +216,7 @@ function profileSections(): HTMLElement[] {
     section(
       'experience',
       'Work experience',
-      'Most recent first. Volunteer entries are not added to Workday\'s work-history panels.',
+      'Most recent first. The day is optional: most forms only ask for the month and year, and the day is used where a form asks for the exact date. Volunteer entries are not added to Workday\'s work-history panels.',
       repeatable(p.experience, emptyExperience, 'Job', (x) =>
         h(
           'div',
@@ -226,8 +226,8 @@ function profileSections(): HTMLElement[] {
             textField('Title', x, 'title', s, { placeholder: 'Software Engineering Intern' }),
             selectField('Type', x, 'type', EXPERIENCE_TYPES, s),
             textField('Location', x, 'location', s, { placeholder: 'San Francisco, CA' }),
-            textField('Start', x, 'start', s, { type: 'month' }),
-            textField('End', x, 'end', s, { type: 'month' }),
+            monthDayField('Start', x, 'start', s),
+            monthDayField('End', x, 'end', s),
             checkboxField('I currently work here', x, 'current', s),
           ),
           textArea('Description', x, 'description', s, { rows: 4, placeholder: 'What you built and its impact, one point per line.' }),
@@ -323,6 +323,7 @@ function profileSections(): HTMLElement[] {
         selectField('Current employer is a client of the company you are applying to?', p.answers, 'currentEmployerClient', YES_NO, s),
         selectField('Retained as a consultant / contractor by the U.S. government?', p.answers, 'governmentConsulting', YES_NO, s),
         selectField('Enrollment status while in school', p.answers, 'enrollmentStatus', [['', '—'], ['Full-time', 'Full-time'], ['Part-time', 'Part-time']], s),
+        selectField('Degree you are pursuing (Workday "currently pursuing a degree" lists)', p.answers, 'pursuingDegree', [['', '—'], ["Bachelor's", "Bachelor's"], ["Master's", "Master's"], ['Doctorate', 'Doctorate (PhD)'], ['Associate', 'Associate']], s),
         selectField('International student?', p.answers, 'internationalStudent', YES_NO, s),
         selectField('Currently on Optional Practical Training (OPT)?', p.answers, 'optStatus', YES_NO_NA, s),
         selectField('Eligible for a STEM OPT extension?', p.answers, 'stemOptEligible', YES_NO_NA, s),
@@ -539,6 +540,7 @@ const NAV: [string, string][] = [
   ['saved-answers', 'Saved answers'],
   ['#Files', ''],
   ['resumes', 'Resumes'],
+  ['transcript', 'Transcript'],
   ['rules', 'Resume rules'],
   ['tailoring', 'Resume tailoring'],
   ['#App', ''],
@@ -572,6 +574,7 @@ export async function renderAll(): Promise<void> {
     importSection({ resumes: library, page, enabled: settings.tailorEnabled, profile: () => profile, onApplied: renderAll }),
     ...profileSections(),
     await resumeSection(),
+    await transcriptSection(),
     await rulesSection(rules),
     tailoringSection(settings, saveS),
     settingsSection(),

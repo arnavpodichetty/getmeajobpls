@@ -8,7 +8,7 @@ import { fillCheckbox, fillCombobox, fillMultiCombobox, fillText } from '../lib/
 import { todayISO } from '../lib/clock';
 import { blur, isVisible, queryAllDeep, realClick, sleep, typeInto, waitForElement, waitForStable } from '../lib/engine/dom';
 import { resolveAnswer } from '../lib/engine/answers';
-import { fillPage, type Override } from '../lib/engine/fill';
+import { asksForTranscript, fillPage, type Override } from '../lib/engine/fill';
 import { degreeTiers, majorPreferenceTiers, normalize, schoolVariants } from '../lib/engine/text';
 import type { Education, Experience, FieldResult, FillReport } from '../lib/types';
 import type { Adapter, FillContext } from './types';
@@ -187,7 +187,7 @@ async function setDatePart(input: HTMLInputElement, value: string): Promise<bool
 }
 
 /** Fill a month/year (or year-only) date field inside a panel. */
-async function setDate(field: Element | null, iso: string, results: FieldResult[], label: string): Promise<void> {
+async function setDate(field: Element | null, iso: string, results: FieldResult[], label: string, isJob = false): Promise<void> {
   if (!field || !iso) return;
   const { month, year } = ym(iso);
   const day = iso.split('-')[2] ?? '';
@@ -199,7 +199,12 @@ async function setDate(field: Element | null, iso: string, results: FieldResult[
   if (dayInput) ok = (await setDatePart(dayInput, day || '01')) && ok;
   if (yearInput) ok = (await setDatePart(yearInput, year)) && ok;
   if (yearInput || monthInput) blur(yearInput ?? monthInput!);
-  record(results, label, ok, `Enter ${monthInput ? `${month}/` : ''}${year} yourself.`);
+  // A form that asks for the day when your profile only has the month: the 1st is a guess.
+  if (ok && isJob && dayInput && !day) {
+    results.push({ label, status: 'review', reason: 'This form asks for the exact day and your profile only has the month, so the 1st was used. Add the day under Work experience.' });
+    return;
+  }
+  record(results, label, ok, `Enter ${monthInput ? `${month}/` : ''}${dayInput ? `${day || '01'}/` : ''}${year} yourself.`);
 }
 
 async function fillJobs(jobs: Experience[], results: FieldResult[]): Promise<void> {
@@ -220,8 +225,8 @@ async function fillJobs(jobs: Experience[], results: FieldResult[]): Promise<voi
       fillCheckbox(current, 'Yes');
       await sleep(250); // the end-date field disappears
     }
-    await setDate(panel.querySelector(PANEL.job.start), job.start, results, `${tag}: from`);
-    if (!job.current) await setDate(panel.querySelector(PANEL.job.end), job.end, results, `${tag}: to`);
+    await setDate(panel.querySelector(PANEL.job.start), job.start, results, `${tag}: from`, true);
+    if (!job.current) await setDate(panel.querySelector(PANEL.job.end), job.end, results, `${tag}: to`, true);
     await setText(panel, PANEL.job.description, job.description, results, `${tag}: description`);
   }
   if (found.length < jobs.length) results.push({ label: 'Work experience', status: 'review', reason: `Added ${found.length} of ${jobs.length} jobs — add the rest yourself.` });
@@ -366,7 +371,8 @@ export const workday: Adapter = {
       ats: this.name,
       overrides: OVERRIDES,
       incremental: ctx.incremental,
-      resumeTarget: () => queryAllDeep<HTMLElement>(SELECTORS.resume)[0] ?? null,
+      // A questionnaire's "upload your transcript" box is not the resume upload.
+      resumeTarget: () => queryAllDeep<HTMLElement>(SELECTORS.resume).find((el) => !asksForTranscript(el)) ?? null,
       // Panel fields are filled below, one panel per entry.
       skip: (f) =>
         f.el.matches(SELECTORS.source) ||

@@ -34,7 +34,7 @@ describe('options page', () => {
     const ids = [...document.querySelectorAll('section')].map((s) => s.id);
     expect(ids).toEqual([
       'import', 'personal', 'links', 'education', 'experience', 'projects', 'skills', 'languages', 'answers', 'eeo',
-      'saved-answers', 'resumes', 'rules', 'tailoring', 'settings', 'backup', 'credits',
+      'saved-answers', 'resumes', 'transcript', 'rules', 'tailoring', 'settings', 'backup', 'credits',
     ]);
   });
 

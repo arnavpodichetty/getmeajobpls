@@ -107,14 +107,15 @@ async function setPicklist(row: Element, re: RegExp, value: string, tiers: strin
 }
 
 /** SuccessFactors dates are UI5 date pickers: type into the inner box, then commit. */
-export async function setDate(row: Element, re: RegExp, iso: string, results: FieldResult[], label: string): Promise<void> {
+export async function setDate(row: Element, re: RegExp, iso: string, results: FieldResult[], label: string, isJob = false): Promise<void> {
   const el = rowField(row, re);
   if (!el || !iso) return;
   const host = (el.matches(SELECTORS.datePicker) ? el : el.querySelector<HTMLElement>(SELECTORS.datePicker)) as (HTMLElement & { value?: string }) | null;
   const inner = (host ? queryDeep<HTMLInputElement>('input', host.shadowRoot ?? host) ?? queryDeep<HTMLInputElement>('input', host) : el) as HTMLInputElement | null;
   const current = () => (host?.value ?? host?.getAttribute('value') ?? '') || inner?.value || '';
   if (current()) return;
-  const value = formatDate(iso, inner ?? host ?? el, host?.getAttribute('format-pattern') ?? '');
+  const pattern = host?.getAttribute('format-pattern') ?? '';
+  const value = formatDate(iso, inner ?? host ?? el, pattern);
   if (inner) {
     inner.focus();
     typeInto(inner, value);
@@ -129,6 +130,11 @@ export async function setDate(row: Element, re: RegExp, iso: string, results: Fi
     host.dispatchEvent(new CustomEvent('change', { bubbles: true, composed: true, detail: { value, valid: true } }));
   }
   await sleep(80);
+  // A date picker that wants the day when your profile only has the month: the 1st is a guess.
+  if (isJob && current() === value && iso.split('-').length < 3 && /d/i.test(pattern)) {
+    results.push({ label, status: 'review', reason: 'This form asks for the exact day and your profile only has the month, so the 1st was used. Add the day under Work experience.' });
+    return;
+  }
   record(results, label, current() === value, `Enter ${value} yourself.`);
 }
 
@@ -175,8 +181,8 @@ async function fillJobs(section: HTMLElement, jobs: Experience[], results: Field
     await setText(row, RE.company, job.company, results, `${tag}: company`);
     await setText(row, RE.location, job.location, results, `${tag}: location`);
     await setText(row, RE.jobTitle, job.title, results, `${tag}: title`);
-    await setDate(row, RE.start, job.start, results, `${tag}: start`);
-    if (!job.current) await setDate(row, RE.end, job.end, results, `${tag}: end`);
+    await setDate(row, RE.start, job.start, results, `${tag}: start`, true);
+    if (!job.current) await setDate(row, RE.end, job.end, results, `${tag}: end`, true);
     await setText(row, RE.description, job.description, results, `${tag}: description`);
   }
   if (found.length < jobs.length) results.push({ label: sectionTitle(section), status: 'review', reason: `Added ${found.length} of ${jobs.length} jobs. Add the rest yourself.` });

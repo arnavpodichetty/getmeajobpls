@@ -406,6 +406,38 @@ describe('enrollment status', () => {
   });
 });
 
+describe('"must be pursuing a degree" with degree levels as the choices', () => {
+  const label = 'You must be currently pursuing a degree to be eligible for an internship with Acme Group.';
+  const levels = ['Bachelors', 'Doctorate', 'Juris Doctor', 'Masters'];
+  const pick = (p: ReturnType<typeof profile>, question = label, options = levels) => {
+    const answer = resolveAnswer(question, '', null, { profile: p, skills: [] }, true).answer!;
+    return bestOptionTiered(options, (o) => o, answer.tiers!)?.option;
+  };
+
+  it('picks Bachelors by default', () => {
+    expect(pick(profile())).toBe('Bachelors');
+    expect(pick(profile(), label, ["Bachelor's Degree", "Master's Degree", 'Doctoral Degree'])).toBe("Bachelor's Degree");
+  });
+
+  it('follows the setting', () => {
+    const p = profile();
+    p.answers.pursuingDegree = "Master's";
+    expect(pick(p)).toBe('Masters');
+    p.answers.pursuingDegree = 'Doctorate';
+    expect(pick(p)).toBe('Doctorate');
+  });
+
+  it('still answers Yes when the choices are Yes / No', () => {
+    expect(pick(profile(), label, ['Yes', 'No'])).toBe('Yes');
+  });
+
+  it('leaves the list for you when the setting is blank', () => {
+    const p = profile();
+    p.answers.pursuingDegree = '';
+    expect(pick(p)).toBeUndefined();
+  });
+});
+
 describe('professional license set to Yes', () => {
   it('is left for you, since the license type is unknown', () => {
     const p = profile();

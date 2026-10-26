@@ -3,6 +3,8 @@ import { uid } from '../../lib/defaults';
 import {
   deleteResume,
   getResume,
+  getTranscript,
+  TRANSCRIPT_ID,
   listResumes,
   putResume,
   setDefaultResume,
@@ -233,6 +235,120 @@ export async function resumeSection(): Promise<HTMLElement> {
     h('p', { class: 'intro' }, 'PDFs are stored in this browser (IndexedDB). The default is used when no rule matches.'),
     drop,
     list,
+  );
+}
+
+/** One transcript PDF, attached to "upload your unofficial transcript" fields. */
+export async function transcriptSection(): Promise<HTMLElement> {
+  const body = h('div', { class: 'cards' });
+
+  async function save(file: File) {
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) return showToast(`${file.name} is not a PDF`, true);
+    if (file.size > MAX_BYTES) return showToast(`${file.name} is over 10 MB`, true);
+    await putResume({
+      id: TRANSCRIPT_ID,
+      kind: 'transcript',
+      name: 'Transcript',
+      tags: [],
+      skills: [],
+      fileName: file.name,
+      mimeType: 'application/pdf',
+      size: file.size,
+      uploadedAt: Date.now(),
+      isDefault: false,
+      blob: file,
+    });
+    await draw();
+    showToast('Transcript saved');
+  }
+
+  const fileInput = h('input', {
+    type: 'file',
+    accept: 'application/pdf,.pdf',
+    hidden: true,
+    onChange: async (e: Event) => {
+      const input = e.target as HTMLInputElement;
+      const file = input.files?.[0];
+      input.value = '';
+      if (file) await save(file);
+    },
+  });
+
+  async function draw() {
+    const rec = await getTranscript();
+    if (!rec) {
+      const drop = h(
+        'div',
+        {
+          class: 'dropzone',
+          onClick: () => fileInput.click(),
+          onDragover: (e: Event) => {
+            e.preventDefault();
+            drop.classList.add('over');
+          },
+          onDragleave: () => drop.classList.remove('over'),
+          onDrop: (e: Event) => {
+            e.preventDefault();
+            drop.classList.remove('over');
+            const file = (e as DragEvent).dataTransfer?.files?.[0];
+            if (file) void save(file);
+          },
+        },
+        'Drop your unofficial transcript (PDF) here or click to upload',
+      );
+      body.replaceChildren(drop);
+      return;
+    }
+    body.replaceChildren(
+      h(
+        'div',
+        { class: 'card' },
+        h(
+          'div',
+          { class: 'card-tools', style: 'margin-bottom:0' },
+          h('span', { class: 'card-title' }, 'Transcript', h('span', { class: 'muted' }, ` · ${rec.fileName} · ${formatSize(rec.size)}`)),
+          h(
+            'button',
+            {
+              class: 'ghost',
+              onClick: () => {
+                const url = URL.createObjectURL(rec.blob);
+                window.open(url, '_blank');
+                setTimeout(() => URL.revokeObjectURL(url), 60_000);
+              },
+            },
+            'Open',
+          ),
+          h('button', { class: 'ghost', onClick: () => fileInput.click() }, 'Replace file'),
+          h(
+            'button',
+            {
+              class: 'ghost danger',
+              onClick: async () => {
+                if (!confirm('Delete your transcript?')) return;
+                await deleteResume(TRANSCRIPT_ID);
+                await draw();
+              },
+            },
+            'Delete',
+          ),
+        ),
+      ),
+    );
+  }
+  await draw();
+
+  return h(
+    'section',
+    { id: 'transcript' },
+    h('h2', {}, 'Transcript'),
+    h(
+      'p',
+      { class: 'intro' },
+      'Attached to upload fields that ask for your transcript (e.g. "Please upload a copy of your unofficial transcript"), on Greenhouse, Workday and other sites. Stored in this browser like your resumes.',
+    ),
+    body,
+    fileInput,
   );
 }
 

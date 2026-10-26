@@ -8,6 +8,8 @@ export interface ResumeFile {
 export interface FillContext {
   profile: Profile;
   resume: ResumeFile | null;
+  /** Your transcript, for "upload your unofficial transcript" fields. */
+  transcript?: ResumeFile | null;
   settings: Settings;
   /** Skills from the chosen skill set (overrides resume and profile skills). */
   skills?: string[];

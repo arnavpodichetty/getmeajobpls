@@ -21,8 +21,8 @@ import {
   monthName,
   type Outcome,
 } from './controls';
-import { closestDeep, composedElements, sleep, waitForStable } from './dom';
-import { optionText, textOfIds } from './labels';
+import { closestDeep, composedElements, queryAllDeep, sleep, waitForStable } from './dom';
+import { labelFor, optionText, textOfIds } from './labels';
 import { currentValue, scanFields, type Field } from './scan';
 import { DECLINE, isBareFieldHead, isPlaceholderOption, normalize } from './text';
 
@@ -66,6 +66,8 @@ let handled = new WeakSet<Element>();
 // there don't attach it again (or re-attach one you removed). Another page, such as
 // Workday's "Autofill with Resume" step or the next application, still gets it.
 let resumeAttachedOn: string | null = null;
+// Same for the transcript: the questions it went into on each page.
+let transcriptAttached = new Set<string>();
 const pageKey = () => `${location.origin}${location.pathname}`;
 
 const HIGHLIGHT_ATTR = 'data-getmeajobpls';
@@ -183,6 +185,19 @@ async function fillField(field: Field, answer: Answer): Promise<Outcome> {
   }
 }
 
+/** An upload asking for your (unofficial) transcript, not a video or interview transcript. */
+const TRANSCRIPT = /\btranscripts?\b/;
+export function isTranscriptUpload(text: string): boolean {
+  const n = normalize(text);
+  return TRANSCRIPT.test(n) && !/\b(?:video|interview|recording|meeting|call)\b/.test(n);
+}
+
+/** True when a file input's question asks for a transcript (used to keep the resume out of it). */
+export function asksForTranscript(el: HTMLElement): boolean {
+  const { label, hints } = labelFor(el);
+  return isTranscriptUpload(`${label} ${hints}`);
+}
+
 /** Score file inputs: the resume field, not the cover letter or "autofill from resume" box. */
 export function findResumeTarget(fields: Field[]): HTMLElement | null {
   const files = fields.filter((f) => f.kind === 'file');
@@ -197,6 +212,36 @@ export function findResumeTarget(fields: Field[]): HTMLElement | null {
   }
   if (best && best.score >= 0) return best.el;
   return files.length === 1 && !/cover/i.test(files[0].label + files[0].hints) ? files[0].el : null;
+}
+
+async function attachTranscripts(ctx: FillContext, root: ParentNode, results: FieldResult[], notes: string[], onFilled: () => void): Promise<void> {
+  // Cheap check first: most steps have no upload, and a full scan reads every label.
+  if (!queryAllDeep('input[type=file]', root).length) return;
+  const fields = scanFields(root).filter((f) => f.kind === 'file' && !handled.has(f.el) && isTranscriptUpload(`${f.label} ${f.hints}`));
+  for (const field of fields) {
+    handled.add(field.el);
+    const label = displayLabel(field);
+    const key = `${pageKey()}|${normalize(label)}`;
+    if (transcriptAttached.has(key)) continue;
+    if (!ctx.transcript) {
+      if (field.required) results.push({ label, status: 'review', reason: 'Required. Add your transcript under Options → Transcript, or attach it here.' });
+      continue;
+    }
+    const hasFile = (field.el instanceof HTMLInputElement && !!field.el.files?.length) || uploadShowsFile(field.el);
+    if (hasFile && !ctx.settings.overwriteExisting) {
+      results.push({ label, status: 'skipped', reason: 'A file is already attached.' });
+      continue;
+    }
+    const outcome = attachFile(field.el, ctx.transcript.file, 'transcript');
+    if (outcome.ok) {
+      transcriptAttached.add(key);
+      onFilled();
+      await waitForStable(document.body, 800, 6000);
+      if (outcome.review && pageShows(ctx.transcript.file.name)) outcome.review = undefined;
+    }
+    if (outcome.ok && !outcome.review) notes.push('Transcript attached.');
+    results.push({ label: `Transcript (${ctx.transcript.file.name})`, status: outcome.ok && !outcome.review ? 'filled' : 'review', reason: outcome.review });
+  }
 }
 
 function overrideFor(field: Field, overrides: Override[], c: AnswerContext): Answer | null {
@@ -226,6 +271,7 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
     clearHighlights();
     handled = new WeakSet();
     resumeAttachedOn = null;
+    transcriptAttached = new Set();
   }
 
   // Dropdowns marked filled, re-checked at the end: Workday re-renders a
@@ -241,7 +287,8 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
   // 1. Resume first: many ATSs parse it and overwrite fields afterwards.
   // Only look for the upload when there's a resume this page hasn't had yet; that
   // spares a full scan on every pass that watches a wizard for new steps.
-  const resumeEl = ctx.resume && resumeAttachedOn !== pageKey() ? opts.resumeTarget?.() ?? findResumeTarget(scanFields(root)) : null;
+  let resumeEl = ctx.resume && resumeAttachedOn !== pageKey() ? opts.resumeTarget?.() ?? findResumeTarget(scanFields(root)) : null;
+  if (resumeEl && asksForTranscript(resumeEl)) resumeEl = null;
   if (ctx.resume && resumeEl && !handled.has(resumeEl) && resumeAttachedOn !== pageKey()) {
     handled.add(resumeEl);
     const hasFile = (resumeEl instanceof HTMLInputElement && !!resumeEl.files?.length) || uploadShowsFile(resumeEl);
@@ -262,6 +309,9 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
   } else if (ctx.resume && !resumeEl && !opts.incremental) {
     notes.push('No resume upload field found on this page.');
   }
+
+  // 1b. Transcript uploads ("Please upload a copy of your unofficial transcript").
+  await attachTranscripts(ctx, root, results, notes, () => filled++);
 
   // 2. Every other field, twice: answers can reveal follow-up questions.
   for (let pass = 0; pass < 2; pass++) {

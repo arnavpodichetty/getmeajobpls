@@ -19,3 +19,17 @@ describe('date formats', () => {
     expect(formatDate('2028-05', input(placeholder), label)).toBe(expected);
   });
 });
+
+describe('job dates with an exact day', () => {
+  it('uses the day where the form asks for it, and only month and year elsewhere', () => {
+    const date = document.createElement('input');
+    date.type = 'date';
+    expect(formatDate('2026-09-15', date)).toBe('2026-09-15');
+    expect(formatDate('2026-09-15', input('MM/DD/YYYY'), 'Start date')).toBe('09/15/2026');
+    expect(formatDate('2026-09-15', input('MM/YYYY'), 'Start date')).toBe('09/2026');
+    expect(formatDate('2026-09-15', input(), 'Start date (month and year)')).toBe('September 2026');
+    const month = document.createElement('input');
+    month.type = 'month';
+    expect(formatDate('2026-09-15', month)).toBe('2026-09');
+  });
+});

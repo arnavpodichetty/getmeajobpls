@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.2 (2026-10-23)
+
+### New
+- **Transcript upload:** save your unofficial transcript under Options → Transcript, and it's attached to uploads that ask for one (Greenhouse, Workday and others). A required one with no transcript saved is flagged for you.
+- **Exact job dates:** work experience Start and End take an optional day. Forms that ask for the full date (Workday, SuccessFactors date pickers) get it; most forms still get the month and year. When a form asks for the day and you haven't added one, the 1st is used and flagged for you.
+
+### Fixes
+- **"You must be currently pursuing a degree…":** Workday lists Bachelors / Masters / Doctorate as the choices, and it was flagged for review. It picks your "Degree you are pursuing" now (Standard answers, Bachelor's by default).
+- **Resume in a transcript box:** on Workday, the resume could go into an "upload your transcript" question. It never does now.
+
 ## 1.3.1 (2026-10-22)
 
 ### New

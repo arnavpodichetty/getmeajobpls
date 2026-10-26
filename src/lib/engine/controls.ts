@@ -468,7 +468,7 @@ export async function fillMultiCombobox(
 // ---------------------------------------------------------------------------
 // Files
 
-export function attachFile(target: HTMLInputElement | HTMLElement, file: File): Outcome {
+export function attachFile(target: HTMLInputElement | HTMLElement, file: File, what = 'resume'): Outcome {
   const transfer = new DataTransfer();
   transfer.items.add(file);
   if (target instanceof HTMLInputElement) {
@@ -482,13 +482,13 @@ export function attachFile(target: HTMLInputElement | HTMLElement, file: File): 
     fire(target, 'input');
     fire(target, 'change');
     // Some upload widgets read the file and then clear the input; that's still a success.
-    return target.files?.length ? OK : { ok: true, review: 'Check that the resume shows as attached.' };
+    return target.files?.length ? OK : { ok: true, review: `Check that the ${what} shows as attached.` };
   }
   // Drop zones without a usable <input type=file>.
   for (const type of ['dragenter', 'dragover', 'drop']) {
     target.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, composed: true, dataTransfer: transfer }));
   }
-  return { ok: true, review: 'Resume was dropped onto the upload area — check it attached.' };
+  return { ok: true, review: `${what[0].toUpperCase()}${what.slice(1)} was dropped onto the upload area — check it attached.` };
 }
 
 /** Nearest container worth outlining for a field (group wrapper or the control). */

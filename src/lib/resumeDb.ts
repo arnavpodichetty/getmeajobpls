@@ -37,11 +37,23 @@ async function tx(mode: IDBTransactionMode): Promise<IDBObjectStore> {
   return db.transaction(STORE, mode).objectStore(STORE);
 }
 
-export async function listResumes(): Promise<ResumeMeta[]> {
+/** The transcript is one record in the same store, under a fixed id. */
+export const TRANSCRIPT_ID = 'transcript';
+
+/** Every stored file (resumes and the transcript), for backups. */
+export async function listAllFiles(): Promise<ResumeMeta[]> {
   const all = (await promisify((await tx('readonly')).getAll())) as ResumeRecord[];
   return all
     .map(({ blob: _blob, ...meta }) => meta)
     .sort((a, b) => a.uploadedAt - b.uploadedAt);
+}
+
+export async function listResumes(): Promise<ResumeMeta[]> {
+  return (await listAllFiles()).filter((meta) => meta.kind !== 'transcript');
+}
+
+export async function getTranscript(): Promise<ResumeRecord | undefined> {
+  return getResume(TRANSCRIPT_ID);
 }
 
 export async function getResume(id: string): Promise<ResumeRecord | undefined> {

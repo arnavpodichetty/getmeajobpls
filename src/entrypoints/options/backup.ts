@@ -1,6 +1,6 @@
 import { h } from '../../lib/dom';
 import { normalizeProfile, normalizeSettings } from '../../lib/defaults';
-import { base64ToBlob, blobToBase64, getResume, listResumes, putResume } from '../../lib/resumeDb';
+import { base64ToBlob, blobToBase64, getResume, listAllFiles, putResume } from '../../lib/resumeDb';
 import { loadProfile, loadRules, loadSettings, saveProfile, saveRules, saveSettings } from '../../lib/storage';
 import type { ResumeMeta, ResumeRule, Settings } from '../../lib/types';
 import { showToast } from './toast';
@@ -28,7 +28,7 @@ async function exportBackup(includeFiles: boolean): Promise<void> {
   };
   if (includeFiles) {
     backup.resumes = [];
-    for (const meta of await listResumes()) {
+    for (const meta of await listAllFiles()) {
       const rec = await getResume(meta.id);
       if (rec) backup.resumes.push({ ...meta, base64: await blobToBase64(rec.blob) });
     }
@@ -52,7 +52,7 @@ async function importBackup(file: File): Promise<void> {
     'Replace your current profile' +
     (isBackup ? ', settings and resume rules' : '') +
     ' with this file?' +
-    (fileCount ? ` ${fileCount} resume file(s) will be added (same id = replaced).` : '');
+    (fileCount ? ` ${fileCount} file(s) (resumes, transcript) will be added (same id = replaced).` : '');
   if (!confirm(msg)) return;
 
   await saveProfile(normalizeProfile(profileData));
@@ -98,7 +98,7 @@ export function backupSection(onImported: () => Promise<void>): HTMLElement {
       'div',
       { class: 'row' },
       h('button', { onClick: () => exportBackup(includeFiles.checked) }, 'Export JSON'),
-      h('label', { class: 'check inline' }, includeFiles, h('span', {}, 'Include resume PDFs')),
+      h('label', { class: 'check inline' }, includeFiles, h('span', {}, 'Include resume and transcript PDFs')),
       h('button', { class: 'secondary', onClick: () => importInput.click() }, 'Import JSON…'),
       importInput,
     ),
