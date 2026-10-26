@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ContentScriptContext } from 'wxt/utils/content-script-context';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
+import { browser } from 'wxt/browser';
 import content from '../src/entrypoints/content';
 
 const mocks = vi.hoisted(() => ({
@@ -62,9 +63,46 @@ beforeEach(() => {
 afterEach(() => {
   vi.clearAllTimers();
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 describe('content script reload lifecycle', () => {
+  it('does not start when Chrome has already removed runtime', async () => {
+    const descriptor = Object.getOwnPropertyDescriptor(browser, 'runtime')!;
+    try {
+      Object.defineProperty(browser, 'runtime', { configurable: true, value: undefined });
+      expect(() => startContent()).not.toThrow();
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(mocks.loadSettings).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(browser, 'runtime', descriptor);
+    }
+  });
+
+  it('cleans up safely after Chrome removes runtime from an existing script', async () => {
+    const ctx = startContent();
+    const descriptor = Object.getOwnPropertyDescriptor(browser, 'runtime')!;
+    try {
+      Object.defineProperty(browser, 'runtime', { configurable: true, value: undefined });
+      expect(() => ctx.notifyInvalidated()).not.toThrow();
+      document.body.append(document.createElement('input'));
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(mocks.remove).toHaveBeenCalledOnce();
+      expect(mocks.loadSettings).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(browser, 'runtime', descriptor);
+    }
+  });
+
+  it('tolerates an event object that rejects cleanup after an extension reload', () => {
+    const ctx = startContent();
+    vi.spyOn(browser.runtime.onMessage, 'removeListener').mockImplementation(() => {
+      throw new Error('Extension context invalidated.');
+    });
+    expect(() => ctx.notifyInvalidated()).not.toThrow();
+    expect(mocks.remove).toHaveBeenCalledOnce();
+  });
+
   it('returns the fill report when the panel closes during a fill', async () => {
     mocks.loadSettings.mockResolvedValue({ showOnPage: true, watchForNewFields: true });
     const report = { ats: 'Workday', filled: 1, needsReview: 0, fields: [], notes: [] };

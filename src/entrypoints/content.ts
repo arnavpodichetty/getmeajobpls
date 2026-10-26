@@ -25,6 +25,9 @@ export default defineContentScript({
   // Start once the HTML is parsed, not after every image and script has loaded.
   runAt: 'document_end',
   main(ctx) {
+    // Old scripts can outlive an extension reload. Don't create observers or
+    // UI if Chrome has already detached the messaging API.
+    if (ctx.isInvalid || !browser.runtime?.onMessage) return;
     const adapter = () => detectAdapter(new URL(location.href), document);
     let lastContext: FillContext | null = null;
     let filling = false;
@@ -257,6 +260,15 @@ export default defineContentScript({
       return true; // keep the channel open for the async response
     };
     browser.runtime.onMessage.addListener(listener);
-    ctx.onInvalidated(() => browser.runtime.onMessage.removeListener(listener));
+    ctx.onInvalidated(() => {
+      try {
+        // WXT invokes cleanup when runtime disappears; reading .onMessage on
+        // that missing runtime would itself throw during invalidation.
+        browser.runtime?.onMessage?.removeListener(listener);
+      } catch (err) {
+        // Chrome may retain the event object but reject calls on the old API.
+        if (!/extension context invalidated/i.test(err instanceof Error ? err.message : String(err))) throw err;
+      }
+    });
   },
 });
