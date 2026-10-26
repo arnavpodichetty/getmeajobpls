@@ -66,7 +66,12 @@ function companyFromUrl(url: URL): string {
   if (/greenhouse\.io$/.test(host)) slug = url.searchParams.get('for') ?? (parts[0] === 'embed' ? '' : parts[0] ?? '');
   else if (/(?:^|\.)lever\.co$/.test(host) || host === 'jobs.ashbyhq.com' || host === 'apply.workable.com' || host === 'jobs.smartrecruiters.com') slug = parts[0] ?? '';
   if (!slug || slug.length < 3) return '';
-  return decodeURIComponent(slug).replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  try {
+    slug = decodeURIComponent(slug);
+  } catch {
+    // A stray "%" in the path; use the slug as is.
+  }
+  return slug.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 const clean = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, ' ').trim();

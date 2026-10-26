@@ -55,7 +55,13 @@ export function postingSource(pageUrl: string): PostingSource | null {
     return null;
   }
   const host = u.hostname.toLowerCase();
-  const parts = u.pathname.split('/').filter(Boolean).map(decodeURIComponent);
+  const parts = u.pathname.split('/').filter(Boolean).map((p) => {
+    try {
+      return decodeURIComponent(p);
+    } catch {
+      return p; // a stray "%" in the path
+    }
+  });
   const enc = (s: string) => encodeURIComponent(s);
 
   // Workday: /[locale/]<site>/job/<location>/<slug>[/apply/...] or /<site>/details/<slug>;

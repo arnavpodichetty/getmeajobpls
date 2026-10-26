@@ -7,9 +7,23 @@
 - **Exact job dates:** work experience Start and End take an optional day. Forms that ask for the full date (Workday, SuccessFactors date pickers) get it; most forms still get the month and year. When a form asks for the day and you haven't added one, the 1st is used and flagged for you.
 
 ### Fixes
+- **Fill startup:** load profile, settings and document files in parallel; skip the resume label scan on pages without an upload. Deep lookups stop at their first match.
+- **Separate radio questions:** radios with the same name in different forms or shadow roots are no longer combined.
+- **Saved radio answers:** save the visible answer instead of the site's internal option ID, so it can be reused on another form.
+- **Upload selection:** a lone portfolio, writing sample or other document upload is no longer used as a fallback resume field.
+- **Skills dropdowns:** ignored selections are reported as skipped after the retry instead of counted as added.
+- **Panel and highlights:** closing the panel during a fill no longer loses its report or restarts watching; a fresh fill also clears old highlights inside shadow roots.
 - **Faster Workday My Experience:** jobs, schools and websites fill about 2–3x faster. Dates move on as soon as Workday shows the value, instead of always waiting, and every value is still checked.
 - **"You must be currently pursuing a degree…":** Workday lists Bachelors / Masters / Doctorate as the choices, and it was flagged for review. It picks your "Degree you are pursuing" now (Standard answers, Bachelor's by default).
 - **Resume in a transcript box:** on Workday, the resume could go into an "upload your transcript" question. It never does now.
+- **Race / ethnicity choices:** the South Asian, East Asian and Southeast Asian options are gone from Options → EEO. A saved subgroup becomes Asian.
+- **Fill on pages with an embedded form:** if one frame reloaded during a fill, the whole fill showed an error. The other frames' results show now.
+- **Popup "Save my answers":** errors weren't shown, and a double click could save twice.
+- **Fill my profile:** clicking Apply twice added new entries twice.
+- **Options sidebar:** stopped highlighting the current section after Fill my profile or a backup import.
+- **Resumes:** "Uploaded" no longer covers the "not a PDF" message when nothing was uploaded, and Replace file works when you pick the same file again.
+- **Tailoring on some job URLs:** a stray "%" in the link made tailoring fail.
+- **Capture page:** text typed into some rich-text boxes could end up in the snapshot. It's left out now.
 
 ## 1.3.1 (2026-10-22)
 

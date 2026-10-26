@@ -122,14 +122,26 @@ export async function tabState(tabId: number): Promise<TabState> {
   };
 }
 
+/**
+ * Every frame's answer. A frame that went away mid-request (an embedded form that
+ * reloaded) is left out instead of failing the others; only all failing is an error.
+ */
+export async function fromFrames<T>(requests: Promise<T>[]): Promise<T[]> {
+  const results = await Promise.allSettled(requests);
+  const ok = results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
+  const failed = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
+  if (failed && !ok.length) throw failed.reason;
+  return ok;
+}
+
 export async function fillTab(tabId: number, resumeId: string | null, skillSetId: string | null = null): Promise<FillReport[]> {
   const targets = targetFrames(await detectFrames(tabId));
-  return Promise.all(targets.map((f) => sendToFrame(tabId, f.frameId, { type: 'fill', resumeId, skillSetId })));
+  return fromFrames(targets.map((f) => sendToFrame(tabId, f.frameId, { type: 'fill', resumeId, skillSetId })));
 }
 
 export async function saveAnswersFromTab(tabId: number): Promise<{ added: number; updated: number }> {
   const targets = targetFrames(await detectFrames(tabId));
-  const found = (await Promise.all(targets.map((f) => sendToFrame(tabId, f.frameId, { type: 'collectAnswers' })))).flat();
+  const found = (await fromFrames(targets.map((f) => sendToFrame(tabId, f.frameId, { type: 'collectAnswers' })))).flat();
   if (!found.length) return { added: 0, updated: 0 };
   const profile = await loadProfile();
   const result = mergeSavedAnswers(profile.savedAnswers, found, uid);

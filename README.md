@@ -2,6 +2,8 @@
 
 A Chrome extension that autofills job applications, built to fill them faster and more completely than tools like Simplify and Jobright. Open an application on Workday, Greenhouse, Lever or another site, click **Fill page**, and it uploads your resume and answers the form from your profile. It never clicks Submit.
 
+**[Get it on the Chrome Web Store](https://chromewebstore.google.com/detail/getmeajobpls-%E2%80%94-autofill/mehdobcbdbllkjnolbpcgdfojdccjdhf)**
+
 What sets it apart:
 
 - **Fills the parts that usually take longest**: Workday's multi-step forms, searchable dropdowns, forms embedded in a company's careers site, and custom questions you've answered before.
@@ -36,6 +38,10 @@ What sets it apart:
 | Any other site | Generic, matches fields by their labels |
 
 ## Install
+
+**[Add it from the Chrome Web Store](https://chromewebstore.google.com/detail/getmeajobpls-%E2%80%94-autofill/mehdobcbdbllkjnolbpcgdfojdccjdhf)**, then fill in your profile and upload your resumes on the options page.
+
+### Build from source
 
 Requires Node 20+ and Chrome (or another Chromium browser).
 

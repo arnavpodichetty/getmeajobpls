@@ -4,7 +4,7 @@ import { uid } from '../../lib/defaults';
 import { $, h } from '../../lib/dom';
 import { mergeSavedAnswers } from '../../lib/engine/capture';
 import { sendToFrame } from '../../lib/messages';
-import { describe, detectFrames, pageContext, targetFrames } from '../../lib/orchestrate';
+import { describe, detectFrames, fromFrames, pageContext, targetFrames } from '../../lib/orchestrate';
 import { listResumes } from '../../lib/resumeDb';
 import { pickResume, pickSkillSetFor, skillSetForResume } from '../../lib/resumeRules';
 import { findTailored, jobLabel } from '../../lib/tailorMatch';
@@ -146,7 +146,7 @@ async function init(): Promise<void> {
     try {
       const resumeId = resumeSel.value || null;
       const skillSetId = skillSel.value || null;
-      const reports = await Promise.all(targets.map((f) => sendToFrame(tabId, f.frameId, { type: 'fill', resumeId, skillSetId })));
+      const reports = await fromFrames(targets.map((f) => sendToFrame(tabId, f.frameId, { type: 'fill', resumeId, skillSetId })));
       renderSummary(reports);
     } catch (err) {
       showError(`Fill failed: ${err instanceof Error ? err.message : err}`);
@@ -157,15 +157,22 @@ async function init(): Promise<void> {
   });
 
   saveBtn.addEventListener('click', async () => {
-    const found = (await Promise.all(targets.map((f) => sendToFrame(tabId, f.frameId, { type: 'collectAnswers' })))).flat();
-    if (!found.length) {
-      showOk('No new answers to save on this page.');
-      return;
+    saveBtn.disabled = true;
+    try {
+      const found = (await fromFrames(targets.map((f) => sendToFrame(tabId, f.frameId, { type: 'collectAnswers' })))).flat();
+      if (!found.length) {
+        showOk('No new answers to save on this page.');
+        return;
+      }
+      const profile = await loadProfile();
+      const { added, updated } = mergeSavedAnswers(profile.savedAnswers, found, uid);
+      await saveProfile(profile);
+      showOk(`Saved ${added} new answer${added === 1 ? '' : 's'}${updated ? `, updated ${updated}` : ''}. They'll fill matching questions next time.`);
+    } catch (err) {
+      showError(`Couldn't save answers: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      saveBtn.disabled = false;
     }
-    const profile = await loadProfile();
-    const { added, updated } = mergeSavedAnswers(profile.savedAnswers, found, uid);
-    await saveProfile(profile);
-    showOk(`Saved ${added} new answer${added === 1 ? '' : 's'}${updated ? `, updated ${updated}` : ''}. They'll fill matching questions next time.`);
   });
 
   captureBtn.addEventListener('click', async () => {

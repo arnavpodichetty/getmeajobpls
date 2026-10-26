@@ -42,6 +42,7 @@ export async function resumeSection(): Promise<HTMLElement> {
   });
 
   async function addFiles(files: File[]) {
+    let added = 0;
     for (const file of files) {
       if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
         showToast(`${file.name} is not a PDF`, true);
@@ -64,9 +65,11 @@ export async function resumeSection(): Promise<HTMLElement> {
         blob: file,
       });
       resumes = await listResumes();
+      added++;
     }
     draw();
-    showToast('Uploaded');
+    // Don't cover a "not a PDF" error with "Uploaded" when nothing was.
+    if (added) showToast('Uploaded');
   }
 
   async function replaceFile(meta: ResumeMeta, file: File) {
@@ -97,8 +100,11 @@ export async function resumeSection(): Promise<HTMLElement> {
       accept: 'application/pdf,.pdf',
       hidden: true,
       onChange: (e: Event) => {
-        const f = (e.target as HTMLInputElement).files?.[0];
-        if (f) replaceFile(meta, f);
+        const input = e.target as HTMLInputElement;
+        const f = input.files?.[0];
+        // Cleared so picking the same file again still counts as a change.
+        input.value = '';
+        if (f) void replaceFile(meta, f);
       },
     });
     return h(

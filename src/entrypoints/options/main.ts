@@ -34,9 +34,6 @@ const EEO = {
     'White',
     'Black or African American',
     'Asian',
-    'South Asian',
-    'East Asian',
-    'Southeast Asian',
     'Native Hawaiian or Other Pacific Islander',
     'American Indian or Alaska Native',
     'Two or More Races',
@@ -585,15 +582,22 @@ export async function renderAll(): Promise<void> {
 
 /** Highlight the sidebar link for the section at the top of the screen. */
 function trackActiveSection(): void {
-  const links = [...document.querySelectorAll<HTMLAnchorElement>('nav a[data-section]')];
+  // Looked up each time: the sidebar is rebuilt when the page re-renders (after Fill my profile or a backup import).
+  const navLinks = () => [...document.querySelectorAll<HTMLAnchorElement>('nav a[data-section]')];
   let frame = 0;
   // A section you click stays highlighted until you scroll yourself. Sections near
   // the end can't scroll to the top, so position alone would highlight the last one.
   let clicked: string | null = null;
-  for (const a of links) a.addEventListener('click', () => { clicked = a.dataset.section ?? null; update(); });
+  $('#nav').addEventListener('click', (e) => {
+    const a = (e.target as Element).closest<HTMLAnchorElement>('a[data-section]');
+    if (!a) return;
+    clicked = a.dataset.section ?? null;
+    update();
+  });
   for (const type of ['wheel', 'touchmove', 'keydown'] as const) window.addEventListener(type, () => (clicked = null), { passive: true });
   const update = () => {
     frame = 0;
+    const links = navLinks();
     if (clicked) {
       for (const a of links) a.classList.toggle('active', a.dataset.section === clicked);
       return;

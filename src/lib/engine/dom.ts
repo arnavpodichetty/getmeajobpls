@@ -25,7 +25,17 @@ export function queryAllDeep<T extends Element = HTMLElement>(selector: string, 
 }
 
 export function queryDeep<T extends Element = HTMLElement>(selector: string, root: ParentNode = document): T | null {
-  return queryAllDeep<T>(selector, root)[0] ?? null;
+  // Stop at the first match rather than materializing and testing the entire
+  // page on every dropdown poll. Keep the same order as composedElements.
+  const visit = (node: ParentNode): T | null => {
+    for (let child = node.firstElementChild; child; child = child.nextElementSibling) {
+      if (child.matches(selector)) return child as T;
+      const found = (child.shadowRoot && visit(child.shadowRoot)) || visit(child);
+      if (found) return found;
+    }
+    return null;
+  };
+  return (root instanceof Element && root.shadowRoot && visit(root.shadowRoot)) || visit(root);
 }
 
 /** getElementById that works inside the element's own (shadow) root. */

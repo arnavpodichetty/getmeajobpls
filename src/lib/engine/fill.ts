@@ -21,7 +21,7 @@ import {
   monthName,
   type Outcome,
 } from './controls';
-import { closestDeep, composedElements, queryAllDeep, sleep, waitForStable } from './dom';
+import { closestDeep, composedElements, queryAllDeep, queryDeep, sleep, waitForStable } from './dom';
 import { labelFor, optionText, textOfIds } from './labels';
 import { currentValue, scanFields, type Field } from './scan';
 import { DECLINE, isBareFieldHead, isPlaceholderOption, normalize } from './text';
@@ -74,7 +74,7 @@ const HIGHLIGHT_ATTR = 'data-getmeajobpls';
 const COLORS = { filled: '#1f9d63', review: '#d97706' };
 
 export function clearHighlights(): void {
-  document.querySelectorAll<HTMLElement>(`[${HIGHLIGHT_ATTR}]`).forEach((el) => {
+  queryAllDeep<HTMLElement>(`[${HIGHLIGHT_ATTR}]`).forEach((el) => {
     el.style.removeProperty('outline');
     el.style.removeProperty('outline-offset');
     el.removeAttribute(HIGHLIGHT_ATTR);
@@ -211,12 +211,12 @@ export function findResumeTarget(fields: Field[]): HTMLElement | null {
     if (score > (best?.score ?? -1)) best = { el: f.el, score };
   }
   if (best && best.score >= 0) return best.el;
-  return files.length === 1 && !/cover/i.test(files[0].label + files[0].hints) ? files[0].el : null;
+  return null;
 }
 
 async function attachTranscripts(ctx: FillContext, root: ParentNode, results: FieldResult[], notes: string[], onFilled: () => void): Promise<void> {
   // Cheap check first: most steps have no upload, and a full scan reads every label.
-  if (!queryAllDeep('input[type=file]', root).length) return;
+  if (!queryDeep('input[type=file]', root)) return;
   const fields = scanFields(root).filter((f) => f.kind === 'file' && !handled.has(f.el) && isTranscriptUpload(`${f.label} ${f.hints}`));
   for (const field of fields) {
     handled.add(field.el);
@@ -287,7 +287,9 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
   // 1. Resume first: many ATSs parse it and overwrite fields afterwards.
   // Only look for the upload when there's a resume this page hasn't had yet; that
   // spares a full scan on every pass that watches a wizard for new steps.
-  let resumeEl = ctx.resume && resumeAttachedOn !== pageKey() ? opts.resumeTarget?.() ?? findResumeTarget(scanFields(root)) : null;
+  let resumeEl = ctx.resume && resumeAttachedOn !== pageKey()
+    ? opts.resumeTarget?.() ?? (queryDeep('input[type=file]', root) ? findResumeTarget(scanFields(root)) : null)
+    : null;
   if (resumeEl && asksForTranscript(resumeEl)) resumeEl = null;
   if (ctx.resume && resumeEl && !handled.has(resumeEl) && resumeAttachedOn !== pageKey()) {
     handled.add(resumeEl);

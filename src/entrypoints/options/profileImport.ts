@@ -107,6 +107,9 @@ export function importSection(opts: {
     const groups = [...new Set(items.map((i) => i.group))];
     const apply = h('button', {
       onClick: async () => {
+        // A second click would add the new entries twice.
+        if (apply.disabled) return;
+        apply.disabled = true;
         const profile = opts.profile();
         const n = applyImport(profile, items, chosen);
         await saveProfile(profile);

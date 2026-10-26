@@ -60,14 +60,15 @@ export default defineContentScript({
     }
 
     async function buildContext(resumeId: string | null, skillSetId: string | null): Promise<FillContext> {
-      const [profile, settings] = await Promise.all([loadProfile(), loadSettings()]);
       const load = async (id: string | null): Promise<ResumeFile | null> => {
         const payload = id ? await requestResumeFile(id) : null;
         if (!payload) return null;
         const blob = base64ToBlob(payload.base64, payload.meta.mimeType);
         return { meta: payload.meta, file: new File([blob], payload.meta.fileName, { type: payload.meta.mimeType }) };
       };
-      const [resume, transcript] = await Promise.all([load(resumeId), load(TRANSCRIPT_ID).catch(() => null)]);
+      const [profile, settings, resume, transcript] = await Promise.all([
+        loadProfile(), loadSettings(), load(resumeId), load(TRANSCRIPT_ID).catch(() => null),
+      ]);
       const skills = profile.skillSets.find((s) => s.id === skillSetId)?.skills;
       return { profile, resume, transcript, settings, skills };
     }
@@ -76,9 +77,10 @@ export default defineContentScript({
       if (filling) return { ats: adapter().name, filled: 0, needsReview: 0, fields: [], notes: ['A fill is already running on this page.'] };
       filling = true;
       try {
-        lastContext = await buildContext(resumeId, skillSetId);
-        const report = await adapter().fill(lastContext);
-        if (lastContext.settings.watchForNewFields) startWatching();
+        const fillContext = await buildContext(resumeId, skillSetId);
+        lastContext = fillContext;
+        const report = await adapter().fill(fillContext);
+        if (lastContext === fillContext && fillContext.settings.watchForNewFields) startWatching();
         return report;
       } finally {
         filling = false;

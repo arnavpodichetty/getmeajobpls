@@ -4,6 +4,7 @@ import type { Profile, SavedAnswer } from '../types';
 import { todayISO } from '../clock';
 import { resolveAnswer } from './answers';
 import { scanFields, currentValue } from './scan';
+import { optionText } from './labels';
 import { questionSimilarity } from './text';
 
 const DROP = new Set(['script', 'style', 'link', 'iframe', 'img', 'svg', 'noscript', 'video', 'picture', 'meta', 'canvas']);
@@ -24,7 +25,7 @@ export function captureForm(): string {
     if (node.nodeType === Node.TEXT_NODE) {
       const parent = node.parentElement;
       // Text inside a textarea or a rich-text editor is your answer, not page structure.
-      if (parent?.closest('textarea, [contenteditable="true"]')) return '';
+      if (parent?.closest('textarea, [contenteditable]:not([contenteditable="false"])')) return '';
       return escapeText(node.textContent ?? '');
     }
     if (node.nodeType !== Node.ELEMENT_NODE) return '';
@@ -50,7 +51,10 @@ export function collectAnswers(profile: Profile): { question: string; answer: st
   const out: { question: string; answer: string }[] = [];
   for (const field of scanFields()) {
     if (field.kind === 'file' || field.kind === 'checkbox' || !field.label) continue;
-    const answer = currentValue(field);
+    // Radio values are often opaque site IDs (or the default "on"). Save the
+    // visible answer so it can be matched on another application's form.
+    const selectedRadio = field.kind === 'radio' ? field.members.find((m) => (m as HTMLInputElement).checked) : null;
+    const answer = field.kind === 'radio' ? (selectedRadio ? optionText(selectedRadio) : '') : currentValue(field);
     if (!answer || answer.length > 5000) continue;
     const known = resolveAnswer(field.label, '', null, { profile, skills: profile.skills }, field.kind !== 'text' && field.kind !== 'textarea');
     if (known.matchedKey && known.matchedKey !== 'savedAnswer') continue; // already a profile field

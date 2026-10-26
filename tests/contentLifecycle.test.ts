@@ -8,18 +8,23 @@ const mocks = vi.hoisted(() => ({
   sendPanel: vi.fn(),
   show: vi.fn(),
   remove: vi.fn(),
+  fill: vi.fn(),
+  loadProfile: vi.fn(),
 }));
 
-vi.mock('../src/lib/storage', () => ({ loadSettings: mocks.loadSettings, loadProfile: vi.fn() }));
+vi.mock('../src/lib/storage', () => ({ loadSettings: mocks.loadSettings, loadProfile: mocks.loadProfile }));
 vi.mock('../src/lib/messages', () => ({ sendPanel: mocks.sendPanel, requestResumeFile: vi.fn() }));
-vi.mock('../src/adapters', () => ({ detectAdapter: () => ({ id: 'workday', name: 'Workday' }) }));
+vi.mock('../src/adapters', () => ({ detectAdapter: () => ({ id: 'workday', name: 'Workday', fill: mocks.fill }) }));
 vi.mock('../src/lib/panel', () => ({
   FillPanel: class {
+    constructor(onClose: () => void) { closePanel = onClose; }
     shown = false;
     show = mocks.show;
     remove = mocks.remove;
   },
 }));
+
+let closePanel: () => void;
 
 function startContent() {
   let invalid = false;
@@ -51,6 +56,7 @@ beforeEach(() => {
   document.body.innerHTML = '';
   mocks.loadSettings.mockResolvedValue({ showOnPage: true });
   mocks.sendPanel.mockResolvedValue({ kind: 'state', isApplication: true });
+  mocks.loadProfile.mockResolvedValue({ skillSets: [] });
 });
 
 afterEach(() => {
@@ -59,6 +65,24 @@ afterEach(() => {
 });
 
 describe('content script reload lifecycle', () => {
+  it('returns the fill report when the panel closes during a fill', async () => {
+    mocks.loadSettings.mockResolvedValue({ showOnPage: true, watchForNewFields: true });
+    const report = { ats: 'Workday', filled: 1, needsReview: 0, fields: [], notes: [] };
+    let finish!: (value: unknown) => void;
+    mocks.fill.mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    const ctx = startContent();
+    const response = fakeBrowser.runtime.sendMessage({ type: 'fill', resumeId: null });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(mocks.fill).toHaveBeenCalledOnce();
+    closePanel();
+    finish(report);
+    expect(await response).toEqual(report);
+    document.body.append(document.createElement('input'));
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(mocks.fill).toHaveBeenCalledOnce();
+    ctx.notifyInvalidated();
+  });
+
   it('cleans up an invalid-context rejection from the settings check', async () => {
     mocks.loadSettings.mockRejectedValue(new Error('Extension context invalidated.'));
     const ctx = startContent();

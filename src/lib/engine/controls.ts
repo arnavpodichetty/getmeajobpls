@@ -414,8 +414,9 @@ function clickTarget(option: HTMLElement): HTMLElement {
 
 /** Has a pick registered? Workday shows selected items as pills; other widgets flip aria-selected/checked. */
 function looksSelected(el: HTMLElement, option: HTMLElement, value: string): boolean {
-  const container = el.closest('[data-automation-id^="formField"], [data-automation-id="multiSelectContainer"]') ?? el.parentElement;
-  const pills = container?.querySelectorAll('[data-automation-id="selectedItem"], [data-automation-id="selectedItemList"] li, [class*="chip" i], [class*="tag" i], [class*="pill" i]') ?? [];
+  if (splSelectedValues(el).some((selected) => normalize(selected) === normalize(value))) return true;
+  const container = reactSelectControl(el) ?? el.closest('[data-automation-id^="formField"], [data-automation-id="multiSelectContainer"]') ?? el.parentElement;
+  const pills = container?.querySelectorAll('[data-automation-id="selectedItem"], [data-automation-id="selectedItemList"] li, [class*="chip" i], [class*="tag" i], [class*="pill" i], [class*="multi-value" i], [class*="multiValue" i]') ?? [];
   const wanted = value.toLowerCase();
   if ([...pills].some((p) => (p.textContent ?? '').toLowerCase().includes(wanted))) return true;
   if (option.isConnected && (option.getAttribute('aria-selected') === 'true' || option.getAttribute('aria-checked') === 'true')) return true;
@@ -452,7 +453,8 @@ export async function fillMultiCombobox(
         else pressKey(input, 'Enter');
         await sleep(250);
       }
-      added.push(value);
+      if (looksSelected(el, pick.option, optionText)) added.push(value);
+      else skipped.push(value);
     } else {
       skipped.push(value);
     }

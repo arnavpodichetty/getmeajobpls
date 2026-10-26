@@ -111,7 +111,8 @@ export function scanFields(root: ParentNode = document): Field[] {
   const isMenuSearch = (el: HTMLElement) =>
     (menuIds.has(el.getAttribute('aria-controls')) && el instanceof HTMLInputElement) ||
     !!el.closest('[role="listbox"], [role="menu"], .iti__dropdown-content');
-  const radioGroups = new Map<unknown, HTMLInputElement[]>();
+  // Native radio groups share a name only within the same form and DOM tree.
+  const radioGroups = new Map<Node, Map<string | Element, HTMLInputElement[]>>();
   const checkboxGroups = new Map<Element, HTMLInputElement[]>();
 
   for (const el of controls) {
@@ -130,9 +131,12 @@ export function scanFields(root: ParentNode = document): Field[] {
       if (type === 'radio') {
         if (!choiceVisible(el)) continue;
         const group = closestDeep(el, '[role="radiogroup"], fieldset');
-        const key: unknown = el.name ? `name:${el.name}` : (group ?? el);
-        if (!radioGroups.has(key)) radioGroups.set(key, []);
-        radioGroups.get(key)!.push(el);
+        const scope = el.form ?? el.getRootNode();
+        const key = el.name || group || el;
+        let groups = radioGroups.get(scope);
+        if (!groups) radioGroups.set(scope, groups = new Map());
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key)!.push(el);
         continue;
       }
       if (type === 'checkbox') {
@@ -173,7 +177,9 @@ export function scanFields(root: ParentNode = document): Field[] {
     }
   }
 
-  for (const members of radioGroups.values()) push('radio', members[0], members, groupLabelFor(members));
+  for (const groups of radioGroups.values()) {
+    for (const members of groups.values()) push('radio', members[0], members, groupLabelFor(members));
+  }
   for (const members of checkboxGroups.values()) push('checkboxes', members[0], members, groupLabelFor(members));
 
   // Rendered order (shadow roots included) so filling goes top to bottom like a person would.

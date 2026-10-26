@@ -215,7 +215,12 @@ export function normalizeProfile(raw: unknown): Profile {
       typeof l === 'string' ? { ...emptyLanguage(), language: l } : { ...emptyLanguage(), ...(l as Partial<Language>) },
     ),
     answers: { ...base.answers, ...p.answers, locationPreferences: list(p.answers?.locationPreferences ?? base.answers.locationPreferences), referralSourceFallbacks: list(p.answers?.referralSourceFallbacks) },
-    eeo: { ...base.eeo, ...p.eeo },
+    eeo: (() => {
+      const eeo = { ...base.eeo, ...p.eeo };
+      // Options once offered Asian subgroups; the dropdown is just "Asian" now.
+      if (/^(?:south|east|southeast) asian$/i.test(String(eeo.raceEthnicity ?? '').trim())) eeo.raceEthnicity = 'Asian';
+      return eeo;
+    })(),
     savedAnswers: (p.savedAnswers ?? []).map((a) => ({ ...emptySavedAnswer(), ...a })),
   };
 }
