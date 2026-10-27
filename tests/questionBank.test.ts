@@ -64,6 +64,8 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Sponsorship required?', 'No'],
     ['Will you require sponsorship? (If you can work without sponsorship, select No)', 'No'],
     ['Will you need H-1B sponsorship?', 'No'],
+    ['Will you require employer support to obtain or maintain authorization to work in that country? e.g. (work permit)*', 'No'],
+    ['Will you need company assistance to obtain a work permit or visa?', 'No'],
   ],
   'authorized without sponsorship': [
     ['Are you authorized (or eligible) to work lawfully in the country where this position is based, without requiring sponsorship or other immigration-related legal support from your employer, now and in the future?', 'Yes'],
@@ -335,6 +337,10 @@ const CHOICES: [string, string[], string | null, boolean][] = [
   ['Do you hold an active U.S. Government Security Clearance?', ['Yes - Secret', 'Yes - Top Secret', 'No, I do not hold an active U.S. Government Security Clearance.'], 'No, I do not hold an active U.S. Government Security Clearance.', true],
   ['Security clearance', ['None', 'Secret', 'Top Secret', 'TS/SCI'], 'None', true],
   ['Security clearance', ['Yes', 'No'], 'No', true],
+  ['Do you currently possess an active security clearance?*', ['Yes, I possess an active security clearance.', 'No, I do not possess an active security clearance.'], 'No, I do not possess an active security clearance.', true],
+  // "Sponsored" here is the clearance's agency, not visa sponsorship.
+  ['If you currently possess an active security clearance, which agency sponsored the clearance?*', ['Department of Defense', 'Department of Energy', 'Other', 'I do not possess an active security clearance.'], 'I do not possess an active security clearance.', true],
+  ['Which agency granted your security clearance?', ['Department of Defense', 'Department of State', 'Not applicable'], 'Not applicable', true],
   ['Are you currently enrolled in a four-year accredited college or university?', ['Full-time', 'Part-time', 'Not attending'], 'Full-time', true],
   ['Are you currently enrolled in a four-year accredited college or university?', ['Yes', 'No'], 'Yes', true],
   ['Are you currently enrolled full-time?', ['Yes', 'No'], 'Yes', true],

@@ -8,6 +8,9 @@
 
 ### Fixes
 - **Export-control country lists:** "Have you held citizenship in any of the countries listed above?" was answered Yes (as if it asked about U.S. citizenship). It answers No when your citizenship isn't on the list, and the "If yes, please specify which country" box gets N/A.
+- **Clearance agency follow-up:** "Which agency sponsored the clearance?" was read as a visa-sponsorship question. It has its own rule now and picks "I do not possess an active security clearance" (or N/A) when your profile has no clearance.
+- **"Will you require employer support to obtain or maintain authorization to work?":** it was read as "are you authorized to work?" and answered Yes. It's a sponsorship question now and uses your sponsorship answer (No by default).
+- **Links without "https://":** Oracle pre-fills Link 1 / Link 2 from your resume text (e.g. "example.com"), then rejects them. A box holding one of your profile links without "https://" gets the full link from your profile.
 - **Errors after an extension reload:** old content scripts now stop safely when Chrome removes the runtime API, including during message-listener cleanup, instead of throwing "Cannot read properties of undefined (reading 'onMessage')".
 - **Fill startup:** load profile, settings and document files in parallel; skip the resume label scan on pages without an upload. Deep lookups stop at their first match.
 - **Separate radio questions:** radios with the same name in different forms or shadow roots are no longer combined.

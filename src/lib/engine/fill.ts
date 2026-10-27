@@ -129,6 +129,14 @@ function optionsOf(field: Field): string[] {
 
 const US_CITIZEN_OPTION = /\b(?:u s|us|united states|american) citizen/;
 
+/** Your profile link that `value` is, minus its "https://" (and "www."), or null. */
+export function fullProfileLink(value: string, links: Record<string, string>): string | null {
+  const bare = (s: string) => s.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
+  const shown = value.trim();
+  if (!shown || /^https?:\/\//i.test(shown)) return null;
+  return Object.values(links).find((link) => /^https?:\/\//i.test(link.trim()) && bare(link) === bare(shown))?.trim() ?? null;
+}
+
 /** A visible option saying you're a US citizen, when your profile says you are. */
 function usCitizenOption(field: Field, c: AnswerContext): Answer | null {
   if (!/^(united states|usa|us|u s|united states of america)$/.test(normalize(c.profile.answers.citizenship))) return null;
@@ -352,6 +360,10 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
       }
       const existing = currentValue(field);
       if (answer?.value === LEAVE_EMPTY) continue; // a follow-up that doesn't apply
+      // The site pre-filled one of your links without "https://" (Oracle copies it from the
+      // resume text, then rejects it). Put back the full link from your profile.
+      const fullLink = field.kind === 'text' ? fullProfileLink(existing, answers.profile.links) : null;
+      if (fullLink) answer = { key: 'linkWithScheme', value: fullLink, confidence: 'high' };
 
       if (!answer) {
         if (existing) continue;
@@ -378,7 +390,7 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
         && normalize(existing).includes(normalize(asText(answer.value)))
         && /\b(?:b a|b s|b sc|m a|m s|bachelor|master|degree|minor)\b/.test(normalize(existing));
       const dateInEducationField = ['gpa', 'degree'].includes(answer.key) && /^\d{4}(?:-\d{2}){0,2}$/.test(existing);
-      if (existing && !ctx.settings.overwriteExisting && !bareFieldHead && !parsedDegreeInMajor && !dateInEducationField) {
+      if (existing && !ctx.settings.overwriteExisting && !fullLink && !bareFieldHead && !parsedDegreeInMajor && !dateInEducationField) {
         results.push({ label: displayLabel(field), status: 'skipped', reason: 'Already has a value.' });
         continue;
       }

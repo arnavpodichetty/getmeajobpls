@@ -148,6 +148,9 @@ const STATE_NAMES = [...Object.values(US_STATES), ...Object.keys(US_STATES)].joi
 // "Are you a resident of California?" / "Do you live in CA?" / "Are you a California resident?"
 const STATE_RESIDENCY = new RegExp(`\\b(?:resident (?:of|in)|(?:reside|residing|live|living) in) (?:the )?(?:state of )?(${STATE_NAMES})\\b|\\bare you an? (${STATE_NAMES}) resident\\b`);
 
+/** Your profile says you hold no clearance. */
+const hasNoClearance = (c: AnswerContext) => /^(none|no|n\/a|na|not applicable)$/i.test(c.profile.answers.securityClearance.trim());
+
 /** A rule's answer for "leave this box empty" (don't fill it, don't flag it). */
 export const LEAVE_EMPTY = '__leave_empty__';
 
@@ -155,6 +158,15 @@ export const LEAVE_EMPTY = '__leave_empty__';
 export const LANGUAGE_LEVEL_TIERS = [['Native', 'Native speaker'], ['Fluent']];
 
 const DEFS: Def[] = [
+  // "Which agency sponsored your clearance?" follows a clearance question; it's not visa sponsorship.
+  {
+    key: 'clearanceDetails',
+    re: /\bclearances?\b.{0,80}\b(?:agency|agencies|sponsor\w*|issued|granted|adjudicat\w*)\b|\b(?:agency|agencies|sponsor\w*|issued|granted)\b.{0,80}\bclearances?\b/,
+    value: (c) => (hasNoClearance(c) ? 'N/A' : null),
+    tiers: (c) => (hasNoClearance(c)
+      ? [['I do not possess an active security clearance', 'I do not have a security clearance', 'I do not have a clearance', 'No clearance', 'None', 'Not applicable', 'N/A'], ['No']]
+      : []),
+  },
   // "If yes, please specify which country" after a citizenship question you answered No.
   {
     key: 'otherCountryDetails',
@@ -251,7 +263,8 @@ const DEFS: Def[] = [
     value: (c) => (c.profile.answers.citizenship ? (isUS(c.profile.answers.citizenship) ? 'Yes' : 'No') : null),
   },
   // Sponsorship examples may mention OPT; answer the sponsorship question itself.
-  { key: 'needsSponsorship', re: /sponsor|visa (status|support)|h ?1 ?b|immigration (case|support)/, value: (c) => yesNo(c.profile.answers.needsSponsorship) },
+  // "Will you require employer support to obtain … authorization to work?" is sponsorship too.
+  { key: 'needsSponsorship', re: /sponsor|visa (status|support)|h ?1 ?b|immigration (case|support)|\b(?:require|need)\w*\b.{0,40}\b(?:support|assistance|help)\b.{0,60}\b(?:authori[sz]\w*|work permits?|visas?|immigration)\b/, value: (c) => yesNo(c.profile.answers.needsSponsorship) },
   {
     key: 'stemOptEligible',
     re: /\b(?:opt|optional practical training)\b.*(?:extension|extend|eligib|qualif)|(?:extension|extend|eligib|qualif|24 month|degree).*\b(?:opt|optional practical training)\b/,
