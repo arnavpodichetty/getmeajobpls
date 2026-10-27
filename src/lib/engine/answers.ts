@@ -155,6 +155,12 @@ export const LEAVE_EMPTY = '__leave_empty__';
 export const LANGUAGE_LEVEL_TIERS = [['Native', 'Native speaker'], ['Fluent']];
 
 const DEFS: Def[] = [
+  // "If yes, please specify which country" after a citizenship question you answered No.
+  {
+    key: 'otherCountryDetails',
+    re: /^if (?:so|yes)\b.{0,60}\b(?:which|what|specify|list|name|indicate)\b.{0,40}\b(?:country|countries|citizenships?|nationalit(?:y|ies))\b/,
+    value: (c) => (c.profile.answers.citizenship ? 'N/A' : null),
+  },
   // Follow-ups that only apply after a "Yes": "If so, please provide the employee's name",
   // "If related, please provide name". With nothing to report they stay empty.
   {
@@ -365,6 +371,19 @@ const DEFS: Def[] = [
     re: /are you a resident of (?:mainland china|any european country|the united kingdom|china|canada|japan|south korea)/,
     choiceOnly: true,
     value: (c) => isUS(c.profile.personal.country) ? 'No' : null,
+  },
+  {
+    // "Have you held citizenship in any of the countries listed above?" (export-control lists).
+    // Your one citizenship is either named in the list or it isn't. The US is never on a
+    // restricted list, so a mention like "U.S. export control laws" doesn't count.
+    key: 'listedCountriesCitizenship',
+    re: /\b(?:citizen(?:ship)?s?|nationals?|nationality|permanent resid\w*)\b.{0,60}\b(?:countries|country|nations) (?:listed|above|below|mentioned|shown)\b|\b(?:listed|above|below|following) (?:countries|nations)\b.{0,80}\b(?:citizen|national)/,
+    value: (c, label) => {
+      const citizenship = normalize(c.profile.answers.citizenship);
+      if (!citizenship) return null;
+      if (isUS(citizenship)) return /export|sanction|embargo|restrict/.test(label) || !/\b(?:united states|usa|america)\b/.test(label) ? 'No' : null;
+      return new RegExp(`\\b${citizenship.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(label) ? null : 'No';
+    },
   },
   {
     // Export-control / "U.S. person" / citizenship-status lists: pick the US-citizen option.

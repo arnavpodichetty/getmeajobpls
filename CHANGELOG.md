@@ -7,6 +7,7 @@
 - **Exact job dates:** work experience Start and End take an optional day. Forms that ask for the full date (Workday, SuccessFactors date pickers) get it; most forms still get the month and year. When a form asks for the day and you haven't added one, the 1st is used and flagged for you.
 
 ### Fixes
+- **Export-control country lists:** "Have you held citizenship in any of the countries listed above?" was answered Yes (as if it asked about U.S. citizenship). It answers No when your citizenship isn't on the list, and the "If yes, please specify which country" box gets N/A.
 - **Errors after an extension reload:** old content scripts now stop safely when Chrome removes the runtime API, including during message-listener cleanup, instead of throwing "Cannot read properties of undefined (reading 'onMessage')".
 - **Fill startup:** load profile, settings and document files in parallel; skip the resume label scan on pages without an upload. Deep lookups stop at their first match.
 - **Separate radio questions:** radios with the same name in different forms or shadow roots are no longer combined.

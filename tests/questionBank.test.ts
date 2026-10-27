@@ -253,6 +253,17 @@ const BANK: Record<string, [string, string | null][]> = {
   'other citizenships': [
     ['Are you a dual citizen?', 'No'],
     ['If you are a dual citizen, what other country are you a citizen of?', 'N/A'],
+    ['Do you currently hold permanent residence or citizenship in another country?*', 'No'],
+  ],
+  'export-control country lists': [
+    ['In line with U.S. export control laws, Acme Group may gather nationality details for specific roles to determine licensing or technology control needs. Please review the countries below and answer the subsequent questions accordingly. Afghanistan Armenia Belarus China, or other Chinese territory Cuba Iran North Korea Russia Syria Venezuela Do you now, or have you held citizenship in any of the countries listed above?*', 'No'],
+    ['Are you a citizen or national of any of the following countries: Cuba, Iran, North Korea, Syria?', 'No'],
+    ['If yes, please specify which country.*', 'N/A'],
+    ['If so, which country?', 'N/A'],
+  ],
+  'non-compete': [
+    ['Do you have a non-compete?*', 'No'],
+    ['Are you bound by a non-compete or non-solicitation agreement?', 'No'],
   ],
   'international student': [
     ['Are you an international student?', 'No'],
