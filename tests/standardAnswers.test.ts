@@ -44,7 +44,7 @@ describe('standard answers that replace saved answers', () => {
 });
 
 describe('language proficiency', () => {
-  it('tries only Native, then Fluent', async () => {
+  it('tries Native, Fluent, then the top of a scale without Fluent', async () => {
     const { bestOptionTiered } = await import('../src/lib/engine/text');
     const { profile } = context();
     const tiers = resolveAnswer('Speaking', '', null, { profile, skills: [] }, true).answer!.tiers!;
@@ -52,9 +52,12 @@ describe('language proficiency', () => {
     expect(pick(['Beginner', 'Intermediate', 'Fluent', 'Native'])).toBe('Native');
     expect(pick(['Elementary proficiency', 'Full professional proficiency', 'Native or bilingual proficiency'])).toBe('Native or bilingual proficiency');
     expect(pick(['Beginner', 'Intermediate', 'Fluent'])).toBe('Fluent');
-    expect(tiers).toEqual([['Native', 'Native speaker'], ['Fluent']]);
-    // Nothing in between: with neither offered, the question is left for review.
-    expect(pick(['Beginner', 'Intermediate', 'Advanced', 'Expert'])).toBeUndefined();
+    expect(tiers).toEqual([['Native', 'Native speaker'], ['Fluent'], ['Expert'], ['Advanced']]);
+    // No Fluent level: the top of the scale.
+    expect(pick(['Beginner', 'Intermediate', 'Advanced', 'Expert'])).toBe('Expert');
+    expect(pick(['1 - Beginner', '2 - Intermediate', '3 - Advanced'])).toBe('3 - Advanced');
+    // Nothing else stands in: Intermediate is never picked.
+    expect(pick(['Beginner', 'Intermediate'])).toBeUndefined();
   });
 });
 

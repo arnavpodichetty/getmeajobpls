@@ -154,8 +154,12 @@ const hasNoClearance = (c: AnswerContext) => /^(none|no|n\/a|na|not applicable)$
 /** A rule's answer for "leave this box empty" (don't fill it, don't flag it). */
 export const LEAVE_EMPTY = '__leave_empty__';
 
-/** Language level for a fluent speaker: Native / Native speaker, then Fluent, nothing else. */
-export const LANGUAGE_LEVEL_TIERS = [['Native', 'Native speaker'], ['Fluent']];
+/**
+ * Language level for a fluent speaker: Native / Native speaker, then Fluent.
+ * Scales without a Fluent level (Workday's "1 - Beginner ... 3 - Advanced")
+ * fall back to their top level: Expert, then Advanced.
+ */
+export const LANGUAGE_LEVEL_TIERS = [['Native', 'Native speaker'], ['Fluent'], ['Expert'], ['Advanced']];
 
 const DEFS: Def[] = [
   // "Which agency sponsored your clearance?" follows a clearance question; it's not visa sponsorship.
@@ -782,8 +786,8 @@ const DEFS: Def[] = [
       if (!language) return null;
       return language.proficiency || null;
     },
-    // A fluent speaker tries Native, then Fluent, and nothing else: every extra
-    // spelling is another search on typeahead dropdowns, which made this slow.
+    // A fluent speaker tries Native, Fluent, Expert, Advanced, and nothing else:
+    // every extra spelling is another search on typeahead dropdowns.
     tiers: (c) => {
       const language = primaryLanguage(c.profile);
       if (!language || !(language.fluent || /native|bilingual|fluent|expert/i.test(language.proficiency))) return [];

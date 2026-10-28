@@ -210,7 +210,7 @@ async function fillSchools(section: HTMLElement, schools: Education[], results: 
   if (found.length < schools.length) results.push({ label: sectionTitle(section), status: 'review', reason: `Added ${found.length} of ${schools.length} schools. Add the rest yourself.` });
 }
 
-/** Native, then Fluent, as for other language questions. */
+/** Native, Fluent, Expert, then Advanced, as for other language questions. */
 function levelTiers(lang: Language): string[][] {
   if (!(lang.fluent || /native|bilingual|fluent|expert/i.test(lang.proficiency))) return [[lang.proficiency]];
   return LANGUAGE_LEVEL_TIERS;

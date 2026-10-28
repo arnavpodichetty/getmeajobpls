@@ -63,9 +63,15 @@ describe('language skill dropdowns', () => {
     skills.forEach((skill, i) => expect(document.getElementById(`level${i}`)?.textContent, skill).toBe('Fluent'));
   });
 
-  it.each(['select', 'combobox'])('fills every skill as Fluent in %s fields', async (kind) => {
+  it.each([
+    ['select', ['Select One', 'Advanced', 'Beginner', 'Expert', 'Fluent', 'Intermediate'], 'Fluent'],
+    ['combobox', ['Select One', 'Advanced', 'Beginner', 'Expert', 'Fluent', 'Intermediate'], 'Fluent'],
+    // No Fluent level: fall back to the top of the scale.
+    ['select', ['Select One', '1 - Beginner', '2 - Intermediate', '3 - Advanced'], '3 - Advanced'],
+    ['combobox', ['Select One', '1 - Beginner', '2 - Intermediate', '3 - Advanced'], '3 - Advanced'],
+    ['select', ['Select One', 'Beginner', 'Intermediate', 'Advanced', 'Expert'], 'Expert'],
+  ] as const)('fills every skill in %s fields with %j as %s', async (kind, levels, want) => {
     const skills = ['Comprehension', 'Overall', 'Read', 'Reading', 'Speak', 'Speaking', 'Write', 'Writing', 'Listen', 'Listening', 'Understand', 'Understanding', 'Verbal', 'Written', 'Oral Proficiency'];
-    const levels = ['Select One', 'Advanced', 'Beginner', 'Expert', 'Fluent', 'Intermediate'];
     document.body.innerHTML = skills.map((skill, i) => `
       <div data-automation-id="formField-skill${i}">
         <label for="skill${i}">${skill}*</label>
@@ -100,7 +106,7 @@ describe('language skill dropdowns', () => {
     for (let i = 0; i < skills.length; i++) {
       const field = document.getElementById(`skill${i}`)!;
       const selected = field instanceof HTMLSelectElement ? field.selectedOptions[0].text : field.textContent;
-      expect(selected, skills[i]).toBe('Fluent');
+      expect(selected, skills[i]).toBe(want);
     }
   });
 });

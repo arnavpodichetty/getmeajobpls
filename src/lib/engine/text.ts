@@ -307,6 +307,8 @@ export function optionScore(optionText: string, wanted: string): number {
   // Language levels are distinct choices. Never fuzzily substitute Expert or
   // Advanced for Fluent; also accept numbered labels such as "5 - Fluent".
   if (w === 'fluent') return /\bfluent\b/.test(opt) && !/\b(not|non) fluent\b/.test(opt) ? 1 : 0;
+  // Numbered scales: "3 - Advanced" is Advanced, "4 - Expert" is Expert.
+  if ((w === 'advanced' || w === 'expert') && opt.replace(/^\d+\s*/, '') === w) return 1;
   // Keep majors separate: a shared "Science" is not "Computer Science", and
   // "Computer Science" does not answer "Computer and Information Science".
   const field = qualifiedField(w);

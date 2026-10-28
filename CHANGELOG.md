@@ -22,6 +22,7 @@
 - **"You must be currently pursuing a degree…":** Workday lists Bachelors / Masters / Doctorate as the choices, and it was flagged for review. It picks your "Degree you are pursuing" now (Standard answers, Bachelor's by default).
 - **Resume in a transcript box:** on Workday, the resume could go into an "upload your transcript" question. It never does now.
 - **Race / ethnicity choices:** the South Asian, East Asian and Southeast Asian options are gone from Options → EEO. A saved subgroup becomes Asian.
+- **Language levels with no Fluent option:** Workday's "1 - Beginner / 2 - Intermediate / 3 - Advanced" scales were left for review. A fluent speaker now gets the top of the scale (Expert, then Advanced) in every level box: Comprehension, Overall, Reading, Speaking, Writing and the rest.
 - **Fill on pages with an embedded form:** if one frame reloaded during a fill, the whole fill showed an error. The other frames' results show now.
 - **Popup "Save my answers":** errors weren't shown, and a double click could save twice.
 - **Fill my profile:** clicking Apply twice added new entries twice.
