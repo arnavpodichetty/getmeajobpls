@@ -137,6 +137,27 @@ export function fullProfileLink(value: string, links: Record<string, string>): s
   return Object.values(links).find((link) => /^https?:\/\//i.test(link.trim()) && bare(link) === bare(shown))?.trim() ?? null;
 }
 
+const BARE_DOMAIN = /^(?:www\.)?[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}(?::\d+)?(?:[/?#]\S*)?$/i;
+const LINK_LABEL = /\b(?:links?|urls?|websites?|web ?sites?|web page|homepage|portfolio|linkedin|github|blog)\b/i;
+
+/** True for a text box that asks for a web address: type="url", or a label about links. */
+export function isLinkField(field: Field): boolean {
+  if (field.kind !== 'text') return false;
+  if ((field.el as HTMLInputElement).type === 'url') return true;
+  return LINK_LABEL.test(field.label) && !/\b(?:e ?mail|phone)\b/i.test(field.label);
+}
+
+/**
+ * The value of a link box with "https://" put back, or null when it already has one or isn't
+ * a web address. Your profile's own spelling of the link wins; any other bare domain
+ * ("acme.dev/work") gets "https://" in front, since sites reject links without it.
+ */
+export function linkWithScheme(value: string, links: Record<string, string>): string | null {
+  const shown = value.trim();
+  if (!shown || /^[a-z][a-z0-9+.-]*:\/\//i.test(shown)) return null;
+  return fullProfileLink(shown, links) ?? (BARE_DOMAIN.test(shown) ? `https://${shown}` : null);
+}
+
 /** A visible option saying you're a US citizen, when your profile says you are. */
 function usCitizenOption(field: Field, c: AnswerContext): Answer | null {
   if (!/^(united states|usa|us|u s|united states of america)$/.test(normalize(c.profile.answers.citizenship))) return null;
@@ -362,8 +383,14 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
       if (answer?.value === LEAVE_EMPTY) continue; // a follow-up that doesn't apply
       // The site pre-filled one of your links without "https://" (Oracle copies it from the
       // resume text, then rejects it). Put back the full link from your profile.
-      const fullLink = field.kind === 'text' ? fullProfileLink(existing, answers.profile.links) : null;
+      const fullLink = field.kind !== 'text' ? null
+        : isLinkField(field) ? linkWithScheme(existing, answers.profile.links) : fullProfileLink(existing, answers.profile.links);
       if (fullLink) answer = { key: 'linkWithScheme', value: fullLink, confidence: 'high' };
+      // A profile link saved without "https://" going into a link box: add it.
+      else if (answer && isLinkField(field) && typeof answer.value === 'string') {
+        const withScheme = linkWithScheme(answer.value, {});
+        if (withScheme) answer = { ...answer, value: withScheme };
+      }
 
       if (!answer) {
         if (existing) continue;
@@ -408,6 +435,19 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
       await sleep(30);
     }
     await sleep(400);
+  }
+
+  // Link boxes the site filled after we passed them (Oracle copies links from the resume a
+  // moment later), still without "https://", which the site then rejects.
+  for (const field of scanFields(root)) {
+    if (!field.el.isConnected || !isLinkField(field) || opts.skip?.(field)) continue;
+    const fixed = linkWithScheme(currentValue(field), answers.profile.links);
+    if (!fixed) continue;
+    const outcome = await fillField(field, { key: 'linkWithScheme', value: fixed, confidence: 'high' }).catch(() => null);
+    if (!outcome?.ok) continue;
+    const label = displayLabel(field);
+    for (let i = results.length - 1; i >= 0; i--) if (results[i].label === label && results[i].status === 'skipped') results.splice(i, 1);
+    record(field, outcome.review ? 'review' : 'filled', outcome.review);
   }
 
   for (const { field, index } of picked) {
