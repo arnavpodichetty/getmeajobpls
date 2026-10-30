@@ -290,6 +290,9 @@ export function optionScore(optionText: string, wanted: string): number {
   if (w === 'not taken') {
     return /\b(?:not taken|did not take|have not taken|haven t taken|never taken|didn t take|not applicable)\b|\b(?:don t|do not) have (?:an? )?(?:(?:sat|act|standardized test) )?scores?\b|^(?:n a|na|none|neither|no standardized tests?)\b/.test(opt) ? 1 : 0;
   }
+  // Phone country lists add the dial code: "United States +1" / "United States (+1)" is exactly "United States".
+  const dialCode = optionText.trim().match(/^(.+?)\s*\(?\+\d{1,4}\)?$/);
+  if (dialCode && w && normalize(dialCode[1]) === w) return 1;
   const rangeScore = rangeOptionScore(optionText, wanted);
   if (rangeScore !== null) return rangeScore;
   // N/A is a distinct answer from No. Prefer it when offered, then let an

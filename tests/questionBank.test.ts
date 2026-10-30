@@ -51,6 +51,17 @@ const BANK: Record<string, [string, string | null][]> = {
   'fiduciary roles': [
     ['Do you currently hold a position, or have you been named to serve as a board member, trustee, trust protector, executor, or personal representative?', 'No'],
   ],
+  'current or previous employer': [
+    ['Who is your current or previous employer?', 'Analytical Engines'],
+    ['Current or most recent employer', 'Analytical Engines'],
+    ['Most recent or current company', 'Analytical Engines'],
+    ['Current Company', 'Analytical Engines'],
+  ],
+  'current or previous job title': [
+    ['What is your current or previous job title?', 'Software Engineering Intern'],
+    ['Current or most recent job title', 'Software Engineering Intern'],
+    ['Most recent job title', 'Software Engineering Intern'],
+  ],
   'current employer a client': [
     ['Is your current employer an Example Firm client?', 'No'],
   ],

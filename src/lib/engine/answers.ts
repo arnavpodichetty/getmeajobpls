@@ -727,12 +727,12 @@ const DEFS: Def[] = [
   {
     key: 'currentCompany',
     short: true,
-    re: /current (company|employer|organi[sz]ation)|most recent (company|employer)|^(company|employer|organi[sz]ation)( name)?$/,
+    re: /(?:current|most recent)(?: or (?:previous|prior|past|last|former|most recent|current))? (?:company|employer|organi[sz]ation)|^(company|employer|organi[sz]ation)( name)?$/,
     value: (c) => latestJob(c.profile)?.company || null,
   },
   // A bare "Title" choice is an honorific (Mr. / Ms. / Dr.), as on Oracle Recruiting; only a text box wants your job title.
   { key: 'currentTitle', short: true, textOnly: true, re: /^title$/, value: (c) => latestJob(c.profile)?.title || null },
-  { key: 'currentTitle', short: true, re: /current (job )?(title|role|position)|most recent (job )?(title|role)|^job title$/, value: (c) => latestJob(c.profile)?.title || null },
+  { key: 'currentTitle', short: true, re: /current(?: or (?:previous|prior|past|last|former|most recent))? (job )?(title|role|position)|most recent(?: or (?:previous|prior|past|last|former|current))? (job )?(title|role)|^job title$/, value: (c) => latestJob(c.profile)?.title || null },
   {
     key: 'school',
     re: /school|university|college|institution/,

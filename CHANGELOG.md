@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.3 (2026-10-30)
+
+### Fixes
+- **SmartRecruiters "This is the job posting":** on the one-click apply page the panel could check before the form had loaded, decide it was the posting, and never look again, so Fill page did nothing. Its field count now sees inputs inside shadow roots (where SmartRecruiters puts all of them), so the panel notices the form once it loads.
+- **SmartRecruiters phone country code:** picking "+1" was always reported as failed (orange), because the selected value is drawn through a slot the check couldn't read. It now reads what the box shows.
+- **Phone country lists with dial codes:** an option like "United States +1" or "United States (+1)" counts as an exact match for your country, so Greenhouse's and SmartRecruiters' phone Country is green instead of "please check".
+- **"Current or previous employer" / "job title":** questions worded "current or previous", "current or most recent" or "most recent or current" were left blank. They now get the company and title from your latest job.
+
 ## 1.3.2 (2026-10-23)
 
 ### New

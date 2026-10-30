@@ -3,7 +3,7 @@ import { browser } from 'wxt/browser';
 import { detectAdapter } from '../adapters';
 import type { FillContext, ResumeFile } from '../adapters/types';
 import { captureForm, collectAnswers } from '../lib/engine/capture';
-import { isVisible } from '../lib/engine/dom';
+import { formControlCount, isVisible } from '../lib/engine/dom';
 import { isJobPosting } from '../lib/jobInfo';
 import { FillPanel } from '../lib/panel';
 import { sendPanel } from '../lib/messages';
@@ -166,7 +166,7 @@ export default defineContentScript({
         });
         if (embedded) return true;
         // Cheap count first; only scan the form when there's enough of one.
-        if (document.querySelectorAll('input:not([type=hidden]):not([type=search]), select, textarea').length < 4) return false;
+        if (formControlCount() < 4) return false;
         const wait = lastFormScan + FORM_SCAN_GAP - Date.now();
         if (wait > 0) {
           schedule(wait);
@@ -178,7 +178,7 @@ export default defineContentScript({
       let lastCheck = 0;
       // Workday changes the URL to /apply before drawing the form, so a panel shown for the
       // posting looks again whenever the number of form fields changes.
-      const formFieldCount = () => document.querySelectorAll('input:not([type=hidden]):not([type=search]), select, textarea').length;
+      const formFieldCount = () => formControlCount();
       let lastFieldCount = 0;
       const needsCheck = () => !panel.shown || location.href !== lastUrl || (panel.postingOnly && formFieldCount() !== lastFieldCount);
 

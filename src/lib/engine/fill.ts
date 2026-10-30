@@ -21,7 +21,7 @@ import {
   monthName,
   type Outcome,
 } from './controls';
-import { closestDeep, composedElements, queryAllDeep, queryDeep, sleep, waitForStable } from './dom';
+import { closestDeep, composedElements, queryAllDeep, queryDeep, renderedText, sleep, waitForStable } from './dom';
 import { labelFor, optionText, textOfIds } from './labels';
 import { currentValue, scanFields, type Field } from './scan';
 import { DECLINE, isBareFieldHead, isPlaceholderOption, normalize } from './text';
@@ -451,7 +451,7 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
   }
 
   for (const { field, index } of picked) {
-    const shown = field.el instanceof HTMLSelectElement ? currentValue(field) : (field.el.textContent ?? '').trim();
+    const shown = field.el instanceof HTMLSelectElement ? currentValue(field) : renderedText(field.el);
     if (!field.el.isConnected || (shown && !isPlaceholderOption(shown))) continue;
     results[index] = { ...results[index], status: 'review', reason: 'The site cleared this answer after it was picked. Pick it again.' };
     highlight(field, 'review', ctx.settings.highlightFields);

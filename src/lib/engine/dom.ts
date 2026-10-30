@@ -19,6 +19,51 @@ export function composedElements(root: ParentNode = document): Element[] {
   return out;
 }
 
+/**
+ * An element's text as it renders: slots show the content assigned to them.
+ * SmartRecruiters' select button shows its value ("+1") through a slot, so its textContent is empty.
+ */
+export function renderedText(el: Element): string {
+  let out = '';
+  const walk = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      out += node.textContent ?? '';
+      return;
+    }
+    if (node instanceof HTMLSlotElement) {
+      const assigned = node.assignedNodes({ flatten: true });
+      if (assigned.length) {
+        assigned.forEach(walk);
+        return;
+      }
+    }
+    node.childNodes.forEach(walk);
+  };
+  walk(el);
+  return out.replace(/\s+/g, ' ').trim();
+}
+
+const FORM_CONTROL ='input:not([type=hidden]):not([type=search]), select, textarea';
+
+/**
+ * How many form controls the page has, including ones inside open shadow roots.
+ * SmartRecruiters puts every input in a shadow root, so a plain querySelectorAll sees none.
+ */
+export function formControlCount(root: ParentNode = document): number {
+  let count = root.querySelectorAll(FORM_CONTROL).length;
+  const visit = (node: ParentNode) => {
+    for (let child = node.firstElementChild; child; child = child.nextElementSibling) {
+      if (child.shadowRoot) {
+        count += child.shadowRoot.querySelectorAll(FORM_CONTROL).length;
+        visit(child.shadowRoot);
+      }
+      visit(child);
+    }
+  };
+  visit(root);
+  return count;
+}
+
 /** querySelectorAll that also descends into open shadow roots (SmartRecruiters, SuccessFactors). */
 export function queryAllDeep<T extends Element = HTMLElement>(selector: string, root: ParentNode = document): T[] {
   return composedElements(root).filter((el) => el.matches(selector)) as T[];

@@ -4,6 +4,7 @@ import {
   blur,
   byId,
   closestDeep,
+  renderedText,
   fire,
   isVisible,
   parentOf,
@@ -386,19 +387,22 @@ export async function fillCombobox(
     close(el, null);
     return fail('The dropdown did not accept the selected option.');
   }
-  if (el.matches('button[aria-haspopup="listbox"]') && isPlaceholderOption(el.textContent ?? '')) {
-    close(el, input);
-    return fail('The dropdown did not accept the selected option.');
-  }
-  const reactControl = el instanceof HTMLInputElement && el.getAttribute('aria-autocomplete') === 'list'
-    ? reactSelectControl(el) : null;
-  const selected = reactControl?.querySelectorAll('[class*="single-value" i], [class*="singleValue" i], [class*="multi-value" i], [class*="multiValue" i], [data-automation-id="selectedItem"]');
-  // Some selects show a short form of the pick: Greenhouse's phone country shows "+1" for "United States +1".
+  // Some selects show a short form of the pick: Greenhouse's and SmartRecruiters' phone country show "+1" for "United States +1".
   const showsPick = (shownText: string) => {
     const item = normalize(shownText);
     const chosen = normalize(chosenText);
     return optionScore(shownText, chosenText) >= CONFIDENT_OPTION_SCORE || (!!item && (chosen.endsWith(` ${item}`) || chosen.startsWith(`${item} `)));
   };
+  if (el.matches('button[aria-haspopup="listbox"]')) {
+    const shownValue = renderedText(el);
+    if (isPlaceholderOption(shownValue) || (closestDeep(el, 'spl-select') && !showsPick(shownValue))) {
+      close(el, input);
+      return fail('The dropdown did not accept the selected option.');
+    }
+  }
+  const reactControl = el instanceof HTMLInputElement && el.getAttribute('aria-autocomplete') === 'list'
+    ? reactSelectControl(el) : null;
+  const selected = reactControl?.querySelectorAll('[class*="single-value" i], [class*="singleValue" i], [class*="multi-value" i], [class*="multiValue" i], [data-automation-id="selectedItem"]');
   if (reactControl && ![...(selected ?? [])].some((item) => showsPick(item.textContent ?? ''))) {
     close(el, input);
     return fail('The dropdown did not accept the selected option.');

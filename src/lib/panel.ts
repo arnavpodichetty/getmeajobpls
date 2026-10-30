@@ -3,6 +3,7 @@
 // and the filler never mistakes its controls for application fields.
 import { browser } from 'wxt/browser';
 import { boltIcon, h } from './dom';
+import { formControlCount } from './engine/dom';
 import type { PanelResponse, PanelRequest } from './messages';
 import { requestResumeFile, sendPanel } from './messages';
 import { base64ToBlob } from './resumeDb';
@@ -358,7 +359,7 @@ export class FillPanel {
   private async fill(): Promise<void> {
     if (this.busy) return;
     // The page may have turned into the application since (Workday draws the form late).
-    if (this.postingOnly && document.querySelector('input:not([type=hidden]):not([type=search]), select, textarea')) {
+    if (this.postingOnly && formControlCount() > 0) {
       this.postingOnly = false;
       this.fillBtn.title = 'Fill this application';
     }

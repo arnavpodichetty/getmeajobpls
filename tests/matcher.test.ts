@@ -90,6 +90,13 @@ describe('cleanLabel', () => {
 });
 
 describe('optionScore', () => {
+  it('treats a phone country option with its dial code as the country', () => {
+    expect(optionScore('United States +1', 'United States')).toBe(1);
+    expect(optionScore('United States (+1)', 'United States')).toBe(1);
+    expect(optionScore('Dominican Republic +1', 'Dominica')).toBeLessThan(1);
+    expect(optionScore('United States Minor Outlying Islands +1', 'United States')).toBeLessThan(1);
+  });
+
   it('matches yes/no phrasings', () => {
     expect(optionScore('Yes', 'Yes')).toBe(1);
     expect(optionScore('Yes, I am authorized to work in the US', 'Yes')).toBeGreaterThan(0.9);

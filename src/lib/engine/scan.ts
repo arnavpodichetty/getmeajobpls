@@ -1,6 +1,6 @@
 // Turns a page into a list of logical fields: one entry per question, with
 // radio/checkbox/button groups collapsed and widget internals ignored.
-import { closestDeep, composedElements, isHoneypot, isVisible, parentOf, reactSelectControl } from './dom';
+import { closestDeep, composedElements, isHoneypot, isVisible, parentOf, reactSelectControl, renderedText } from './dom';
 import { groupLabelFor, labelFor, optionText, splSelectedValues, type FieldLabel } from './labels';
 
 export type FieldKind =
@@ -219,7 +219,7 @@ export function currentValue(field: Field): string {
         return el.value.trim();
       }
       if (!(el instanceof HTMLInputElement)) {
-        const text = el.textContent?.trim() ?? '';
+        const text = renderedText(el);
         return /^(select|choose|search)/i.test(text) ? '' : text;
       }
       return '';
