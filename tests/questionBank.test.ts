@@ -345,6 +345,13 @@ const CHOICES: [string, string[], string | null, boolean][] = [
   ['Please select your race', ['White', 'Black or African American', 'Asian', 'Hispanic or Latino', 'Two or more races'], 'Asian', true],
   ['What is the highest level of education you have completed?', ['High School Diploma/GED', "Associate's Degree", "Bachelor's Degree", "Master's Degree"], 'High School Diploma/GED', true],
   ['Do you hold an active U.S. Government Security Clearance?', ['Yes', 'No'], 'No', true],
+  // SAP SuccessFactors wordings.
+  ['Do you now, or in the foreseeable future, require Acme to file for a visa petition on your behalf in order to allow you to work or continue to work?', ['Yes', 'No'], 'No', true],
+  ['What year will you be receiving your undergraduate degree?', ['Spring/Fall 2027', 'Spring/Fall 2028', 'Spring/Fall 2029', 'N/A Already Graduated'], 'Spring/Fall 2028', true],
+  ['When will you complete your degree?', ['Spring 2027', 'Spring 2028', 'Fall 2028'], 'Spring 2028', true],
+  ['What are your preferred pronouns?', ['He/His/Him', 'She/Her/Hers', 'They/Them/Theirs', 'Prefer not to say'], 'She/Her/Hers', true],
+  ['Ethnicity', ['Hispanic or Latino', 'Not Hispanic or Latino', 'I do not wish to answer'], 'Not Hispanic or Latino', true],
+  ['Ethnicity', ['White', 'East Asian', 'Hispanic or Latino', 'Black or African American'], 'East Asian', true],
   ['Do you hold an active U.S. Government Security Clearance?', ['Yes - Secret', 'Yes - Top Secret', 'No, I do not hold an active U.S. Government Security Clearance.'], 'No, I do not hold an active U.S. Government Security Clearance.', true],
   ['Security clearance', ['None', 'Secret', 'Top Secret', 'TS/SCI'], 'None', true],
   ['Security clearance', ['Yes', 'No'], 'No', true],
@@ -498,5 +505,22 @@ describe('starting the job vs starting school', () => {
     for (const q of ['When can you start the internship program?', 'When are you available to start working after your university term ends?']) {
       expect(resolveAnswer(q, '', null, { profile: profile(), skills: [] }, false).matchedKey, q).not.toBe('schoolStartDate');
     }
+  });
+});
+
+describe('relocation follow-ups', () => {
+  it.each([
+    'If yes, which states/country would you open to relocating?',
+    'If yes, which states would you be open to relocating to?',
+    'Which locations are you willing to relocate to?',
+    'Where would you be willing to relocate?',
+  ])('%s → your location preferences', (q) => {
+    expect(answerFor(q, false)).toBe('California');
+  });
+  it('is N/A when you won\'t relocate, and the Yes/No question still gets Yes/No', () => {
+    const p = profile();
+    p.answers.willingToRelocate = 'No';
+    expect(resolveAnswer('If yes, which states would you be open to relocating to?', '', null, { profile: p, skills: [] }, false).answer?.value).toBe('N/A');
+    expect(answerFor('Are you open to relocating?')).toBe('Yes');
   });
 });

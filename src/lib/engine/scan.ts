@@ -74,6 +74,14 @@ function isDropdownHelper(el: HTMLElement): boolean {
   return !!prev && prev.matches('button[aria-haspopup="listbox"]');
 }
 
+/** Cookie banners and preference centers (OneTrust, Cookiebot, SuccessFactors' cookie manager). */
+const COOKIE_PANEL = '[id*="cookie" i], [class*="cookie" i], #onetrust-consent-sdk, #CybotCookiebotDialog';
+// Sites also mark the whole page ("<body class="cookies-accepted">"); that isn't a panel.
+const inCookiePanel = (el: Element) => {
+  const panel = closestDeep(el, COOKIE_PANEL);
+  return !!panel && !/^(?:HTML|BODY|FORM|MAIN)$/.test(panel.tagName);
+};
+
 export function scanFields(root: ParentNode = document): Field[] {
   const fields: Field[] = [];
   const seen = new Set<Element>();
@@ -90,13 +98,19 @@ export function scanFields(root: ParentNode = document): Field[] {
   const buttons = all.filter((el) => el.matches('button[aria-pressed], button[data-option], [role="radio"]:not(input)')) as HTMLButtonElement[];
   for (const button of buttons) {
     const parent = parentOf(button);
-    if (!parent || seen.has(button) || !isVisible(button)) continue;
+    if (!parent || seen.has(button) || !isVisible(button) || inCookiePanel(button)) continue;
     // SuccessFactors wraps each role="radio" in its own span; the radiogroup holds the set.
     const group = button.getAttribute('role') === 'radio' ? button.closest('[role="radiogroup"]') : null;
     const grouped = group ? [...group.querySelectorAll<HTMLElement>('[role="radio"]:not(input)')] : [];
     const members = grouped.length > 1 ? grouped : [...parent.children].filter(isToggleButton) as HTMLElement[];
     if (members.length < 2) continue;
-    const hidden = [...parent.querySelectorAll<HTMLElement>('input[type=checkbox], input[type=radio]')];
+    // The real inputs behind the styled ones belong to this question, not a second one.
+    // Workable puts one inside each role="radio" box.
+    const hidden = [...new Set([
+      ...parent.querySelectorAll<HTMLElement>('input[type=checkbox], input[type=radio]'),
+      ...members.flatMap((m) => [...m.querySelectorAll<HTMLElement>('input[type=checkbox], input[type=radio]')]),
+      ...(grouped.length > 1 && group ? group.querySelectorAll<HTMLElement>('input[type=radio]') : []),
+    ])];
     hidden.forEach((h) => seen.add(h));
     push('buttons', members[0], members, groupLabelFor([...members, ...hidden]));
   }
@@ -118,6 +132,7 @@ export function scanFields(root: ParentNode = document): Field[] {
   for (const el of controls) {
     if (seen.has(el) || !usable(el) || isMenuSearch(el)) continue;
     if (closestDeep(el, 'header, nav, [role="banner"], [role="navigation"]')) continue; // site menus, language pickers
+    if (inCookiePanel(el)) continue; // cookie preference switches aren't questions
     if (el.getAttribute('role') === 'spinbutton') continue; // date parts; adapters fill these as dates
     if (isDropdownHelper(el)) continue;
 

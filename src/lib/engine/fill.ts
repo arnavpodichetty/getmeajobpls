@@ -81,6 +81,15 @@ export function clearHighlights(): void {
   });
 }
 
+/** Outline a control an adapter filled itself (rows it handled outside the main pass). */
+export function markField(el: HTMLElement, status: 'filled' | 'review', enabled: boolean, isGroup = false): void {
+  if (!enabled) return;
+  const target = highlightTarget(el, isGroup);
+  target.setAttribute(HIGHLIGHT_ATTR, status);
+  target.style.setProperty('outline', `2px solid ${COLORS[status]}`, 'important');
+  target.style.setProperty('outline-offset', '2px', 'important');
+}
+
 function highlight(field: Field, status: 'filled' | 'review', enabled: boolean): void {
   if (!enabled) return;
   const target = highlightTarget(field.el, ['radio', 'checkboxes', 'buttons'].includes(field.kind));
@@ -186,7 +195,7 @@ async function fillField(field: Field, answer: Answer): Promise<Outcome> {
     case 'text':
     case 'textarea':
       if (one === DECLINE) return { ok: false, review: 'Decline-to-answer question with a text box.' };
-      return fillText(field.el as HTMLInputElement, one);
+      return fillTextOrNumber(field.el as HTMLInputElement, one);
     case 'date':
       return fillText(field.el as HTMLInputElement, typeof answer.value === 'string' ? formatDate(answer.value, field.el, field.label) : one);
     case 'richtext':
@@ -212,6 +221,27 @@ async function fillField(field: Field, answer: Answer): Promise<Outcome> {
     default:
       return { ok: false, review: 'Unsupported field type.' };
   }
+}
+
+/** A pay figure like "$40/hr" or "$83,200": the bare number, for boxes that only take digits. */
+export function bareAmount(text: string): string | null {
+  const m = text.trim().match(/^\$?\s*(\d[\d,]*(?:\.\d+)?)\s*(?:\/\s*(?:hr|hour|yr|year)|per (?:hour|year)|usd)?$/i);
+  return m && m[1] !== text.trim() ? m[1].replace(/,/g, '') : null;
+}
+
+/** The site marked the box invalid ("Invalid number.") after typing. */
+const markedInvalid = (el: HTMLElement) => el.getAttribute('aria-invalid') === 'true' || /\binvalid/i.test(el.className);
+
+/** Type the answer; if the site rejects a pay figure as not a number, type just the number. */
+async function fillTextOrNumber(el: HTMLInputElement | HTMLTextAreaElement, value: string): Promise<Outcome> {
+  const outcome = fillText(el, value);
+  const amount = bareAmount(value);
+  if (!amount) return outcome;
+  await sleep(60);
+  if (!markedInvalid(el)) return outcome;
+  const retry = fillText(el, amount);
+  await sleep(60);
+  return markedInvalid(el) ? { ok: false, review: `The site rejected "${value}" and "${amount}".` } : retry;
 }
 
 /** An upload asking for your (unofficial) transcript, not a video or interview transcript. */

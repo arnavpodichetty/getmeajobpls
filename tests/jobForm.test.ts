@@ -22,7 +22,7 @@ const fixtures = readdirSync(resolve(__dirname, 'fixtures'))
   .filter((f) => f.endsWith('.html'))
   .map((f) => f.replace('.html', ''))
   // Later wizard steps and single-section captures hold only a few fields; their ATS host is always recognized.
-  .filter((f) => !/-[2-9]$/.test(f) && f !== 'smartrecruiters-education');
+  .filter((f) => !/-[2-9]$/.test(f) && f !== 'smartrecruiters-education' && f !== 'workable-eeo');
 
 describe('job application forms on unrecognized hosts', () => {
   it.each(fixtures)('%s looks like an application', (name) => {

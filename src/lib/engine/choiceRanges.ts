@@ -26,10 +26,11 @@ function period(text: string, fallbackYear?: number): Period | null {
   // Academic terms by the months they end in: spring semesters and quarters by
   // June, summer by August, fall by December. "Winter 2027" is left unmatched:
   // it is a March quarter at some schools and the December term at others.
-  const season = text.match(/\b(spring|summer|fall|autumn)\b/i)?.[1].toLowerCase();
-  if (season && !/\bwinter\b/i.test(text)) {
-    const [first, last] = { spring: [4, 6], summer: [7, 8], fall: [9, 12], autumn: [9, 12] }[season]!;
-    return { from: dateKey(year, first, 1), to: dateKey(year, last, 31) };
+  // "Spring/Fall 2028" covers both terms.
+  const seasons = [...text.matchAll(/\b(spring|summer|fall|autumn)\b/gi)].map((m) => m[1].toLowerCase());
+  if (seasons.length && !/\bwinter\b/i.test(text)) {
+    const ranges = seasons.map((season) => ({ spring: [4, 6], summer: [7, 8], fall: [9, 12], autumn: [9, 12] })[season]!);
+    return { from: dateKey(year, Math.min(...ranges.map((r) => r[0])), 1), to: dateKey(year, Math.max(...ranges.map((r) => r[1])), 31) };
   }
   // Bare year options and year ranges are common graduation choices.
   if (/^\s*(?:19|20)\d{2}\s*$/.test(text)) return { from: dateKey(year, 1, 1), to: dateKey(year, 12, 31) };

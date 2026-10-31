@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.4 (2026-10-31)
+
+### Fixes
+- **SuccessFactors education rows:** Major and Degree came up empty ("There were no results") because their lists stay empty until the Education level is picked. The row now fills Education, Country, School, Major, Degree and Graduation Year in that order. "Degree Achieved" is recognized too.
+- **SuccessFactors job rows:** Employer Type (Current / Previous Employer), Position Type (from the job's type) and Company Country (from the job's location, only when it clearly names a US state or a country) are filled. The general pass no longer copies your first job into other rows or puts your home country in every Company Country. Row fields are outlined green/orange like the rest of the page, and required row fields left empty (a current job's End Date) are flagged.
+- **Pay boxes that only take numbers:** when a site rejects "$40/hr" as an invalid number, the bare number is typed instead.
+- **"Require [company] to file for a visa petition on your behalf":** now read as the sponsorship question.
+- **"What year will you be receiving your undergraduate degree?":** answered from your graduation date, including "Spring/Fall 2028"-style options.
+- **Pronouns:** "he/him" matches "He/His/Him" (and the she/they spellings) confidently.
+- **"Ethnicity" dropdowns:** a list of Hispanic / Not Hispanic options gets your Hispanic answer instead of failing on your race. On a combined race/ethnicity list, a Hispanic applicant gets "Hispanic or Latino" rather than "White (Not Hispanic or Latino)".
+- **Workable EEO survey:** each answer has a hidden radio inside its styled box, and those were read as a second, mislabeled question that could overwrite race and gender with "I don't wish to answer". They're one question now.
+- **Relocation follow-ups:** "If yes, which states/country would you be open to relocating to?" gets your location preferences (N/A if you won't relocate) instead of "N/A" or a bare "Yes".
+- **Cookie settings:** switches in cookie banners and preference panels are no longer treated as application questions.
+
 ## 1.3.3 (2026-10-30)
 
 ### Fixes

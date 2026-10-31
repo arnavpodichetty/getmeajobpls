@@ -81,6 +81,17 @@ const raceTiers = (race: string): string[][] => {
   const subgroup = RACE_SUBGROUPS[normalize(race)];
   return subgroup ? [[race.trim(), ...subgroup.aliases], [subgroup.category]] : [];
 };
+/** "he/him" is also written "He/His/Him", "He/Him/His". */
+const pronounTiers = (pronouns: string): string[][] => {
+  const n = normalize(pronouns);
+  const sets: Record<string, string[]> = {
+    he: ['He/Him', 'He/Him/His', 'He/His/Him', 'He/His'],
+    she: ['She/Her', 'She/Her/Hers', 'She/Hers/Her', 'She/Hers'],
+    they: ['They/Them', 'They/Them/Theirs', 'They/Theirs/Them'],
+  };
+  const first = n.split(' ')[0];
+  return sets[first] && n.split(' ').every((w) => /^(?:he|him|his|she|her|hers|they|them|theirs)$/.test(w)) ? [[pronouns, ...sets[first]]] : [];
+};
 const today = todayISO;
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const monthOf = (iso?: string) => (iso ? MONTHS[Number(iso.split('-')[1]) - 1] ?? null : null);
@@ -170,6 +181,16 @@ const DEFS: Def[] = [
     tiers: (c) => (hasNoClearance(c)
       ? [['I do not possess an active security clearance', 'I do not have a security clearance', 'I do not have a clearance', 'No clearance', 'None', 'Not applicable', 'N/A'], ['No']]
       : []),
+  },
+  // "If yes, which states/country would you be open to relocating to?": the places, not Yes.
+  {
+    key: 'relocationPlaces',
+    textOnly: true,
+    re: /^(?=.*\brelocat)(?=.*\b(?:which|what|where|list|specify|name)\b)(?=.*\b(?:states?|countr(?:y|ies)|cit(?:y|ies)|locations?|places?|regions?|areas?|where)\b)/,
+    value: (c) => {
+      if (/^no\b/i.test(c.profile.answers.willingToRelocate)) return 'N/A';
+      return c.profile.answers.locationPreferences.join(', ') || null;
+    },
   },
   // "If yes, please specify which country" after a citizenship question you answered No.
   {
@@ -268,7 +289,7 @@ const DEFS: Def[] = [
   },
   // Sponsorship examples may mention OPT; answer the sponsorship question itself.
   // "Will you require employer support to obtain … authorization to work?" is sponsorship too.
-  { key: 'needsSponsorship', re: /sponsor|visa (status|support)|h ?1 ?b|immigration (case|support)|\b(?:require|need)\w*\b.{0,40}\b(?:support|assistance|help)\b.{0,60}\b(?:authori[sz]\w*|work permits?|visas?|immigration)\b/, value: (c) => yesNo(c.profile.answers.needsSponsorship) },
+  { key: 'needsSponsorship', re: /sponsor|visa (status|support)|\bvisa petitions?\b|\bpetition (?:for|on) (?:a |your |my )?(?:visa|behalf)\b|h ?1 ?b|immigration (case|support)|\b(?:require|need)\w*\b.{0,40}\b(?:support|assistance|help)\b.{0,60}\b(?:authori[sz]\w*|work permits?|visas?|immigration)\b/, value: (c) => yesNo(c.profile.answers.needsSponsorship) },
   {
     key: 'stemOptEligible',
     re: /\b(?:opt|optional practical training)\b.*(?:extension|extend|eligib|qualif)|(?:extension|extend|eligib|qualif|24 month|degree).*\b(?:opt|optional practical training)\b/,
@@ -637,7 +658,25 @@ const DEFS: Def[] = [
   },
   { key: 'transgender', re: /transgender|trans experience|cisgender/, choiceOnly: true, value: (c) => declineIfBlank(c.profile.eeo.transgender) },
   { key: 'sexualOrientation', re: /sexual orientation|lgbt|queer/, choiceOnly: true, value: (c) => declineIfBlank(c.profile.eeo.sexualOrientation) },
-  { key: 'raceEthnicity', re: /\brace\b|ethnic/, choiceOnly: true, value: (c) => declineIfBlank(c.profile.eeo.raceEthnicity), tiers: (c) => raceTiers(c.profile.eeo.raceEthnicity) },
+  // A dropdown labeled just "Ethnicity" may list Hispanic / Not Hispanic instead of races.
+  {
+    key: 'raceEthnicity',
+    re: /\brace\b|ethnic/,
+    choiceOnly: true,
+    value: (c) => declineIfBlank(c.profile.eeo.raceEthnicity),
+    tiers: (c, label) => {
+      const race = c.profile.eeo.raceEthnicity;
+      const hispanic = c.profile.eeo.hispanicLatino || (/hispanic|latin/i.test(race) ? 'Yes' : race ? 'No' : '');
+      // EEO-1: Hispanic or Latino comes before race when one list asks both
+      // ("White (Not Hispanic or Latino)" is wrong for a Hispanic applicant).
+      const tiers = /^yes\b/i.test(hispanic) && race && !/hispanic|latin/i.test(race)
+        ? [['Hispanic or Latino', 'Hispanic/Latino', 'Hispanic or Latinx', 'Hispanic'], ...(raceTiers(race).length ? raceTiers(race) : [[race]])]
+        : raceTiers(race);
+      if (!race || /\brace\b/.test(label) || !/\bethnicity\b/.test(label)) return tiers;
+      const ethnic = /^no\b/i.test(hispanic) ? ['Not Hispanic or Latino', 'Not Hispanic', 'Non-Hispanic'] : /^yes\b/i.test(hispanic) ? ['Hispanic or Latino', 'Hispanic'] : null;
+      return ethnic ? [...(tiers.length ? tiers : [[race]]), ethnic] : tiers;
+    },
+  },
   { key: 'gender', re: /gender|\bsex\b/, choiceOnly: true, value: (c) => declineIfBlank(c.profile.eeo.gender) },
   { key: 'veteranStatus', re: /veteran|military|armed forces|uniformed service/, choiceOnly: true, value: (c) => declineIfBlank(c.profile.eeo.veteranStatus) },
   {
@@ -665,7 +704,7 @@ const DEFS: Def[] = [
     re: /^(your |full |legal |candidate |applicant |applicants )*name$|full (legal )?name|legal name|^name first and last|^(your )?signature$|electronic signature|sign your name|^name of (the )?(candidate|applicant)$/,
     value: (c) => fullName(c.profile),
   },
-  { key: 'pronouns', short: true, re: /\bpronouns?\b/, value: (c) => c.profile.personal.pronouns || null },
+  { key: 'pronouns', short: true, re: /\bpronouns?\b/, value: (c) => c.profile.personal.pronouns || null, tiers: (c) => pronounTiers(c.profile.personal.pronouns) },
 
   // --- Contact ---
   { key: 'universityEmail', re: /(?:university|college|school|academic|student|campus).{0,25}e ?mail/, value: (c) => c.profile.personal.universityEmail || (/\.edu(?:\.[a-z]+)?$/i.test(c.profile.personal.email) ? c.profile.personal.email : null) },
@@ -765,12 +804,12 @@ const DEFS: Def[] = [
     isDate: true,
     value: (c) => latestSchool(c.profile)?.start || null,
   },
-  { key: 'degree', re: /\bdegree\b|level of education|highest education|education level/, not: /\b(?:date|year|completion|gpa|coursework)\b|grade point/, value: (c) => latestSchool(c.profile)?.degree || null, tiers: (c) => degreeTiers(latestSchool(c.profile)?.degree ?? '') },
+  { key: 'degree', re: /\bdegree\b|level of education|highest education|education level/, not: /\b(?:date|year|completion|gpa|coursework|when|semester|term)\b|grade point/, value: (c) => latestSchool(c.profile)?.degree || null, tiers: (c) => degreeTiers(latestSchool(c.profile)?.degree ?? '') },
   { key: 'major', short: true, re: /\bmajor\b|field of study|discipline|area of study|concentration|program of study/, value: (c) => latestSchool(c.profile)?.major || null, tiers: (c) => majorTiers(c.profile) },
   { key: 'minor', short: true, re: /\bminor\b/, value: (c) => latestSchool(c.profile)?.minor || null },
   { key: 'gpa', re: /\bgpa\b|grade point|cumulative grade/, value: (c) => latestSchool(c.profile)?.gpa || null },
   // \bgraduat: "undergraduate" names your level, not your graduation date.
-  { key: 'graduationDate', re: /\bgraduat|expected (completion|grad)|completion date|degree (end|completion)/, not: /(?<!month (?:and )?)year$/, isDate: true, value: (c) => c.profile.answers.graduationDate || latestSchool(c.profile)?.end || null },
+  { key: 'graduationDate', re: /\bgraduat|expected (completion|grad)|completion date|degree (end|completion)|\b(?:when|what (?:year|semester|term|month|date))\b.{0,50}\b(?:receiv|earn|complet|finish|obtain|conferr|award)\w*\b.{0,40}\bdegree\b/, not: /(?<!month (?:and )?)year$/, isDate: true, value: (c) => c.profile.answers.graduationDate || latestSchool(c.profile)?.end || null },
   { key: 'programmingLanguages', re: /programming languages|coding languages/, value: (c) => c.skills },
   // Language proficiency: Workday asks reading / writing / speaking / comprehension / overall separately.
   {
