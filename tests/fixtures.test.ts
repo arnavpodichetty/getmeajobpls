@@ -45,6 +45,33 @@ describe('Greenhouse', () => {
   });
 });
 
+describe('iCIMS', () => {
+  const field = (r: FillReport, label: RegExp) => r.fields.filter((f) => label.test(f.label));
+
+  it('reads each styled dropdown once, as the dropdown, not its hidden select or search box', async () => {
+    const r = await run('icims-a', 'icims');
+    expect(field(r, /^State\/Province$/)).toHaveLength(1);
+    expect(field(r, /^Degree Completed\?$/)).toHaveLength(1);
+    expect(r.fields.some((f) => /^(?:Address|Education) \(1\)/.test(f.label))).toBe(false);
+    // "— Make a Selection —" is a placeholder, not an answer.
+    expect(r.fields.some((f) => f.status === 'skipped' && /Pronouns|School|Degree/.test(f.label))).toBe(false);
+  });
+
+  it('leaves Address 2 empty and drops the "Error:" label prefix', async () => {
+    const r = await run('icims-a', 'icims');
+    expect(value('[id="-1_PersonProfileFields.AddressStreet1"]')).toBe('1 Analytical Way');
+    expect(value('[id="-1_PersonProfileFields.AddressStreet2"]')).toBe('');
+    expect(r.fields.some((f) => /^How did you hear about Acme\?$/.test(f.label))).toBe(true);
+  });
+
+  it('splits the completion date into month, the 1st, and year', async () => {
+    await run('icims-a', 'icims');
+    expect(value('[id="-1_PersonProfileFields.rcf2140_Month"]')).toBe('06');
+    expect(value('[id="-1_PersonProfileFields.rcf2140_Date"]')).toBe('1');
+    expect(value('[id="-1_PersonProfileFields.rcf2140_Year"]')).toBe('2028');
+  });
+});
+
 describe('Lever', () => {
   it('fills full name, links and EEO radios', async () => {
     const r = await run('lever-b', 'lever');

@@ -104,7 +104,7 @@ export function emptyProfile(): Profile {
       hourlyRate: '',
       noticePeriod: 'Immediately',
       referralSource: 'LinkedIn',
-      referralSourceFallbacks: ['Company careers website'],
+      referralSourceFallbacks: ['Company careers website', 'Handshake'],
       coverLetter: '',
     },
     eeo: {
@@ -193,6 +193,11 @@ const list = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x) => typeo
  * Deep-merge stored data onto defaults so older backups / partial imports
  * never leave a field undefined.
  */
+/** Profiles saved with the old default (careers website only) get Handshake after it. */
+function referralFallbacks(saved: string[]): string[] {
+  return saved.length === 1 && saved[0] === 'Company careers website' ? [...saved, 'Handshake'] : saved;
+}
+
 export function normalizeProfile(raw: unknown): Profile {
   const base = emptyProfile();
   if (!raw || typeof raw !== 'object') return base;
@@ -214,7 +219,7 @@ export function normalizeProfile(raw: unknown): Profile {
     languages: (Array.isArray(p.languages) ? p.languages : []).map((l: unknown) =>
       typeof l === 'string' ? { ...emptyLanguage(), language: l } : { ...emptyLanguage(), ...(l as Partial<Language>) },
     ),
-    answers: { ...base.answers, ...p.answers, locationPreferences: list(p.answers?.locationPreferences ?? base.answers.locationPreferences), referralSourceFallbacks: list(p.answers?.referralSourceFallbacks) },
+    answers: { ...base.answers, ...p.answers, locationPreferences: list(p.answers?.locationPreferences ?? base.answers.locationPreferences), referralSourceFallbacks: referralFallbacks(list(p.answers?.referralSourceFallbacks)) },
     eeo: (() => {
       const eeo = { ...base.eeo, ...p.eeo };
       // Options once offered Asian subgroups; the dropdown is just "Asian" now.

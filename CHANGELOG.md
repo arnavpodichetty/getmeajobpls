@@ -12,6 +12,12 @@
 - **"Ethnicity" dropdowns:** a list of Hispanic / Not Hispanic options gets your Hispanic answer instead of failing on your race. On a combined race/ethnicity list, a Hispanic applicant gets "Hispanic or Latino" rather than "White (Not Hispanic or Latino)".
 - **Workable EEO survey:** each answer has a hidden radio inside its styled box, and those were read as a second, mislabeled question that could overwrite race and gender with "I don't wish to answer". They're one question now.
 - **Relocation follow-ups:** "If yes, which states/country would you be open to relocating to?" gets your location preferences (N/A if you won't relocate) instead of "N/A" or a bare "Yes".
+- **"Are you located in or a national of Cuba, Iran, North Korea, or Syria, or in Crimea…?":** answered No when neither your country nor your citizenship is listed. Left for you if you live in or are a citizen of Ukraine or Russia.
+- **"What visa are you on or will you require?":** was filled with "Yes" because it mentions being authorized to work. Questions asking which visa you hold are now left for you.
+- **iCIMS dropdowns:** Pronouns, State, School, Field of Study, Degree and similar dropdowns were skipped as "Already has a value" because their "— Make a Selection —" placeholder was read as an answer. Each is now read once, as the dropdown, and its search box is no longer mistaken for a separate question.
+- **iCIMS profile page:** "Address 2" no longer gets your street address again. "Degree Completed?" gets In Progress (or No) while you're still enrolled instead of your degree name. The split completion date fills Month, the 1st for Day, and Year. Labels no longer start with "Error:" after a failed submit.
+- **"First-generation college student" questions:** your school was typed into these (and into their "If selected Yes…" follow-ups) because they mention "college". They're left for you now, and Yes/No questions that mention college or university no longer get your school.
+- **"How did you hear about us?" fallbacks:** Handshake is tried after LinkedIn and the careers website. Profiles still on the old default list get it added automatically.
 - **Cookie settings:** switches in cookie banners and preference panels are no longer treated as application questions.
 
 ## 1.3.3 (2026-10-30)

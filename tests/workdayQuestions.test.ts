@@ -123,9 +123,9 @@ describe('careers site referral sources', () => {
   it.each(['Agency', 'Recruiter', 'Referred by Employee', 'LinkedIn', 'Indeed Website', 'Career Fair', 'Initech website, article, podcast or other Initech content'])('does not treat %s as the careers website', (option) => {
     expect(optionScore(option, 'Company careers website')).toBe(0);
   });
-  it('tries LinkedIn first, then the careers site', () => {
+  it('tries LinkedIn first, then the careers site, then Handshake', () => {
     const r = answer('How Did You Hear About Us?');
-    expect(r.answer?.tiers).toEqual([['LinkedIn'], ['Company careers website']]);
+    expect(r.answer?.tiers).toEqual([['LinkedIn'], ['Company careers website'], ['Handshake']]);
   });
 });
 

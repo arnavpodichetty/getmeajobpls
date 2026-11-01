@@ -37,6 +37,10 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Legally authorized to work in the US', 'Yes'],
     ['Work Authorization: Are you currently authorized to work in the country where this role is located?', 'Yes'],
   ],
+  'visa type (left for you)': [
+    ['If you are or are not currently authorized to work in the US, what visa are you on or will you require?', null],
+    ['What type of visa do you currently hold?', null],
+  ],
   'work authorization (documentation)': [
     ['Do you have a legal right and necessary documentation to work in the United States? (Identity and employment eligibility of all new hires will be verified as required by the Immigration Reform and Control Act of 1986.)', 'Yes'],
   ],
@@ -271,8 +275,21 @@ const BANK: Record<string, [string, string | null][]> = {
   'export-control country lists': [
     ['In line with U.S. export control laws, Acme Group may gather nationality details for specific roles to determine licensing or technology control needs. Please review the countries below and answer the subsequent questions accordingly. Afghanistan Armenia Belarus China, or other Chinese territory Cuba Iran North Korea Russia Syria Venezuela Do you now, or have you held citizenship in any of the countries listed above?*', 'No'],
     ['Are you a citizen or national of any of the following countries: Cuba, Iran, North Korea, Syria?', 'No'],
+    ['Are you located in or a national of Cuba, Iran, North Korea, or Syria, or are currently located in the Crimea, Donetsk, Luhansk, Kherson, or Zaporizhzhia territories?*', 'No'],
+    ['Do you currently reside in Cuba, Iran, North Korea, Syria, or the Crimea region?', 'No'],
     ['If yes, please specify which country.*', 'N/A'],
     ['If so, which country?', 'N/A'],
+  ],
+  'first-generation college student (left for you)': [
+    ['Do you identify as a first-generation college student?', null],
+    ['If selected "Yes" to the question above, would you like to be considered for our first-generation college student fellowship which includes the following: Scholarship, Housing Stipend and enhanced Mentorship?', null],
+  ],
+  'school is only for "which school" questions': [
+    ['Are you currently a college student?', null],
+    ['Which university do you attend?', 'University of California, Los Angeles'],
+  ],
+  'degree completed': [
+    ['Degree Completed?', 'No'],
   ],
   'non-compete': [
     ['Do you have a non-compete?*', 'No'],

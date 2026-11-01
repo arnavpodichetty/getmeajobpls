@@ -69,6 +69,8 @@ function checkboxGroupRoot(input: HTMLInputElement): Element | null {
 
 /** Workday renders each dropdown as a button plus a bare <input> beside it; the input isn't a question. */
 function isDropdownHelper(el: HTMLElement): boolean {
+  if (el.closest('[id$="_icimsDropdown_ctnr"]')) return true;
+  if (el instanceof HTMLSelectElement && el.id && el.ownerDocument.getElementById(`${el.id}_icimsDropdown`)) return true;
   if (!(el instanceof HTMLInputElement) || el.id || el.name || el.getAttribute('aria-label')) return false;
   const prev = el.previousElementSibling;
   return !!prev && prev.matches('button[aria-haspopup="listbox"]');
@@ -235,7 +237,7 @@ export function currentValue(field: Field): string {
       }
       if (!(el instanceof HTMLInputElement)) {
         const text = renderedText(el);
-        return /^(select|choose|search)/i.test(text) ? '' : text;
+        return /^[\s\-–—]*(?:select|choose|search|make a selection)/i.test(text) ? '' : text;
       }
       return '';
     }

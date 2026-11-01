@@ -264,6 +264,15 @@ const DEFS: Def[] = [
     not: /work for you|acceptable|suitable|residen|address|statement|acknowledg|declaration/,
     value: (c) => c.profile.answers.locationPreferences.join(', ') || null,
   },
+  // First-generation college student questions and their "if Yes" follow-ups: not in your
+  // profile, so left for you. ("college" in them must not pull in your school.)
+  { key: 'firstGeneration', re: /\bfirst gen(?:eration)?\b/, value: () => null },
+  // "What visa are you on or will you require?" asks for a visa name, not Yes/No. Left for you.
+  {
+    key: 'visaType',
+    re: /\b(?:what|which) (?:type of |kind of )?visas?\b|\bvisa (?:type|category|classification)\b|\b(?:type|kind) of visa\b/,
+    value: () => null,
+  },
   {
     key: 'sponsorshipDetails',
     re: /(?:context|details|explain|describe|additional information).*(?:immigration|sponsor)|(?:immigration|sponsor).*(?:context|details|explain|describe|additional information)/,
@@ -409,6 +418,20 @@ const DEFS: Def[] = [
     re: /are you a resident of (?:mainland china|any european country|the united kingdom|china|canada|japan|south korea)/,
     choiceOnly: true,
     value: (c) => isUS(c.profile.personal.country) ? 'No' : null,
+  },
+  {
+    // "Are you located in or a national of Cuba, Iran, North Korea, or Syria, or in Crimea...?"
+    // No when neither your country nor your citizenship is named. Left for you if you live in
+    // or are a citizen of Ukraine or Russia, since the listed regions are inside Ukraine.
+    key: 'sanctionedRegions',
+    re: /\b(?:located|locat\w+|resid\w*|based|live|living|national|nationals|citizen\w*)\b.{0,120}\b(?:cuba|iran|north korea|syria|crimea|donetsk|luhansk|sevastopol)\b/,
+    choiceOnly: true,
+    value: (c, label) => {
+      const places = [normalize(c.profile.personal.country), normalize(c.profile.answers.citizenship)];
+      if (places.some((p) => !p || /\b(?:ukraine|russia\w*)\b/.test(p))) return null;
+      const named = (p: string) => isUS(p) ? /\b(?:united states|usa|america)\b/.test(label) : new RegExp(`\\b${p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(label);
+      return places.some(named) ? null : 'No';
+    },
   },
   {
     // "Have you held citizenship in any of the countries listed above?" (export-control lists).
@@ -714,7 +737,7 @@ const DEFS: Def[] = [
   // Extensions stay blank; the number goes only in the number field.
   { key: 'phoneExtension', re: /\bext(ension)?\b|\bext\b/, value: () => null },
   { key: 'phone', short: true, re: /phone|mobile|cell|telephone|contact number/, not: /\bext(ension)?\b|country (phone )?code|device type|phone type/, value: (c) => c.profile.personal.phone },
-  { key: 'addressLine2', short: true, re: /address line 2|apartment|\bapt\b|suite|unit number/, value: (c) => c.profile.personal.addressLine2 || null },
+  { key: 'addressLine2', short: true, re: /address line 2|^(?:street )?address 2$|^street 2$|apartment|\bapt\b|suite|unit number/, value: (c) => c.profile.personal.addressLine2 || null },
   { key: 'street', short: true, re: /street|address line 1|^address( 1)?$|home address|mailing address|street address|residential address/, value: (c) => c.profile.personal.street || null },
   { key: 'zip', short: true, re: /zip|postal|post code|postcode/, value: (c) => c.profile.personal.zip || null },
   { key: 'city', short: true, re: /^city\b|\bcity$|city town|town city|location city/, value: (c) => c.profile.personal.city || null },
@@ -775,7 +798,8 @@ const DEFS: Def[] = [
   {
     key: 'school',
     re: /school|university|college|institution/,
-    not: /high school|\bgraduat|\bgpa\b|grade point/,
+    // Yes/No questions that mention college ("Are you a college student?") aren't asking which one.
+    not: /high school|\bgraduat|\bgpa\b|grade point|^(?:are|do|does|did|have|has|is|was|were|will|would|can|could)\b|^if (?:you )?(?:selected|answered|checked)\b/,
     value: (c) => latestSchool(c.profile)?.school || null,
     tiers: (c) => [schoolVariants(latestSchool(c.profile)?.school ?? '')],
   },
@@ -803,6 +827,21 @@ const DEFS: Def[] = [
     not: /\bgraduat|\bcomplet|\bfinish|\bend\b|internship|\bjob\b|position|\brole\b|\bwork|employment|availab|can you|could you|able to/,
     isDate: true,
     value: (c) => latestSchool(c.profile)?.start || null,
+  },
+  // "Degree Completed?" is Yes/No (or In Progress), not which degree.
+  {
+    key: 'degreeCompleted',
+    re: /^(?:degree|program) (?:completed|complete|conferred|earned|obtained)$|^(?:have|did) you (?:completed|complete|finished|finish|earned|earn) (?:your|the|this) degree$/,
+    choiceOnly: true,
+    value: (c) => {
+      const end = latestSchool(c.profile)?.end;
+      if (!end) return null;
+      return end.slice(0, 7) > todayISO().slice(0, 7) ? 'No' : 'Yes';
+    },
+    tiers: (c) => {
+      const end = latestSchool(c.profile)?.end;
+      return end && end.slice(0, 7) > todayISO().slice(0, 7) ? [['In Progress', 'In progress', 'Currently enrolled', 'Pursuing'], ['No']] : [['Yes', 'Completed']];
+    },
   },
   { key: 'degree', re: /\bdegree\b|level of education|highest education|education level/, not: /\b(?:date|year|completion|gpa|coursework|when|semester|term)\b|grade point/, value: (c) => latestSchool(c.profile)?.degree || null, tiers: (c) => degreeTiers(latestSchool(c.profile)?.degree ?? '') },
   { key: 'major', short: true, re: /\bmajor\b|field of study|discipline|area of study|concentration|program of study/, value: (c) => latestSchool(c.profile)?.major || null, tiers: (c) => majorTiers(c.profile) },
@@ -853,7 +892,8 @@ const DEFS: Def[] = [
   { key: 'eduStartMonth', re: /start (date )?month/, value: (c) => monthOf(latestSchool(c.profile)?.start) },
   { key: 'eduStartYear', re: /start (date )?year|first year attended/, value: (c) => latestSchool(c.profile)?.start?.slice(0, 4) || null },
   { key: 'eduEndMonth', re: /end (date )?month/, value: (c) => monthOf(latestSchool(c.profile)?.end) },
-  { key: 'eduEndYear', re: /end (date )?year|last year attended|graduation year/, value: (c) => latestSchool(c.profile)?.end?.slice(0, 4) || null },
+  // "Completion Date … Year" is the year box of a split month/day/year date.
+  { key: 'eduEndYear', re: /end (date )?year|last year attended|graduation year|\b(?:graduation|completion) date\b.*\byear$/, value: (c) => latestSchool(c.profile)?.end?.slice(0, 4) || null },
 
   // --- Logistics ---
   {

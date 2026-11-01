@@ -248,7 +248,8 @@ function listboxFor(el: Element): Element | null {
     const box = id ? byId(el, id) : null;
     if (box) return box;
   }
-  return null;
+  // iCIMS: <a id="X_icimsDropdown"> opens <div id="X_icimsDropdown_ctnr">.
+  return el.id ? byId(el, `${el.id}_ctnr`) : null;
 }
 
 function allVisibleOptions(scope: ParentNode): HTMLElement[] {

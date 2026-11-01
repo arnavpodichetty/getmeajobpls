@@ -19,6 +19,7 @@ export function normalize(value: string | null | undefined): string {
 export function cleanLabel(value: string | null | undefined): string {
   return (value ?? '')
     .replace(/\s+/g, ' ')
+    .replace(/^\s*error:\s*/i, '') // screen-reader prefix after a failed submit (iCIMS)
     .replace(/\s*[*✱]\s*/g, ' ')
     .replace(/\s*\(?\b(required|optional)\)?\s*$/i, '')
     .replace(/(?<=[a-z])(Required|Optional)$/, '')

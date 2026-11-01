@@ -187,8 +187,17 @@ async function fillField(field: Field, answer: Answer): Promise<Outcome> {
   // A dropdown asking only for the month ("June") or only for the year ("2028") of a date.
   else if (answer.isDate && typeof value === 'string' && /^\d{4}-\d{2}/.test(value)) {
     const question = normalize(field.label);
-    if (/\bmonth\b/.test(question) && !/\byears?\b/.test(question)) value = monthName(value);
-    else if (/\byears?\b/.test(question) && !/\bmonths?\b/.test(question)) value = value.slice(0, 4);
+    // Split dates label each box by its last word ("… Completion Date Month" / "Day" / "Year"),
+    // and the question before it can mention the others ("1st day of the month").
+    const part = question.match(/\b(month|day|year)$/)?.[1];
+    if (part === 'day') {
+      const day = Number(value.slice(8, 10));
+      const outcome = await fillField(field, { ...answer, isDate: false, value: String(day || 1), tiers: undefined });
+      // Your profile has month and year only; the 1st is a guess unless the site asks for it.
+      return outcome.ok && !day && !/\b(?:1st|first) day\b/.test(question) ? { ...outcome, review: 'Day picked as the 1st; your profile has only month and year.' } : outcome;
+    }
+    if (part === 'month' || (!part && /\bmonth\b/.test(question) && !/\byears?\b/.test(question))) value = monthName(value);
+    else if (part === 'year' || (!part && /\byears?\b/.test(question) && !/\bmonths?\b/.test(question))) value = value.slice(0, 4);
   }
   const one = asText(value);
   switch (field.kind) {
