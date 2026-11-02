@@ -3,8 +3,9 @@
 // first answers.
 import type { FillContext } from '../../adapters/types';
 import { setTimeZone } from '../clock';
+import { jobInfoForPage } from '../jobInfo';
 import type { FieldResult, FillReport } from '../types';
-import { LEAVE_EMPTY, resolveAnswer, type Answer, type AnswerContext, type AnswerValue } from './answers';
+import { gpaToTenth, LEAVE_EMPTY, resolveAnswer, TENTH_GPA, type Answer, type AnswerContext, type AnswerValue } from './answers';
 import {
   attachFile,
   fillButtons,
@@ -183,6 +184,7 @@ function asText(value: AnswerValue): string {
 
 async function fillField(field: Field, answer: Answer): Promise<Outcome> {
   let value = answer.value;
+  let tiers = answer.tiers;
   if (answer.isDate && typeof value === 'string' && !isChoice(field)) value = formatDate(value, field.el, field.label);
   // A dropdown asking only for the month ("June") or only for the year ("2028") of a date.
   else if (answer.isDate && typeof value === 'string' && /^\d{4}-\d{2}/.test(value)) {
@@ -196,9 +198,12 @@ async function fillField(field: Field, answer: Answer): Promise<Outcome> {
       // Your profile has month and year only; the 1st is a guess unless the site asks for it.
       return outcome.ok && !day && !/\b(?:1st|first) day\b/.test(question) ? { ...outcome, review: 'Day picked as the 1st; your profile has only month and year.' } : outcome;
     }
-    if (part === 'month' || (!part && /\bmonth\b/.test(question) && !/\byears?\b/.test(question))) value = monthName(value);
-    else if (part === 'year' || (!part && /\byears?\b/.test(question) && !/\bmonths?\b/.test(question))) value = value.slice(0, 4);
+    // A month or year on its own replaces the whole date, and so do its spellings (tiers).
+    if (part === 'month' || (!part && /\bmonth\b/.test(question) && !/\byears?\b/.test(question))) [value, tiers] = [monthName(value), undefined];
+    else if (part === 'year' || (!part && /\byears?\b/.test(question) && !/\bmonths?\b/.test(question))) [value, tiers] = [value.slice(0, 4), undefined];
   }
+  // The hint is often in parentheses, which label matching ignores, so check the full label here.
+  if (answer.key === 'gpa' && typeof value === 'string' && TENTH_GPA.test(`${field.label} ${(field.el as HTMLInputElement).placeholder ?? ''}`)) value = gpaToTenth(value);
   const one = asText(value);
   switch (field.kind) {
     case 'text':
@@ -210,22 +215,22 @@ async function fillField(field: Field, answer: Answer): Promise<Outcome> {
     case 'richtext':
       return fillRichText(field.el, one);
     case 'select':
-      return fillSelect(field.el as HTMLSelectElement, value, answer.tiers, answer.locationPreference, answer.availabilityDate);
+      return fillSelect(field.el as HTMLSelectElement, value, tiers, answer.locationPreference, answer.availabilityDate);
     case 'radio':
-      return fillRadio(field.members, one, answer.tiers, answer.locationPreference, answer.availabilityDate);
+      return fillRadio(field.members, one, tiers, answer.locationPreference, answer.availabilityDate);
     case 'checkboxes':
-      return fillCheckboxes(field.members, value, answer.tiers, answer.locationPreference, answer.availabilityDate);
+      return fillCheckboxes(field.members, value, tiers, answer.locationPreference, answer.availabilityDate);
     case 'checkbox':
       return fillCheckbox(field.el as HTMLInputElement, one);
     case 'buttons':
-      return fillButtons(field.members, one, answer.tiers, answer.locationPreference, answer.availabilityDate);
+      return fillButtons(field.members, one, tiers, answer.locationPreference, answer.availabilityDate);
     case 'combobox': {
       if (Array.isArray(value) && value.length > 1) {
         const { added, skipped } = await fillMultiCombobox(field.el, value);
         if (!added.length) return { ok: false, review: 'None of your skills matched the options.' };
         return skipped.length ? { ok: true, review: `Skipped (no match): ${skipped.slice(0, 6).join(', ')}${skipped.length > 6 ? '…' : ''}` } : { ok: true };
       }
-      return fillCombobox(field.el, one, { tiers: answer.tiers, locationPreference: answer.locationPreference, availabilityDate: answer.availabilityDate });
+      return fillCombobox(field.el, one, { tiers: tiers, locationPreference: answer.locationPreference, availabilityDate: answer.availabilityDate });
     }
     default:
       return { ok: false, review: 'Unsupported field type.' };
@@ -325,10 +330,12 @@ function overrideFor(field: Field, overrides: Override[], c: AnswerContext): Ans
 export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<FillReport> {
   const root = opts.root ?? document;
   setTimeZone(ctx.settings.timeZone);
+  const job = jobInfoForPage();
   const answers: AnswerContext = {
     profile: ctx.profile,
-    jobTitle: document.querySelector('[data-test="topbar-job-title"], h1')?.textContent?.trim() || document.title,
+    jobTitle: job.title || document.querySelector('[data-test="topbar-job-title"], h1')?.textContent?.trim() || document.title,
     jobText: (document.body.innerText || document.body.textContent || '').slice(0, 30000),
+    jobLocation: job.location,
     skills: ctx.skills?.length ? ctx.skills : ctx.profile.skills,
   };
   const results: FieldResult[] = [];

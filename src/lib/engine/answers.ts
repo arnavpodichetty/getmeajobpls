@@ -13,6 +13,8 @@ export interface AnswerContext {
   skills: string[];
   jobTitle?: string;
   jobText?: string;
+  /** Where the job is, as the posting shows it ("Springfield, CA"). */
+  jobLocation?: string;
 }
 
 export type AnswerValue = string | string[];
@@ -101,6 +103,50 @@ export function payExpectation(p: Profile): { hourly: number; annual: number } {
   return { hourly, annual: Math.round(hourly * 52 * 40) };
 }
 const asksAnnual = (label: string) => !/\b(?:hour|hourly|hr)\b/.test(label) && /\b(?:annual|annually|annualized|yearly|year|per annum)\b/.test(label);
+const LEVEL_WORDS: Record<string, string[]> = {
+  bachelor: ['Bachelors', "Bachelor's", 'Bachelor'],
+  master: ['Masters', "Master's", 'Master'],
+  doctor: ['PhD', 'Doctorate', 'Doctoral'],
+  associate: ['Associates', "Associate's", 'Associate'],
+};
+
+/** Your graduation date first; then "2028 Bachelors"-style options (year plus degree level). */
+function graduationTiers(c: AnswerContext): string[][] {
+  const iso = c.profile.answers.graduationDate || latestSchool(c.profile)?.end || '';
+  if (!iso) return [];
+  const level = degreeTiers(latestSchool(c.profile)?.degree ?? '').flat().find((t) => t.startsWith('degree-level:'))?.slice('degree-level:'.length);
+  const words = level ? LEVEL_WORDS[level] ?? [] : [];
+  return words.length ? [[iso], words.map((w) => `${iso.slice(0, 4)} ${w}`)] : [[iso]];
+}
+
+/** "3.84" → "3.8", "3.85" → "3.9", "3.96" → "4.0"; anything not a plain number is kept. */
+/** A GPA box asking for one decimal place ("GPA (rounded to one decimal)", "X.X"). */
+export const TENTH_GPA = /\b(?:one|1|first|single) decimal|\bnearest (?:tenth|0\.1)\b|\btenths? place\b|\bx\.x\b/i;
+
+export function gpaToTenth(gpa: string): string {
+  if (!/^\d+(?:\.\d+)?$/.test(gpa)) return gpa;
+  // Work in hundredths so 3.85 doesn't round down through floating point.
+  const hundredths = Math.round(Number(gpa) * 100);
+  return (Math.round(hundredths / 10) / 10).toFixed(1);
+}
+
+/**
+ * Whether you live in the job's city: true for the same city (and state), false when the
+ * job is in another state or country, null when it's unclear (no location, remote, several
+ * offices, or another city in your state that may be within commuting distance).
+ */
+function livesInJobCity(c: AnswerContext): boolean | null {
+  const loc = c.jobLocation ?? '';
+  if (!loc || /\bremote\b|\+ \d+ more/i.test(loc)) return null;
+  const [jobCity = '', jobRegion = ''] = loc.split(',').map(normalize);
+  const city = normalize(c.profile.personal.city);
+  const state = normalize(c.profile.personal.state);
+  if (!city || !state || !jobCity) return null;
+  const region = (s: string) => US_STATES[s] ?? s;
+  if (jobRegion && region(jobRegion) !== region(state)) return false;
+  return jobCity === city ? true : null;
+}
+
 const isUS = (country: string) => /^(united states|usa|us|u s|united states of america)$/.test(normalize(country));
 const location = (p: Profile) => [p.personal.city, p.personal.state].filter(Boolean).join(', ');
 export const fullName = (p: Profile) => p.personal.fullName.trim() || [p.personal.firstName, p.personal.lastName].filter(Boolean).join(' ');
@@ -449,11 +495,11 @@ const DEFS: Def[] = [
   {
     // Export-control / "U.S. person" / citizenship-status lists: pick the US-citizen option.
     key: 'usPersonStatus',
-    re: /export control|\bu s person\b|\bitar\b|\bear\b.{0,40}\b(?:regulat|export)|citizenship status|immigration status|(?:describes|is) your (?:current )?(?:citizenship|immigration|residency|work authori[sz]ation) status/,
+    re: /export (?:control|compliance)|\bu s person\b|\bitar\b|\bear\b.{0,40}\b(?:regulat|export)|citizenship status|immigration status|(?:describes|is) your (?:current )?(?:citizenship|immigration|residency|work authori[sz]ation) status/,
     choiceOnly: true,
     value: (c) => (isUS(c.profile.answers.citizenship) ? 'United States citizen' : null),
     // Yes/No lists ("Are you a U.S. person?") take Yes last.
-    tiers: (c) => (isUS(c.profile.answers.citizenship) ? [['A United States citizen or national', 'United States citizen', 'U.S. citizen', 'US citizen'], ['U.S. person', 'US person', 'Citizen'], ['Yes']] : []),
+    tiers: (c) => (isUS(c.profile.answers.citizenship) ? [['A United States citizen or national', 'United States citizen', 'U.S. citizen', 'US citizen'], ['I am currently a U.S. Person', 'I am a U.S. Person', 'U.S. person', 'US person', 'Citizen'], ['Yes']] : []),
   },
   // --- Yes/no eligibility questions (before location/country patterns) ---
   {
@@ -506,6 +552,23 @@ const DEFS: Def[] = [
     value: () => 'Yes',
   },
   { key: 'citizenship', re: /citizenship|country of citizenship|nationality/, value: (c) => c.profile.answers.citizenship || null },
+  // "I acknowledge this posting is for an on-site position." with options like "YES, and I
+  // already live locally" / "YES, and I would relocate" / "NO, I am not able to relocate".
+  {
+    key: 'onsiteAcknowledge',
+    re: /\backnowledg\w*\b.{0,80}\b(?:on ?site|in office|in person)\b|\b(?:on ?site|in office|in person)\b.{0,80}\backnowledg/,
+    choiceOnly: true,
+    value: (c) => {
+      const local = livesInJobCity(c);
+      if (local) return 'Yes, I already live locally';
+      return local === false && /^yes/i.test(c.profile.answers.willingToRelocate) ? 'Yes, I would relocate' : null;
+    },
+    tiers: (c) => {
+      const local = livesInJobCity(c);
+      if (local) return [['YES, and I already live locally', 'I already live locally', 'I live locally']];
+      return local === false && /^yes/i.test(c.profile.answers.willingToRelocate) ? [['YES, and I would relocate', 'I would relocate', 'I will relocate', 'willing to relocate']] : [];
+    },
+  },
   { key: 'willingToRelocate', re: /relocat/, value: (c) => yesNo(c.profile.answers.willingToRelocate) },
   {
     key: 'workScheduleAvailable',
@@ -601,7 +664,7 @@ const DEFS: Def[] = [
   },
   {
     key: 'agreeToTerms',
-    re: /i (have read|agree|acknowledge|accept|understand)|terms (and|&) conditions|privacy (policy|notice|agreement|statement)|code of conduct|data privacy|by submitting|i certify|attest|confirm (that )?(everything|all|the information)|(information|answers?) .{0,40}(true|accurate) and|\b(statement|acknowledg(e)?ment|declaration)\b/,
+    re: /i (have read|agree|acknowledge|accept|understand)|i confirm that i have (?:read|reviewed)|(?:reviewed|read) and (?:accept|agree)|terms (and|&) conditions|terms of (?:service|use)|privacy (policy|notice|agreement|statement)|code of conduct|data privacy|by submitting|i certify|attest|confirm (that )?(everything|all|the information)|(information|answers?) .{0,40}(true|accurate) and|\b(statement|acknowledg(e)?ment|declaration)\b/,
     not: /marketing|newsletter|sms|text messages|promotional|future (job )?opportunit|talent (community|network)|personal statement|statement of (interest|purpose)|financial statement|bank statement|disabilit|veteran|\brace\b|ethnic|gender|which statement|best describes|approach to/,
     choiceOnly: true,
     value: (c) => yesNo(c.profile.answers.agreeToTerms),
@@ -783,7 +846,7 @@ const DEFS: Def[] = [
     choiceOnly: true,
     value: (c) => yesNo(c.profile.answers.returningToSchool),
   },
-  { key: 'furtherEducation', re: /\b(?:further|additional|postgraduate|post graduate).{0,20}(?:education|studies|school|degree)|(?:pursu|continu|consider|commit|enroll|attend|plan|intend|intent).{0,60}(?:education|studies|degree|school).{0,70}(?:after|following|upon)|(?:plan|intend|intent|pursu|enroll|attend).{0,40}\b(?:graduate|master s|masters|phd|doctoral) (?:school|degree|studies)/, value: (c) => yesNo(c.profile.answers.furtherEducation) },
+  { key: 'furtherEducation', re: /\b(?:further|additional|postgraduate|post graduate).{0,20}(?:education|studies|school|degree)|(?:pursu|continu|consider|commit|enroll|attend|plan|intend|intent).{0,60}(?:education|studies|degree|school).{0,70}(?:after|following|upon)|(?:plan|intend|intent|pursu|enroll|attend).{0,40}\b(?:graduate|master s|masters|phd|doctoral) (?:school|degree|studies)/, not: /^(?:what|which|when) (?:year|date|semester|term|month)\b|\bgraduation date\b/, value: (c) => yesNo(c.profile.answers.furtherEducation) },
   { key: 'currentOffers', re: /(?:currently|current|any|other).{0,25}\boffers?\b|\boffers?\b.{0,25}(?:received|hold|outstanding)/, value: (c) => yesNo(c.profile.answers.currentOffers) },
   { key: 'offerDetails', re: /\boffers?\b.*(?:details|company|deadline)|company name.*job title.*deadline/, value: (c) => c.profile.answers.currentOffers === 'No' ? 'N/A' : c.profile.answers.offerDetails || null },
   {
@@ -846,9 +909,22 @@ const DEFS: Def[] = [
   { key: 'degree', re: /\bdegree\b|level of education|highest education|education level/, not: /\b(?:date|year|completion|gpa|coursework|when|semester|term)\b|grade point/, value: (c) => latestSchool(c.profile)?.degree || null, tiers: (c) => degreeTiers(latestSchool(c.profile)?.degree ?? '') },
   { key: 'major', short: true, re: /\bmajor\b|field of study|discipline|area of study|concentration|program of study/, value: (c) => latestSchool(c.profile)?.major || null, tiers: (c) => majorTiers(c.profile) },
   { key: 'minor', short: true, re: /\bminor\b/, value: (c) => latestSchool(c.profile)?.minor || null },
-  { key: 'gpa', re: /\bgpa\b|grade point|cumulative grade/, value: (c) => latestSchool(c.profile)?.gpa || null },
+  // Choices: your exact GPA or the range holding it ("3.5 - 3.79", "3.5+") first; lists of
+  // one-decimal values ("3.9", "3.8") get it rounded to the nearest tenth. A box asking for
+  // one decimal place gets the rounded value too.
+  {
+    key: 'gpa',
+    re: /\bgpa\b|grade point|cumulative grade/,
+    value: (c) => latestSchool(c.profile)?.gpa?.trim() || null,
+    tiers: (c) => {
+      const gpa = latestSchool(c.profile)?.gpa?.trim();
+      if (!gpa) return [];
+      const tenth = gpaToTenth(gpa);
+      return tenth === gpa ? [[gpa]] : [[gpa], [tenth]];
+    },
+  },
   // \bgraduat: "undergraduate" names your level, not your graduation date.
-  { key: 'graduationDate', re: /\bgraduat|expected (completion|grad)|completion date|degree (end|completion)|\b(?:when|what (?:year|semester|term|month|date))\b.{0,50}\b(?:receiv|earn|complet|finish|obtain|conferr|award)\w*\b.{0,40}\bdegree\b/, not: /(?<!month (?:and )?)year$/, isDate: true, value: (c) => c.profile.answers.graduationDate || latestSchool(c.profile)?.end || null },
+  { key: 'graduationDate', re: /\bgraduat|expected (completion|grad)|completion date|degree (end|completion)|\b(?:when|what (?:year|semester|term|month|date))\b.{0,50}\b(?:receiv|earn|complet|finish|obtain|conferr|award)\w*\b.{0,40}\bdegree\b/, not: /(?<!month (?:and )?)year$/, isDate: true, value: (c) => c.profile.answers.graduationDate || latestSchool(c.profile)?.end || null, tiers: graduationTiers },
   { key: 'programmingLanguages', re: /programming languages|coding languages/, value: (c) => c.skills },
   // Language proficiency: Workday asks reading / writing / speaking / comprehension / overall separately.
   {

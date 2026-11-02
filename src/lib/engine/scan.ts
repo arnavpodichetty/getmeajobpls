@@ -68,6 +68,8 @@ function checkboxGroupRoot(input: HTMLInputElement): Element | null {
 }
 
 /** Workday renders each dropdown as a button plus a bare <input> beside it; the input isn't a question. */
+const CONSENT_STATEMENT = /^(?:by (?:checking|ticking|selecting) (?:this|the) box|i (?:hereby )?(?:confirm|agree|acknowledge|certify|accept|understand|consent|attest))\b/i;
+
 function isDropdownHelper(el: HTMLElement): boolean {
   if (el.closest('[id$="_icimsDropdown_ctnr"]')) return true;
   if (el instanceof HTMLSelectElement && el.id && el.ownerDocument.getElementById(`${el.id}_icimsDropdown`)) return true;
@@ -126,7 +128,8 @@ export function scanFields(root: ParentNode = document): Field[] {
   );
   const isMenuSearch = (el: HTMLElement) =>
     (menuIds.has(el.getAttribute('aria-controls')) && el instanceof HTMLInputElement) ||
-    !!el.closest('[role="listbox"], [role="menu"], .iti__dropdown-content');
+    // RippleMatch marks its radio and checkbox groups role="listbox"; those are questions.
+    (!!el.closest('[role="listbox"], [role="menu"], .iti__dropdown-content') && !(el instanceof HTMLInputElement && /^(?:radio|checkbox)$/i.test(el.type)));
   // Native radio groups share a name only within the same form and DOM tree.
   const radioGroups = new Map<Node, Map<string | Element, HTMLInputElement[]>>();
   const checkboxGroups = new Map<Element, HTMLInputElement[]>();
@@ -197,7 +200,12 @@ export function scanFields(root: ParentNode = document): Field[] {
   for (const groups of radioGroups.values()) {
     for (const members of groups.values()) push('radio', members[0], members, groupLabelFor(members));
   }
-  for (const members of checkboxGroups.values()) push('checkboxes', members[0], members, groupLabelFor(members));
+  for (const members of checkboxGroups.values()) {
+    // A lone "By checking this box, I confirm…" under a section title is one consent box, not a list.
+    const own = members.length === 1 ? labelFor(members[0]) : null;
+    if (own && CONSENT_STATEMENT.test(own.label)) push('checkbox', members[0], members, own);
+    else push('checkboxes', members[0], members, groupLabelFor(members));
+  }
 
   // Rendered order (shadow roots included) so filling goes top to bottom like a person would.
   const order = new Map(all.map((el, i) => [el, i]));

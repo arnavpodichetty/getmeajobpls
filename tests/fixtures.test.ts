@@ -3,7 +3,7 @@
 // JavaScript, so custom dropdowns can't open here — those are covered by
 // `npm run live-test` in a real browser. These tests pin down labels, text
 // fields, native selects, radios, checkboxes and button groups.
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ADAPTERS } from '../src/adapters';
 import type { FillReport } from '../src/lib/types';
 import { context, fastTimings, loadFixture } from './helpers/fixture';
@@ -42,6 +42,77 @@ describe('Greenhouse', () => {
     await run('greenhouse-embed', 'greenhouse');
     expect(value('#first_name')).toBe('Ada');
     expect(value('#email')).toBe('ada@example.com');
+  });
+});
+
+describe('Breezy rows and on-site question', () => {
+  const setUrl = (url: string) => (window as unknown as { happyDOM: { setURL(u: string): void } }).happyDOM.setURL(url);
+  afterEach(() => setUrl('http://localhost/'));
+
+  async function fill(city: string, state: string, jobs = 1) {
+    setUrl('https://acme.breezy.hr/p/0-intern/apply');
+    loadFixture('breezy-b');
+    const ctx = context();
+    Object.assign(ctx.profile.personal, { city, state });
+    if (jobs > 1) ctx.profile.experience.push({ ...ctx.profile.experience[0], id: 'x2', company: 'Difference Engines', title: 'Tutor', current: false, start: '2025-06', end: '2025-08' });
+    const r = await adapterFor('breezy').fill(ctx);
+    const picked = [...document.querySelectorAll<HTMLInputElement>('input[name$="question_0"]')].find((e) => e.checked)?.parentElement?.textContent?.trim();
+    return { r, picked };
+  }
+  const rowValue = (i: number, model: string) => document.querySelectorAll<HTMLInputElement>('li[ng-repeat*="work_history"]')[i].querySelector<HTMLInputElement>(`[ng-model="${model}"]`)!.value;
+
+  it('puts one job in each work row, with dates in the date boxes', async () => {
+    await fill('Los Angeles', 'CA', 2);
+    expect(rowValue(0, 'candidatePosition.company_name')).toBe('Analytical Engines');
+    expect(rowValue(1, 'candidatePosition.company_name')).toBe('Difference Engines');
+    expect(rowValue(1, 'candidatePosition.date_end')).toBe('2025-08-01');
+    expect(rowValue(2, 'candidatePosition.company_name')).toBe('');
+  });
+
+  it('labels questions by their heading, not the note under it', async () => {
+    const { r } = await fill('Los Angeles', 'CA');
+    expect(r.fields.some((f) => /^Give an example where you had to make a decision/.test(f.label))).toBe(true);
+    expect(r.fields.some((f) => /expected length/.test(f.label))).toBe(false);
+  });
+
+  it('answers the on-site question from where you live', async () => {
+    expect((await fill('Springfield', 'CA')).picked).toBe('YES, and I already live locally.');
+    expect((await fill('Seattle', 'WA')).picked).toBe('YES, and I would relocate to work at Acme.');
+    // Another city in the same state may or may not be commutable: left for you.
+    expect((await fill('Los Angeles', 'CA')).picked).toBeUndefined();
+  });
+});
+
+describe('RippleMatch', () => {
+  const picked = (name: string) => {
+    const el = [...document.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`)].find((e) => e.checked);
+    return el ? document.querySelector(`label[for="${el.id}"]`)?.textContent?.trim() : undefined;
+  };
+  const checkedLabels = () => [...document.querySelectorAll<HTMLInputElement>('input[type=checkbox]')].filter((e) => e.checked).map((e) => document.querySelector(`label[for="${e.id}"]`)?.textContent?.trim());
+
+  it('answers radio and checkbox groups the site marks role="listbox"', async () => {
+    await run('ripplematch', 'ripplematch');
+    expect(picked('currentlyEnrolled')).toBe('Yes');
+    expect(picked('authorized')).toBe('Yes, I am authorized');
+    expect(picked('futureSponsorship')).toBe('No, I will not require sponsorship');
+    expect(picked('question-565639')).toBe('I am currently a “U.S. Person”');
+    expect(checkedLabels()).toContain('LinkedIn');
+    // The lone consent box under "Recruiter Questions".
+    expect(checkedLabels().some((l) => /^By checking this box, I confirm/.test(l ?? ''))).toBe(true);
+    // Never "I reside outside of the United States".
+    expect(checkedLabels().some((l) => /reside outside/.test(l ?? ''))).toBe(false);
+  });
+
+  it('labels the home state box by its own label', async () => {
+    const r = await run('ripplematch', 'ripplematch');
+    expect(r.fields.some((f) => f.label === 'Your home state')).toBe(true);
+    expect(r.fields.some((f) => f.label === 'Your Info')).toBe(false);
+  });
+
+  it('leaves first-generation and Pell Grant questions for you', async () => {
+    await run('ripplematch', 'ripplematch');
+    expect(picked('firstGenCollege')).toBeUndefined();
+    expect(picked('eligiblePellGrant')).toBeUndefined();
   });
 });
 

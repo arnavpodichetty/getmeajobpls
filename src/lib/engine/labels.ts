@@ -47,10 +47,16 @@ export function textOfIds(el: Element, attr: string): string {
 }
 
 function labelElementFor(el: Element): HTMLLabelElement | null {
-  if (!el.id) return null;
   const root = el.getRootNode() as Document | ShadowRoot;
   try {
-    return root.querySelector<HTMLLabelElement>(`label[for="${CSS.escape(el.id)}"]`);
+    const byId = el.id ? root.querySelector<HTMLLabelElement>(`label[for="${CSS.escape(el.id)}"]`) : null;
+    if (byId) return byId;
+    // RippleMatch points some labels at the field's name ("homeState") and gives the field a random id.
+    const name = el.getAttribute('name');
+    if (!name || root.querySelector(`[id="${CSS.escape(name)}"]`)) return null;
+    const label = root.querySelector<HTMLLabelElement>(`label[for="${CSS.escape(name)}"]`);
+    // Only when the label sits with this field, not somewhere else on the page.
+    return label && label.closest('div, fieldset, li')?.parentElement?.contains(el) ? label : null;
   } catch {
     return null;
   }
@@ -98,10 +104,10 @@ const isOptionLabel = (el: Element) => el.matches('label') && !!el.querySelector
  * Help text under a question that only matched LABELISH by class name, like
  * Ashby's "ashby-application-form-question-description" ("(If hired,
  * verification will be required…)"). It comes after the title, so it would
- * otherwise win as the nearest heading.
+ * otherwise win as the nearest heading. Breezy's is "question-body".
  */
 const isHelpText = (el: Element) =>
-  !el.matches('label, legend, h1, h2, h3, h4, h5, h6') && /descri|help|hint|instruction|subtitle|caption/i.test(el.getAttribute('class') ?? '');
+  !el.matches('label, legend, h1, h2, h3, h4, h5, h6') && /descri|help|hint|instruction|subtitle|caption|question-body/i.test(el.getAttribute('class') ?? '');
 
 /** Last label-like element inside `container` that comes before `el` in the page. */
 function headingBefore(container: Element, el: Element): string {

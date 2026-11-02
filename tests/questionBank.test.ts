@@ -288,6 +288,9 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Are you currently a college student?', null],
     ['Which university do you attend?', 'University of California, Los Angeles'],
   ],
+  'graduation year with degree level': [
+    ['What year do you intend to complete your degree program? If you are considering further education, please use that graduation date as your selection.', '2028-06'],
+  ],
   'degree completed': [
     ['Degree Completed?', 'No'],
   ],

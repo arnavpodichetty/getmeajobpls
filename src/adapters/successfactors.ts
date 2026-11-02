@@ -146,7 +146,7 @@ export async function setDate(row: Element, re: RegExp, iso: string, results: Fi
 }
 
 /** Pair rows with entries: a row that already names one keeps it, empty rows take the rest in order. */
-function assign<T>(found: HTMLElement[], items: T[], key: (row: HTMLElement) => string, name: (item: T) => string): (T | undefined)[] {
+export function assign<T>(found: HTMLElement[], items: T[], key: (row: HTMLElement) => string, name: (item: T) => string): (T | undefined)[] {
   const remaining = [...items];
   const order = found.map((row) => {
     const have = normalize(key(row));

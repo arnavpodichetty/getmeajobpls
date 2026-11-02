@@ -14,7 +14,6 @@ const BOARDS: { id: string; name: string; host: RegExp }[] = [
   { id: 'rippling', name: 'Rippling', host: /^ats\.rippling\.com$/ },
   { id: 'dover', name: 'Dover', host: /(^|\.)dover\.(com|io)$/ },
   { id: 'teamtailor', name: 'Teamtailor', host: /\.teamtailor\.com$/ },
-  { id: 'breezy', name: 'Breezy HR', host: /\.breezy\.hr$/ },
   { id: 'bamboohr', name: 'BambooHR', host: /\.bamboohr\.com$/ },
   { id: 'jazzhr', name: 'JazzHR', host: /(\.applytojob\.com|\.jazzhr\.com)$/ },
   { id: 'taleo', name: 'Taleo', host: /\.taleo\.net$/ },
@@ -35,6 +34,7 @@ const BOARDS: { id: string; name: string; host: RegExp }[] = [
   { id: 'freshteam', name: 'Freshteam', host: /freshteam\.com$/ },
   { id: 'zoho', name: 'Zoho Recruit', host: /zohorecruit\.(com|eu|in)$/ },
   { id: 'cornerstone', name: 'Cornerstone', host: /csod\.com$/ },
+  { id: 'ripplematch', name: 'RippleMatch', host: /(^|\.)ripplematch\.com$/ },
 ];
 
 export const boardAdapters: Adapter[] = BOARDS.map((b) => ({

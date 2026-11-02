@@ -51,6 +51,20 @@ const SITES: { host: RegExp; title?: string; company?: string; location?: string
     title: 'h1.ashby-job-posting-heading',
   },
   {
+    host: /(?:^|\.)ripplematch\.com$/,
+    title: '[data-testid="RoleHighlightsHeader:name"]',
+    location: '[data-testid="RoleHighlights:firstLocation"]',
+    company: '[data-testid="CompanyHighlights:name"]',
+    pay: '[data-testid^="RoleCompensation:"]',
+  },
+  {
+    // Breezy's first <h1> is the hidden "Application Submitted" message.
+    host: /\.breezy\.hr$/,
+    title: '.banner h1',
+    location: '.banner .meta .location',
+    pay: '.banner .meta .salary-range',
+  },
+  {
     host: /\.smartrecruiters\.com$/,
     title: 'h1.job-title, [data-test="topbar-job-title"]',
     location: '.topbar-location, spl-job-location, .job-location',

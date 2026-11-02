@@ -18,6 +18,12 @@
 - **iCIMS profile page:** "Address 2" no longer gets your street address again. "Degree Completed?" gets In Progress (or No) while you're still enrolled instead of your degree name. The split completion date fills Month, the 1st for Day, and Year. Labels no longer start with "Error:" after a failed submit.
 - **"First-generation college student" questions:** your school was typed into these (and into their "If selected Yes…" follow-ups) because they mention "college". They're left for you now, and Yes/No questions that mention college or university no longer get your school.
 - **"How did you hear about us?" fallbacks:** Handshake is tried after LinkedIn and the careers website. Profiles still on the old default list get it added automatically.
+- **Breezy work history and education:** every row got your latest job, and the date boxes (whose placeholder says "Company") got a company name. Each row now gets one job or school from your profile with its dates. Rows the site's resume reader added that aren't in your profile are flagged for you to check or delete.
+- **Breezy questions:** labels come from the question, not the note under it ("expected length 1-2 paragraphs").
+- **"I acknowledge this posting is for an on-site position":** picks "already live locally" when you live in the job's city, or "would relocate" when it's in another state and you're willing to relocate. Another city in your state is left for you.
+- **GPA choices:** lists of one-decimal values ("3.9", "3.8") get your GPA rounded to the nearest tenth, and range options get the range holding it. A box asking for one decimal place gets the rounded value.
+- **RippleMatch:** radio and checkbox questions (work authorization, sponsorship, export compliance, EEO, how you heard about us) were skipped because the site marks each group as a dropdown list. They're filled now, as is the "By checking this box, I confirm…" consent box. "Your home state" reads its own label, and graduation options like "2028 Bachelors" match your graduation year and degree.
+- **"What year do you intend to complete your degree?… If you are considering further education…":** was answered "No" as a further-education question. It now gets your graduation year.
 - **Cookie settings:** switches in cookie banners and preference panels are no longer treated as application questions.
 
 ## 1.3.3 (2026-10-30)
