@@ -26,6 +26,17 @@ describe('job details for the panel', () => {
     });
   });
 
+  it('decodes HTML entities in schema.org JobPosting data', () => {
+    const doc = page(`<script type="application/ld+json">${JSON.stringify({
+      '@type': 'JobPosting',
+      title: 'Intern AI Engineer R&amp;D',
+      hiringOrganization: { name: 'USA - Acme &amp;amp; Sons, Inc.' },
+    })}</script>`);
+    const info = readJobInfo(doc, new URL('https://example.com/job/1'));
+    expect(info.title).toBe('Intern AI Engineer R&D');
+    expect(info.company).toBe('USA - Acme & Sons, Inc.');
+  });
+
   it('prefers the posting\'s schema.org JobPosting data', () => {
     const doc = page(`<script type="application/ld+json">${JSON.stringify({
       '@context': 'https://schema.org',

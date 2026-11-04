@@ -95,7 +95,21 @@ const textOf = (doc: Document, selector?: string) => (selector ? clean(doc.query
 
 type Json = Record<string, unknown>;
 const asArray = (v: unknown): unknown[] => (Array.isArray(v) ? v : v == null ? [] : [v]);
-const str = (v: unknown) => (typeof v === 'string' || typeof v === 'number' ? clean(String(v)) : '');
+const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', ndash: '–', mdash: '—', rsquo: '’', lsquo: '‘', rdquo: '”', ldquo: '“' };
+/** "R&amp;D" → "R&D". Some sites HTML-escape their JobPosting data (twice, at times). */
+export function decodeEntities(text: string): string {
+  for (let i = 0; i < 3 && /&(?:#\d+|#x[\da-f]+|[a-z]+);/i.test(text); i++) {
+    const next = text.replace(/&(#\d+|#x[\da-f]+|[a-z]+);/gi, (m, e: string) => {
+      const code = /^#x/i.test(e) ? parseInt(e.slice(2), 16) : e[0] === '#' ? Number(e.slice(1)) : NaN;
+      if (Number.isFinite(code)) return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : m;
+      return ENTITIES[e.toLowerCase()] ?? m;
+    });
+    if (next === text) break;
+    text = next;
+  }
+  return text;
+}
+const str = (v: unknown) => (typeof v === 'string' || typeof v === 'number' ? clean(decodeEntities(String(v))) : '');
 const nameOf = (v: unknown) => (typeof v === 'object' && v ? str((v as Json).name) : str(v));
 
 function jobPostings(doc: Document): Json[] {
