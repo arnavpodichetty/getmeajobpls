@@ -148,6 +148,8 @@ describe('Greenhouse phone', () => {
     const p = testProfile();
     p.personal.phone = '2079460958';
     expect(greenhousePhone(p)).toBe('1-207-946-0958');
+    p.personal.phone = '+1 (207) 946-0958';
+    expect(greenhousePhone(p)).toBe('1-207-946-0958');
     p.personal.phone = '442079460958';
     expect(greenhousePhone(p)).toBe('442079460958');
   });

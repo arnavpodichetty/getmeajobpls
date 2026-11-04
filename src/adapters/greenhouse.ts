@@ -1,5 +1,5 @@
 import { fillPage, type Override } from '../lib/engine/fill';
-import type { Profile } from '../lib/types';
+import { dashedPhone } from '../lib/phone';
 import type { Adapter } from './types';
 
 // Every selector for Greenhouse's job-boards UI. Update here when the site changes.
@@ -18,17 +18,8 @@ const SELECTORS = {
   manualEntry: '#resume_text, #cover_letter_text',
 } as const;
 
-/**
- * A lone Greenhouse phone box gets "1-415-555-0100": country code, then the 10-digit
- * number in groups. Other lengths are left as saved.
- */
-export function greenhousePhone(p: Profile): string {
-  const digits = p.personal.phone.replace(/\D/g, '');
-  const cc = p.personal.phoneCountryCode.replace(/\D/g, '');
-  if (digits.length !== 10) return p.personal.phone;
-  const local = `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
-  return cc ? `${cc}-${local}` : local;
-}
+/** A lone Greenhouse phone box gets "1-415-555-0100". */
+export const greenhousePhone = dashedPhone;
 
 const OVERRIDES: Override[] = [
   { selector: SELECTORS.firstName, key: 'firstName', value: (c) => c.profile.personal.firstName },

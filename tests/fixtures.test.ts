@@ -176,6 +176,7 @@ describe('Ashby', () => {
     const r = await run('ashby-a', 'ashby');
     expect(value('#_systemfield_name')).toBe('Ada Lovelace');
     expect(value('#_systemfield_email')).toBe('ada@example.com');
+    expect(document.querySelector<HTMLInputElement>('input[type=tel]')?.value).toBe('1-415-555-0100');
     expect(status(r, /require Acme to sponsor/)).toBe('filled');
     const noButton = [...document.querySelectorAll('button[data-option="no"]')].find((b) =>
       b.closest('[data-field-path="790b5934-74f5-46f5-897a-675b7f37f2f3"]'),
