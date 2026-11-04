@@ -127,6 +127,8 @@ const BANK: Record<string, [string, string | null][]> = {
   ],
   'past employment with the employer': [
     ['Have you ever worked for Acme?', 'No'],
+    ['To your knowledge, were you referred to this position by a senior leader or decision‑maker at a current or prospective institutional client, business partner, or vendor of Example Group?', 'No'],
+    ['Have you previously been DIRECTLY employed with Acme Corp or Example Group? (i.e. have you received a paycheck or W-2 directly from one of these companies?).', 'No'],
     ['Have you previously been employed by Acme?', 'No'],
     ['Are you a current or former employee of Acme?', 'No'],
     ['Have you worked with us before?', 'No'],
@@ -178,6 +180,7 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Are you able to commit to a 10-week summer internship?', 'Yes'],
     ['Can you work 40 hours per week for the duration of the program?', 'Yes'],
     ['Are you available for full-time summer employment from June through August?', 'Yes'],
+    ['Are you available and willing to work for the entire duration of the internship program?', 'Yes'],
   ],
   'returning to school after the internship': [
     ['Do you plan to return to school upon completion of your internship?', 'Yes'],
@@ -218,6 +221,9 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Are you subject to a non-compete agreement?', 'No'],
     ['Are you bound by any non-solicitation or restrictive covenant?', 'No'],
     ['Do you have any outside business activities that could present a conflict of interest?', 'No'],
+    ['Do you have demonstrated experience in the specified discipline either in the form of school, work, or personal projects included in your resume?', 'Yes'],
+    ["Will you be including a link on your resume to samples of projects you've worked on, where you were either the sole or a direct contributor?", 'Yes'],
+    ['Do you serve as a director, officer, adviser, consultant, partner or investor of greater than 5% of any for-profit company or venture?', 'No'],
     ['Would you be subject to any restrictions from a former employer upon joining Example Group?', 'No'],
     ['Within the past 2 years have you supervised, approved, evaluated or awarded Example Group work?', 'No'],
     ['Are you currently or have you been involved in a selection committee process awarding work to Example Group?', 'No'],

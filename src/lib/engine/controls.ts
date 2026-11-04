@@ -67,9 +67,17 @@ export const monthName = (iso: string): string => MONTHS[Number(iso.split('-')[1
 // ---------------------------------------------------------------------------
 // Text
 
+const MONTH_NAMES = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+/** A month written out or abbreviated: "June", "Jun", "Sept." (not "Junior" or "Decline"). */
+const MONTH_WORD = /^(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?$/i;
+
 export function fillText(el: HTMLInputElement | HTMLTextAreaElement, value: string): Outcome {
   let text = value;
   let review: string | undefined;
+  // A number box asking for a month takes 6, not "June".
+  if (el instanceof HTMLInputElement && el.type === 'number' && MONTH_WORD.test(value.trim())) {
+    text = String(MONTH_NAMES.indexOf(value.trim().slice(0, 3).toLowerCase()) + 1);
+  }
   const max = el.maxLength;
   if (max > 0 && text.length > max) {
     text = text.slice(0, max);
@@ -235,11 +243,13 @@ export function fillButtons(members: HTMLElement[], value: string, tiers?: strin
 // Custom dropdowns (react-select, MUI, Workday, Ashby, Rippling…)
 
 /** Waits for dropdown options, in ms. Tests shorten these (fixtures have no live JS). */
-export const TIMING = { open: 1200, search: 4000, multi: 5000 };
+export const TIMING = { open: 1200, search: 4000, multi: 5000, noResults: 600 };
 
 // Grid popups (Oracle Recruiting's cx-select, aria-haspopup="grid") list each choice as a selectable gridcell.
 const OPTION_SELECTOR =
-  '[role="option"], [data-automation-id="promptOption"], [data-automation-id="menuItem"], .select__option, li[class*="option" i], spl-select-option, [role="gridcell"][aria-selected]';
+  '[role="option"], [data-automation-id="promptOption"], [data-automation-id="menuItem"], .select__option, li[class*="option" i], spl-select-option, [role="gridcell"][aria-selected], ' +
+  // Older react-select (v3/v4) options have no role, only an id like "react-select-3-option-0".
+  '[id^="react-select-"][id*="-option-"]';
 const NON_OPTIONS = /^(no (results|options|matches)|loading|searching|type to search|start typing|no items)/i;
 
 function listboxFor(el: Element): Element | null {
@@ -271,14 +281,54 @@ function visibleOptions(el: Element): HTMLElement[] {
   return inBox.length ? inBox : allVisibleOptions(document).filter((o) => !staleOptions.has(o));
 }
 
+const NO_RESULTS = /^(?:no (?:results|options|matches|items)|nothing found)\b/i;
+const STILL_SEARCHING = /^(?:loading|searching)\b/i;
+const NOTICES = '[class*="menu-notice" i], [class*="no-options" i], [class*="noOptions" i], [class*="no-results" i], [class*="noResults" i], [class*="loadingMessage" i], ' + OPTION_SELECTOR;
+
+/**
+ * The dropdown's own "No options" / "Loading…" message. react-select (Greenhouse) puts it
+ * in the menu beside the control; other widgets show it as a disabled option.
+ */
+function searchNotice(el: Element): 'none' | 'loading' | null {
+  // The menu around the listbox, unless it sits straight on the page (then just the listbox).
+  const box = listboxFor(el);
+  const menu = box?.parentElement && box.parentElement !== document.body && box.parentElement !== document.documentElement ? box.parentElement : box;
+  const scopes = [menu, reactSelectControl(el)?.parentElement].filter((x): x is Element => !!x);
+  let none = false;
+  for (const scope of new Set(scopes)) {
+    for (const n of queryAllDeep<HTMLElement>(NOTICES, scope as HTMLElement)) {
+      if (!isVisible(n)) continue;
+      const text = (n.textContent ?? '').trim();
+      if (STILL_SEARCHING.test(text)) return 'loading';
+      if (NO_RESULTS.test(text)) none = true;
+    }
+  }
+  return none ? 'none' : null;
+}
+
 async function waitForOptions(el: Element, timeout: number, previous: HTMLElement[] = [], previousText = previous.map(optionText).join('\n')): Promise<HTMLElement[]> {
   const before = new Set(previous);
+  // A search that settles on "No options" is finished: don't wait out the whole timeout
+  // before trying the next major or school name. It has to stay that way (no "Loading…")
+  // for a moment, since some lists flash "No options" before their results arrive.
+  let noneSince: number | null = null;
+  let settledEmpty = false;
   const result = await waitForElement(() => {
     const opts = visibleOptions(el);
+    if (!opts.length) {
+      const notice = searchNotice(el);
+      if (notice === 'none') {
+        noneSince ??= Date.now();
+        if (Date.now() - noneSince >= TIMING.noResults) {
+          settledEmpty = true;
+          return el as HTMLElement;
+        }
+      } else noneSince = null;
+    } else noneSince = null;
     // When re-searching, wait until the list actually changes.
     return opts.length && (opts.some((o) => !before.has(o)) || !previous.length || opts.map(optionText).join('\n') !== previousText) ? opts[0] : null;
   }, timeout);
-  return result ? visibleOptions(el) : [];
+  return result && !settledEmpty ? visibleOptions(el) : [];
 }
 
 function searchInput(el: HTMLElement): HTMLInputElement | null {

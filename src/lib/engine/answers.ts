@@ -218,7 +218,20 @@ export const LEAVE_EMPTY = '__leave_empty__';
  */
 export const LANGUAGE_LEVEL_TIERS = [['Native', 'Native speaker'], ['Fluent'], ['Expert'], ['Advanced']];
 
+/** Job wording that makes a "start date (month)" box about the job, not your school. */
+const EDU_DATE_NOT = /\b(?:availab\w*|earliest|when can you|you can start|employment|job|position|role|work|internship|assignment|contract)\b/;
+
 const DEFS: Def[] = [
+  // "Were you referred by a senior leader at a client, business partner, or vendor of [company]?"
+  // No when you have no referrer; with one, only you know who they work for.
+  {
+    key: 'clientReferral',
+    // A yes/no question ("were you referred…"), not "How were you referred?" with a list of sources.
+    re: /\b(?:were|are|have|has|was) you (?:been )?referred\b.{0,120}\b(?:clients?|customers?|business partners?|vendors?|suppliers?)\b/,
+    not: /^(?:how|where|what|which|who|by whom)\b/,
+    choiceOnly: true,
+    value: (c) => (c.profile.answers.referrerName.trim() ? null : 'No'),
+  },
   // "Which agency sponsored your clearance?" follows a clearance question; it's not visa sponsorship.
   {
     key: 'clearanceDetails',
@@ -427,6 +440,18 @@ const DEFS: Def[] = [
     choiceOnly: true,
     value: (c) => yesNo(c.profile.answers.fiduciaryRoles),
   },
+  // "Do you serve as a director, officer, adviser, consultant, partner or investor of greater than 5%
+  // of any for-profit company?" A current job whose title is one of those roles leaves it for you.
+  {
+    key: 'outsideBusinessRoles',
+    re: /^(?=.*\b(?:serve|serving|act|acting|hold|are you)\b)(?=.*\b(?:director|officer|advis[eo]r|consultant|partner|investor|owner|shareholder)s?\b)(?=.*(?:\bfor profit\b|\bany (?:other |outside )?(?:company|companies|business|businesses|venture|entity|organi[sz]ation)\b))/,
+    not: /relat|family|spouse|government|public official/,
+    choiceOnly: true,
+    value: (c) =>
+      c.profile.experience.some((x) => x.current && /director|officer|advis[eo]r|consultant|partner|investor|owner|founder|self.employed|president|ceo|cto|coo|cfo/i.test(`${x.title ?? ''} ${x.company ?? ''}`))
+        ? null
+        : yesNo(c.profile.answers.conflictOfInterest),
+  },
   // "Is your current employer a <company> client?" is certainly No when you have no current job.
   {
     key: 'currentEmployerClient',
@@ -572,8 +597,8 @@ const DEFS: Def[] = [
   { key: 'willingToRelocate', re: /relocat/, value: (c) => yesNo(c.profile.answers.willingToRelocate) },
   {
     key: 'workScheduleAvailable',
-    re: /^(?=.*\b(?:availability|available|able|willing|can you|could you|commit|capable)\b)(?=.*\b(?:work|working|employment|employed|job|internship|program|placement|position|role|summer)\b)(?=.*\b(?:hours?|hrs?|weeks?|months?|full time|part time|schedule|shifts?)\b)/,
-    not: /\b(?:how many|how much|which|what|describe|list|specify|provide)\b|\b(?:unavailable|unable|cannot|can t|not available|not able)\b/,
+    re: /^(?=.*\b(?:availability|available|able|willing|can you|could you|commit|capable)\b)(?=.*\b(?:work|working|employment|employed|job|internship|program|placement|position|role|summer)\b)(?=.*\b(?:hours?|hrs?|weeks?|months?|full time|part time|schedule|shifts?|duration|entire (?:internship|program|summer))\b)/,
+    not: /\b(?:how many|how much|which|what|describe|list|specify|provide)\b|\b(?:unavailable|unable|cannot|can t|not available|not able)\b|sponsor|visa|authori[sz]|legally|citizen/,
     choiceOnly: true,
     value: (c) => yesNo(c.profile.answers.workScheduleAvailable),
   },
@@ -613,7 +638,7 @@ const DEFS: Def[] = [
   },
   {
     key: 'previouslyEmployed',
-    re: /(previously|ever|before) (been )?(employed|worked)|(employed|worked) (by|for|at|with) .{0,40}(before|previously|in the past)|former employee|current or former|(?:currently|formerly|previously)(?: or (?:currently|formerly|previously))? (?:employed|working)\b|have you (ever )?worked (for|at)|(contingent|contract) work(er)?|contractor (for|at|with)|been a contractor|(?:currently|formerly|previously).{0,80}\b(?:independent contractor|contract labor|contingent worker|consultant)\b|\b(?:do|are) you (?:currently |presently |now )?work(?:ing)? (?:for|at)\b|\bare you an? (?:current|existing|former|past|previous)\b.{0,50}\bemployee/,
+    re: /(previously|ever|before) (been )?(?:(?:directly|formally|officially|actually) )?(employed|worked)|(employed|worked) (by|for|at|with) .{0,40}(before|previously|in the past)|former employee|current or former|(?:currently|formerly|previously)(?: or (?:currently|formerly|previously))? (?:employed|working)\b|have you (ever )?worked (for|at)|(contingent|contract) work(er)?|contractor (for|at|with)|been a contractor|(?:currently|formerly|previously).{0,80}\b(?:independent contractor|contract labor|contingent worker|consultant)\b|\b(?:do|are) you (?:currently |presently |now )?work(?:ing)? (?:for|at)\b|\bare you an? (?:current|existing|former|past|previous)\b.{0,50}\bemployee/,
     not: /government|public official|public (?:agenc|institution|sector)|willing|able to|relatives?\b|family members?|related to|(?:towards?|pursuing|enrolled in|studying for)\b.{0,40}\bdegree/,
     // "…or were you previously associated with the University as a student?" is Yes only for your own school.
     value: (c, label) => (workedAt(c.profile, label) || studiedAt(c.profile, label) ? 'Yes' : yesNo(c.profile.answers.previouslyEmployed)),
@@ -654,8 +679,15 @@ const DEFS: Def[] = [
   { key: 'conflictOfInterest', re: /conflicts? of interest|outside (business|employment) (activit|interest)|outside employment|secondary employment|moonlighting|(?:will|would) you (?:also |continue to )?(?:perform|do|engage in|provide) (?:any )?(?:work|services)\b.{0,60}\b(?:other|another|outside) (?:company|companies|employer|entity|entities|organi[sz]ation)/, value: (c) => yesNo(c.profile.answers.conflictOfInterest) },
   {
     key: 'meetsRequirements',
-    re: /(minimum|basic|required|stated|listed|job|position|role) (qualifications|requirements)|meet (all |the )?(qualifications|requirements)|qualif(y|ied) for (this|the) (role|position|job)|meet (the )?minimum (years|amount|level) of experience/,
+    re: /(minimum|basic|required|stated|listed|job|position|role) (qualifications|requirements)|meet (all |the )?(qualifications|requirements)|qualif(y|ied) for (this|the) (role|position|job)|meet (the )?minimum (years|amount|level) of experience|demonstrated experience in the (?:specified|required|listed|stated) (?:discipline|field|area|skills?)/,
     value: (c) => yesNo(c.profile.answers.meetsRequirements),
+  },
+  // "Will you be including a link on your resume to samples of projects you've worked on?"
+  {
+    key: 'workSamplesLink',
+    re: /\b(?:include|including|have|has|contain|containing)\b.{0,20}\blinks?\b.{0,40}\bresume\b.{0,80}\b(?:samples?|projects?|portfolio|work)\b|\bresume\b.{0,40}\b(?:include|includes|contain|contains|have|has)\b.{0,20}\blinks?\b.{0,40}\b(?:samples?|projects?|portfolio)\b/,
+    choiceOnly: true,
+    value: (c) => (c.profile.links.github || c.profile.links.portfolio || c.profile.links.website ? 'Yes' : null),
   },
   {
     key: 'appliedBefore',
@@ -860,7 +892,7 @@ const DEFS: Def[] = [
   { key: 'currentTitle', short: true, re: /current(?: or (?:previous|prior|past|last|former|most recent))? (job )?(title|role|position)|most recent(?: or (?:previous|prior|past|last|former|current))? (job )?(title|role)|^job title$/, value: (c) => latestJob(c.profile)?.title || null },
   {
     key: 'school',
-    re: /school|university|college|institution/,
+    re: /school|university|college|\binstitutions?\b/,
     // Yes/No questions that mention college ("Are you a college student?") aren't asking which one.
     not: /high school|\bgraduat|\bgpa\b|grade point|^(?:are|do|does|did|have|has|is|was|were|will|would|can|could)\b|^if (?:you )?(?:selected|answered|checked)\b/,
     value: (c) => latestSchool(c.profile)?.school || null,
@@ -934,7 +966,7 @@ const DEFS: Def[] = [
   },
   {
     key: 'languageProficiency',
-    re: /^(read|reading|write|writing|speak|speaking|listen|listening|understand|understanding|comprehension|comprehend|overall|oral|verbal|written|spoken|conversation|conversational|fluency)( proficiency(?: level)?| skills?| level| ability| competency)?$|^(?:language )?proficiency(?: level)?$|(?:english|language).{0,30}(?:proficiency|fluency)|(?:proficiency|fluency).{0,30}(?:english|language)|language level|how well do you (speak|write|read|understand)|(assess|rate) your .{0,30}(english|language|writing|speaking)/,
+    re: /^(?:\d{1,2}[ .)]+)?(read|reading|write|writing|speak|speaking|listen|listening|understand|understanding|comprehension|comprehend|overall|oral|verbal|written|spoken|conversation|conversational|fluency)( proficiency(?: level)?| skills?| level| ability| competency)?$|^(?:language )?proficiency(?: level)?$|(?:english|language).{0,30}(?:proficiency|fluency)|(?:proficiency|fluency).{0,30}(?:english|language)|language level|how well do you (speak|write|read|understand)|(assess|rate) your .{0,30}(english|language|writing|speaking)/,
     value: (c) => {
       const language = primaryLanguage(c.profile);
       if (!language) return null;
@@ -965,9 +997,10 @@ const DEFS: Def[] = [
   },
 
   // Education date parts (Greenhouse's education block: "Start date month" etc.)
-  { key: 'eduStartMonth', re: /start (date )?month/, value: (c) => monthOf(latestSchool(c.profile)?.start) },
-  { key: 'eduStartYear', re: /start (date )?year|first year attended/, value: (c) => latestSchool(c.profile)?.start?.slice(0, 4) || null },
-  { key: 'eduEndMonth', re: /end (date )?month/, value: (c) => monthOf(latestSchool(c.profile)?.end) },
+  // Not "Available start date (Month)": that's when you could start the job.
+  { key: 'eduStartMonth', re: /start (date )?month/, not: EDU_DATE_NOT, value: (c) => monthOf(latestSchool(c.profile)?.start) },
+  { key: 'eduStartYear', re: /start (date )?year|first year attended/, not: EDU_DATE_NOT, value: (c) => latestSchool(c.profile)?.start?.slice(0, 4) || null },
+  { key: 'eduEndMonth', re: /end (date )?month/, not: EDU_DATE_NOT, value: (c) => monthOf(latestSchool(c.profile)?.end) },
   // "Completion Date … Year" is the year box of a split month/day/year date.
   { key: 'eduEndYear', re: /end (date )?year|last year attended|graduation year|\b(?:graduation|completion) date\b.*\byear$/, value: (c) => latestSchool(c.profile)?.end?.slice(0, 4) || null },
 
@@ -1112,7 +1145,8 @@ function fromDefs(text: string, c: AnswerContext, confidence: 'high' | 'low', is
     if (answer) return answer;
   }
   // Parentheticals are examples and notes ("(e.g., H-1B)", "(select No if …)"); match without them first.
-  const bare = text.replace(/\([^)]*\)/g, ' ');
+  // A date part ("Start Date (Year)") is the question itself, so it stays.
+  const bare = text.replace(/\((?!\s*(?:year|month|day|yyyy|mm|dd)\s*\))[^)]*\)/gi, ' ');
   if (bare !== text) {
     const answer = matchDefs(questionText(bare), c, confidence, isChoice);
     if (answer) return answer;

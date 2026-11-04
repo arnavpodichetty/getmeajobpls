@@ -133,7 +133,9 @@ function containerLabel(el: Element, group: Element[] = [el]): string {
   const own = new Set(group);
   let fallback = '';
   let cur = parentOf(el);
-  for (let depth = 0; cur && depth < 8; depth++, cur = parentOf(cur)) {
+  // Deep enough for react-select inputs ~10 levels under their label; the walk
+  // still stops at the first ancestor that holds another question.
+  for (let depth = 0; cur && depth < 12; depth++, cur = parentOf(cur)) {
     if (cur === document.body || cur === document.documentElement) break;
     const controls = [...cur.querySelectorAll(CONTROL_SELECTOR)];
     const foreign = controls.filter((c) => !own.has(c) && !(group.length > 1 && c.getAttribute('name') === group[0].getAttribute('name')));

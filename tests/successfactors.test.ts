@@ -176,16 +176,16 @@ describe('SAP SuccessFactors questions', () => {
     expect(radioAnswer('relatives currently working')).toBe('No');
   });
 
-  it('leaves "if yes" employment follow-ups empty and answers referral/relative ones N/A', async () => {
+  it('leaves "if yes" employment follow-ups and optional referral/relative boxes empty', async () => {
     loadFixture('successfactors-1');
     liveRadios();
     await successfactors.fill(context({ resume: null }));
     for (const label of ['Employment Location', 'Dates of Employment', 'Name While Employed']) {
       expect(textField(label).value).toBe('');
     }
-    // Referral and relative follow-ups answer N/A.
+    // Optional referral and relative boxes would only get N/A, so they're left empty.
     for (const label of ['Were you referred by', 'If related, please provide name']) {
-      expect(textField(label).value).toBe('N/A');
+      expect(textField(label).value).toBe('');
     }
   });
 

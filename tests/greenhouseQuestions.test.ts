@@ -72,9 +72,11 @@ describe('captured Greenhouse application (capture C)', () => {
       question_9793047101: '2024', question_9793048101: 'Other',
       question_9793049101: "I don't have SAT score", question_9793050101: "I don't have ACT score",
       question_9793051101: 'January 2028 - July 2028', question_9793052101: '3.81 - 3.9',
-      question_9793053101: 'No', question_9793054101: 'No', question_9793055101: 'N/A',
+      question_9793053101: 'No', question_9793054101: 'No',
+      // Optional, and N/A is all it would get: left empty.
+      question_9793055101: '',
       question_9793056101: 'No', question_9793057101: 'No', question_9793058101: 'No',
-      question_9793059101: 'N/A', question_9793061101: 'ada@university.edu',
+      question_9793059101: '', question_9793061101: 'ada@university.edu',
       question_9793062101: 'I Agree', question_9793063101: 'I agree',
       'start-year--0': '2024', 'end-year--0': '2028',
     };

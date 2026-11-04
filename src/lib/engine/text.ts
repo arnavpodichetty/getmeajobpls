@@ -18,12 +18,15 @@ export function normalize(value: string | null | undefined): string {
 /** Clean display text: collapse whitespace and drop trailing required markers. */
 export function cleanLabel(value: string | null | undefined): string {
   return (value ?? '')
+    // Invisible joiners some sites put around the required star ("First Name⁠*⁠:").
+    .replace(/[\u200b-\u200d\u2060\ufeff]/g, '')
     .replace(/\s+/g, ' ')
     .replace(/^\s*error:\s*/i, '') // screen-reader prefix after a failed submit (iCIMS)
     .replace(/\s*[*✱]\s*/g, ' ')
     .replace(/\s*\(?\b(required|optional)\)?\s*$/i, '')
     .replace(/(?<=[a-z])(Required|Optional)$/, '')
     .replace(/\s+/g, ' ')
+    .replace(/\s*:$/, '')
     .trim();
 }
 

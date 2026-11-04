@@ -391,8 +391,11 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
   await attachTranscripts(ctx, root, results, notes, () => filled++);
 
   // 2. Every other field, twice: answers can reveal follow-up questions.
+  // Whether this form marks its required fields: only then is an unmarked box truly optional.
+  let marksRequired = false;
   for (let pass = 0; pass < 2; pass++) {
     const fields = scanFields(root).filter((f) => f.kind !== 'file' && !f.members.some((m) => handled.has(m)));
+    marksRequired ||= fields.some((f) => f.required);
     if (pass > 0 && !fields.length) break;
     for (const field of fields) {
       // Workday re-renders a questionnaire after some answers; the next pass finds the new copy.
@@ -427,6 +430,9 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
       }
       const existing = currentValue(field);
       if (answer?.value === LEAVE_EMPTY) continue; // a follow-up that doesn't apply
+      // An optional box ("If you were referred, share their name") is left empty rather than typed N/A or No.
+      if (answer && !existing && !field.required && marksRequired && (field.kind === 'text' || field.kind === 'textarea')
+        && /^(?:n\s*\/?\s*a|none|no|not applicable|does not apply)\.?$/i.test(asText(answer.value).trim())) continue;
       // The site pre-filled one of your links without "https://" (Oracle copies it from the
       // resume text, then rejects it). Put back the full link from your profile.
       const fullLink = field.kind !== 'text' ? null

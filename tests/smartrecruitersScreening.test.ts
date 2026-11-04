@@ -94,7 +94,8 @@ describe('SmartRecruiters screening', () => {
       ['0a1dfa43-3c8e-4e16-a754-b72371f9652e', 'I am interested in Western locations'],
       ['2ab8befb-248e-4b08-a971-e4e4a40e5048', 'California'],
       ['922bbdd2-7e99-4947-b900-89ec8156dc25', 'No'],
-      ['98bb1fa5-fd4f-49f0-91b6-c4bf5a14bb1b', 'N/A'],
+      // Optional, and N/A is all it would get: left empty.
+      ['98bb1fa5-fd4f-49f0-91b6-c4bf5a14bb1b', ''],
       ['3ce753fc-32a7-43ea-a722-21610138da00', 'Yes'],
       ['dfcee9d7-fe97-4a71-a6a4-17d2b67a8de0', 'I do not require sponsorship and I will not require sponsorship in the future'],
       ['48b8f839-0222-469c-9063-0901368d7ed1', 'LinkedIn'],

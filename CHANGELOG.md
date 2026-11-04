@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.4.0 (2026-11-03)
+
+### New
+- **Read resume without Claude:** Options → Fill my profile → Read resume reads a resume PDF on your device, with no Claude setup. It copies your name, email, phone, city and state, LinkedIn / GitHub / website (including links hidden behind words like "LinkedIn"), schools (degree, majors, minor, GPA, coursework, dates), jobs (company, title, location, dates, bullets), projects and skills straight from the resume. Pick a resume from your library or choose any PDF. You tick what to keep in the same review list as before. Scanned PDFs (images with no text) can't be read this way; Read with Claude still handles those and unusual layouts.
+
+### Fixes
+- **Faster school and major dropdowns:** when a search shows "No options" (no "Statistics" major in the list, or a school name the site spells differently), the next choice is tried after about half a second instead of four. Searches still loading, or ones that flash "No options" before their results arrive, get the full wait.
+- **Company careers sites built on Greenhouse (react-select forms):** the screening dropdowns had no label, because the site's labels name the question instead of the dropdown, and its older dropdown menus weren't recognized as options. Both are read now. Education Start/End Date (Year) and (Month) boxes get numbers ("2024", "9") instead of your job start date or a month name. Labels no longer end in stray characters or a colon.
+- **"Do you have demonstrated experience in the specified discipline…?":** answered from your "meets requirements" answer.
+- **"Will you be including a link on your resume to samples of projects…?":** Yes when your profile has a GitHub, portfolio or website link.
+- **"Were you referred to this position by a senior leader or decision-maker at a client, business partner, or vendor of [company]?":** was answered with your school because "institutional" read as a school question. It's answered No now, or left for you if you've saved a referrer's name.
+- **Optional boxes left empty:** a box that isn't required ("If you were referred by a current teammate, share their name", "If yes, please specify…") is left empty when the answer would only be N/A, None or No. Forms that don't mark any field as required still get N/A, since there's no way to tell which boxes are optional.
+- **"Are you available and willing to work for the entire duration of the internship program?":** answered from your schedule availability.
+- **"Do you serve as a director, officer, adviser, consultant, partner or investor of greater than 5% of any for-profit company?":** answered from your conflict-of-interest answer. It's left for you when your current job title is one of those roles or you're a founder.
+- **"Have you previously been DIRECTLY employed with [company]?":** answered No (Yes when the company is in your experience), like other "worked here before" questions.
+- **Numbered language skill dropdowns:** "1 - Listening", "2 - Speaking", "3 - Reading" and "4 - Writing" weren't recognized because of the number in front. They now get your level ("5 - Fluent").
+
 ## 1.3.4 (2026-10-31)
 
 ### Fixes

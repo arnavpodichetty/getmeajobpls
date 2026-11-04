@@ -10,7 +10,8 @@ import type { Education, Experience, Language, Profile, Project } from './types'
 export interface ProfileDraft {
   personal: Pick<Profile['personal'], 'firstName' | 'middleName' | 'lastName' | 'email' | 'phone' | 'street' | 'city' | 'state' | 'zip' | 'country'>;
   links: Profile['links'];
-  education: Pick<Education, 'school' | 'degree' | 'major' | 'minor' | 'gpa' | 'coursework' | 'start' | 'end'>[];
+  /** secondMajor comes only from the on-device reader (resumeParse.ts). */
+  education: (Pick<Education, 'school' | 'degree' | 'major' | 'minor' | 'gpa' | 'coursework' | 'start' | 'end'> & { secondMajor?: string })[];
   experience: Pick<Experience, 'company' | 'title' | 'location' | 'start' | 'end' | 'current' | 'description'>[];
   projects: Pick<Project, 'name' | 'role' | 'url' | 'start' | 'end' | 'description'>[];
   skills: string[];
@@ -158,6 +159,7 @@ export function planImport(profile: Profile, draft: ProfileDraft): ImportItem[] 
       const list = (p: Profile) => p.education;
       fieldItem(items, g, `${ed.school}: degree`, list, existing, 'degree', ed.degree);
       fieldItem(items, g, `${ed.school}: major`, list, existing, 'major', ed.major);
+      fieldItem(items, g, `${ed.school}: second major`, list, existing, 'secondMajor', ed.secondMajor ?? '');
       fieldItem(items, g, `${ed.school}: minor`, list, existing, 'minor', ed.minor);
       fieldItem(items, g, `${ed.school}: GPA`, list, existing, 'gpa', ed.gpa);
       fieldItem(items, g, `${ed.school}: coursework`, list, existing, 'coursework', ed.coursework);
@@ -170,7 +172,7 @@ export function planImport(profile: Profile, draft: ProfileDraft): ImportItem[] 
       group: 'Education',
       label: `Add ${ed.school}`,
       current: '',
-      proposed: [[ed.degree, ed.major].filter(Boolean).join(', '), ed.gpa && `GPA ${ed.gpa}`, dateRange(ed.start, ed.end)].filter(Boolean).join(' · '),
+      proposed: [[ed.degree, ed.major, ed.secondMajor].filter(Boolean).join(', '), ed.minor && `Minor in ${ed.minor}`, ed.gpa && `GPA ${ed.gpa}`, dateRange(ed.start, ed.end)].filter(Boolean).join(' · '),
       checked: true,
       apply: (p) => { p.education.push({ ...emptyEducation(), ...ed }); },
     });

@@ -1,6 +1,7 @@
 import { browser } from 'wxt/browser';
 import { h } from '../../lib/dom';
 import { applyImport, mergeDrafts, PAGE_SOURCE_KEY, planImport, type ImportItem, type PageSource, type ProfileDraft } from '../../lib/profileImport';
+import { getResume } from '../../lib/resumeDb';
 import { saveProfile } from '../../lib/storage';
 import { readResumeForProfile, readTextForProfile } from '../../lib/tailor';
 import type { Profile, ResumeMeta } from '../../lib/types';
@@ -8,8 +9,27 @@ import { showToast } from './toast';
 
 const shorten = (s: string, n = 220) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
 
+const looksEmpty = (d: ProfileDraft) =>
+  !d.personal.firstName && !d.personal.email && !d.education.length && !d.experience.length && !d.projects.length && !d.skills.length;
+
+/** Read a resume PDF on this device, without Claude. */
+async function readOnDevice(file: Blob): Promise<ProfileDraft> {
+  const [{ readPdfLines }, { parseResume }] = await Promise.all([import('../../lib/pdfText'), import('../../lib/resumeParse')]);
+  let read;
+  try {
+    read = await readPdfLines(await file.arrayBuffer());
+  } catch {
+    throw new Error("That file couldn't be opened as a PDF.");
+  }
+  const draft = parseResume(read.lines, read.links);
+  if (!read.lines.length) throw new Error('This PDF has no text to read (it may be a scanned image). Try Read with Claude, or type your profile in.');
+  if (looksEmpty(draft)) throw new Error("Couldn't find the usual resume sections (Education, Experience, Skills) in this PDF. Try Read with Claude.");
+  return draft;
+}
+
 /**
- * Options → Fill my profile: Claude reads a resume, a profile page (picked with the
+ * Options → Fill my profile: Read resume sorts a resume PDF into profile fields on this
+ * device. Read with Claude reads a resume, a profile page (picked with the
  * toolbar popup) and pasted text into profile fields, through the resume tailoring
  * helper. You tick what to keep before anything is saved.
  */
@@ -38,7 +58,50 @@ export function importSection(opts: {
     placeholder: 'Optional: paste anything about you, like a LinkedIn About and Experience section, a Simplify profile or a bio.',
   });
   const status = h('span', { class: 'hint' });
+  const localStatus = h('span', { class: 'hint' });
   const review = h('div', { class: 'import-review', hidden: true });
+
+  async function readLocal(source: () => Promise<{ blob: Blob; name: string } | null>): Promise<void> {
+    localStatus.className = 'hint';
+    review.hidden = true;
+    try {
+      const file = await source();
+      if (!file) {
+        localStatus.className = 'hint err';
+        localStatus.textContent = 'Pick a resume or choose a PDF first.';
+        return;
+      }
+      if (file.blob.type !== 'application/pdf' && !/\.pdf$/i.test(file.name)) throw new Error('Only PDFs can be read on this device. Try Read with Claude for other files.');
+      localStatus.textContent = 'Reading…';
+      const items = planImport(opts.profile(), await readOnDevice(file.blob));
+      localStatus.textContent = items.length ? 'Check each value before applying: the layout is read by rules, not by Claude.' : 'Your profile already has everything this resume says.';
+      showReview(items, []);
+    } catch (err) {
+      localStatus.textContent = err instanceof Error ? err.message : String(err);
+      localStatus.className = 'hint err';
+    }
+  }
+
+  const fileInput = h('input', {
+    type: 'file',
+    accept: 'application/pdf,.pdf',
+    hidden: true,
+    onChange: async () => {
+      const f = fileInput.files?.[0];
+      fileInput.value = '';
+      if (f) await readLocal(async () => ({ blob: f, name: f.name }));
+    },
+  }) as HTMLInputElement;
+  const readResume = h('button', {
+    onClick: () =>
+      readLocal(async () => {
+        if (!resumeSel.value) return null;
+        const rec = await getResume(resumeSel.value);
+        if (!rec) throw new Error('That resume is no longer in your library.');
+        return { blob: rec.blob, name: rec.name };
+      }),
+  }, 'Read resume');
+  const choosePdf = h('button', { class: 'secondary', onClick: () => fileInput.click() }, 'Choose a PDF…');
 
   function drawPage(): void {
     pageRow.replaceChildren(
@@ -100,7 +163,7 @@ export function importSection(opts: {
         read.disabled = !opts.enabled;
       }
     },
-  }, 'Read');
+  }, 'Read with Claude');
 
   function showReview(items: ImportItem[], dropped: string[]): void {
     const chosen = new Set(items.filter((i) => i.checked).map((i) => i.id));
@@ -182,14 +245,21 @@ export function importSection(opts: {
     h(
       'p',
       { class: 'intro' },
-      'Fill your profile from your resume, a profile page or pasted text instead of typing it in. Your own Claude account reads them, through the same helper as Resume tailoring. ' +
-        'Only what the sources themselves say is used: every value is checked against their text, descriptions and skills are copied word for word, and you choose what to keep. ' +
-        'Standard answers and EEO are never changed.',
+      'Fill your profile from your resume instead of typing it in. Read resume works on this device with any PDF that has selectable text: it copies your contact info, links, education, jobs, projects and skills straight from the resume. ' +
+        'You choose what to keep, and standard answers and EEO are never changed.',
+    ),
+    h('label', { class: 'field' }, h('span', {}, 'Resume'), resumeSel),
+    h('div', { class: 'row' }, readResume, choosePdf, fileInput, localStatus),
+    h('h3', {}, 'Read with Claude'),
+    h(
+      'p',
+      { class: 'intro' },
+      'Claude can also read the resume above, a profile page or pasted text, and handles unusual layouts better. Your own Claude account reads them, through the same helper as Resume tailoring. ' +
+        'Every value is checked against the source text, and descriptions and skills are copied word for word.',
     ),
     !opts.enabled
       ? h('p', { class: 'notice' }, 'Turn on ', h('a', { href: '#tailoring' }, 'Resume tailoring'), ' and finish its setup first. This uses the same helper.')
       : null,
-    h('label', { class: 'field' }, h('span', {}, 'Resume'), resumeSel),
     pageRow,
     h('label', { class: 'field' }, h('span', {}, 'Pasted text'), paste),
     h('div', { class: 'row' }, read, status),
