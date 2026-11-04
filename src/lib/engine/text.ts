@@ -342,7 +342,7 @@ export function optionScore(optionText: string, wanted: string): number {
   }
 
   // A generic "Bachelor's Degree" option answers any bachelor's.
-  if (/^bachelor/.test(w) && /^(bachelor s?( degree)?|bachelors( degree)?|undergraduate( degree)?|4 year degree|four year degree)$/.test(opt)) return 0.88;
+  if (/^bachelor/.test(w) && (isGenericDegreeLevel(opt, 'bachelor') || /^(undergraduate( degree)?|4 year degree|four year degree)$/.test(opt))) return 0.88;
 
   if (/^native( or bilingual)?$|^native speaker$/.test(w)) {
     return NATIVE_LEVEL.test(opt) && !/\bnon native\b/.test(opt) ? 1 : 0;
@@ -518,12 +518,27 @@ function degreeLevel(degree: string): string | null {
   return null;
 }
 
-/** "Bachelor Degree/Int'l Equiv", "Bachelor's degree or equivalent", "Bachelors": the level, no field. */
+/** Degree abbreviations a level-only option may list as examples: "Bachelor's (BS, BA, BSN, etc.)". */
+const LEVEL_ABBREVIATIONS: Record<string, string> = {
+  bachelor: 'ba|bs|ab|bsc|bsn|bse|bba|bfa|bas|bsba|bsw|bsee|bsme|beng|barch|bmus|bm|bed|llb|undergraduate|undergrad|baccalaureate',
+  master: 'ms|ma|msc|mfa|meng|mph|msw|msn|mpa|med|mba|march|mmus|llm|graduate',
+  doctor: 'phd|dphil|edd|dba|dsc|psyd|md|jd|dds|dmd|pharmd|dvm|dnp',
+  associate: 'aa|as|aas|aat|aba',
+};
+
+/** "Bachelor Degree/Int'l Equiv", "Bachelor's degree or equivalent", "Bachelor's (BS, BA, etc.)": the level, no field. */
 function isGenericDegreeLevel(opt: string, level: string): boolean {
-  const stem = level === 'doctor' ? '(?:doctorate|doctoral|doctor s|doctors)' : `${level}(?: s|s)?`;
+  const stem = level === 'doctor'
+    ? '(?:doctorate|doctoral|doctor s|doctors)'
+    : level === 'bachelor' ? '(?:bachelor(?: s|s)?|baccalaureate)' : `${level}(?: s|s)?`;
   const m = opt.match(new RegExp(`^${stem}\\b(.*)$`));
   if (!m) return false;
-  const rest = m[1].replace(/\b(?:degrees?|or|and|int l|international|equiv|equivalent|higher|level|4 year|four year|2 year|two year|college|university|program)\b/g, '').trim();
+  const rest = m[1]
+    .replace(/\b(?:degrees?|or|and|int l|international|equiv|equivalent|higher|level|4 year|four year|2 year|two year|college|university|program|etc|e g|eg|i e|ie|including|such as|any|other)\b/g, '')
+    .replace(new RegExp(`\\b(?:${LEVEL_ABBREVIATIONS[level] ?? ''})\\b`, 'g'), '')
+    // Dotted abbreviations normalize to single letters ("B.S.N." -> "b s n").
+    .replace(/\b[a-z]\b/g, '')
+    .trim();
   return rest === '';
 }
 

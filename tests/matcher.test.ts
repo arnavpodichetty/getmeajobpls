@@ -255,6 +255,17 @@ describe('spelling variants and fallbacks', () => {
     expect(tiered(['Bachelor of Science (BS)', 'Bachelor of Arts (BA)', 'Bachelors'], degreeTiers('Bachelor of Arts'))).toBe('Bachelor of Arts (BA)');
   });
 
+  it('treats a level option that lists example abbreviations as the level', () => {
+    const workday = ['Associates Degree', 'Professional Certificate', 'LLB', "Bachelor's (BS, BA, BSN, etc.)", 'MBA', "Master's (MS, MA, etc.)", 'Doctorate (PhD, EdD, etc.)'];
+    for (const d of ['Bachelor of Arts', 'Bachelor of Science', 'BS', "Bachelor's"]) expect(tiered(workday, degreeTiers(d))).toBe("Bachelor's (BS, BA, BSN, etc.)");
+    expect(tiered(workday, degreeTiers('Master of Science'))).toBe("Master's (MS, MA, etc.)");
+    for (const opt of ["Bachelor's Degree (e.g. B.A., B.S.)", 'Bachelors - BA/BS', "Bachelor's / Undergraduate", 'Baccalaureate Degree']) {
+      expect(tiered(['High School', opt, "Master's Degree"], degreeTiers('Bachelor of Arts'))).toBe(opt);
+    }
+    // A named field is still never filed under another field.
+    expect(tiered(['Bachelor of Science (BS)', "Master's (MS, MA, etc.)"], degreeTiers('Bachelor of Arts'))).toBeUndefined();
+  });
+
   it('finds a degree however the list spells it', () => {
     const ba = [degreeVariants('Bachelor of Arts')];
     expect(tiered(['B.S.', 'B.A.', 'M.S.'], ba)).toBe('B.A.');

@@ -193,6 +193,14 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Are you returning to an academic program after the summer internship?', 'Yes'],
     ['Do you intend to continue your studies after this internship?', 'Yes'],
     ['Will you be enrolled as a student following the completion of the internship?', 'Yes'],
+    ['This is a temporary role for current university students who must return to schooling after the program closes in August 2027, and we cannot consider applicants graduating before or during the program. Will you be returning to schooling (including that of an additional degree program) after the contract ends?', 'Yes'],
+  ],
+  'gpa cutoff (profile GPA 3.9)': [
+    ['Is your predicted / obtained GPA for your current academic program at a 3.0 or higher? If your institution does not use US Grade Point Average (GPA), please convert your grade to the 4.0 scale.', 'Yes'],
+    ['Do you have a cumulative GPA of 3.5 or above?', 'Yes'],
+    ['Is your GPA at least a 3.0?', 'Yes'],
+    ['Do you have a GPA above 3.95?', 'No'],
+    ['Is your GPA 4.0 or higher?', 'No'],
   ],
   'location and relocation': [
     ['Are you willing to relocate?', 'Yes'],

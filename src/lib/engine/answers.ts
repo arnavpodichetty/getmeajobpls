@@ -120,6 +120,17 @@ function graduationTiers(c: AnswerContext): string[][] {
 }
 
 /** "3.84" → "3.8", "3.85" → "3.9", "3.96" → "4.0"; anything not a plain number is kept. */
+/** A GPA cutoff in a normalized label: "3 0 or higher", "at least a 3 5", "above 3 2". */
+const GPA_CUTOFF = /\b[0-4] \d{1,2}(?: (?:cumulative )?gpa)? (?:or (?:higher|above|better|greater|more)|and (?:above|higher|up)|plus)\b|\b(?:at least|minimum(?: of)?|above|over|greater than|higher than|exceed(?:s|ing)?)(?: (?:a|an|the))?(?: (?:cumulative )?gpa(?: of)?)? [0-4] \d{1,2}\b/;
+
+function gpaCutoff(label: string): { value: number; strict: boolean } | null {
+  const m = label.match(GPA_CUTOFF);
+  if (!m) return null;
+  const num = m[0].match(/\b([0-4]) (\d{1,2})\b/);
+  if (!num) return null;
+  return { value: Number(`${num[1]}.${num[2]}`), strict: /^(?:above|over|greater than|higher than|exceed)/.test(m[0]) };
+}
+
 /** A GPA box asking for one decimal place ("GPA (rounded to one decimal)", "X.X"). */
 export const TENTH_GPA = /\b(?:one|1|first|single) decimal|\bnearest (?:tenth|0\.1)\b|\btenths? place\b|\bx\.x\b/i;
 
@@ -897,7 +908,7 @@ const DEFS: Def[] = [
   // Interns going back to class after the internship; not plans for grad school (furtherEducation).
   {
     key: 'returningToSchool',
-    re: /\breturn(?:ing)? to (?:school|college|university|campus|classes|your studies|studies|(?:an |your )?academic (?:program|studies))\b|\b(?:back to|resum\w*) (?:school|college|classes|your studies|studies)\b|\bcontinu\w* (?:your |my )?(?:studies|education|degree|enrollment)\b.{0,20}\b(?:after|following|upon)\b.{0,30}\b(?:internship|co ?op|summer|assignment)\b|\b(?:enrolled|a student)\b.{0,40}\b(?:after|following|upon completion of)\b.{0,30}\b(?:internship|co ?op|summer|assignment)\b/,
+    re: /\breturn(?:ing)? to (?:school(?:ing)?|college|university|campus|classes|your studies|studies|(?:an |your )?academic (?:program|studies))\b|\b(?:back to|resum\w*) (?:school(?:ing)?|college|classes|your studies|studies)\b|\bcontinu\w* (?:your |my )?(?:studies|education|degree|enrollment)\b.{0,20}\b(?:after|following|upon)\b.{0,30}\b(?:internship|co ?op|summer|assignment)\b|\b(?:enrolled|a student)\b.{0,40}\b(?:after|following|upon completion of)\b.{0,30}\b(?:internship|co ?op|summer|assignment)\b/,
     choiceOnly: true,
     value: (c) => yesNo(c.profile.answers.returningToSchool),
   },
@@ -975,6 +986,19 @@ const DEFS: Def[] = [
   // Choices: your exact GPA or the range holding it ("3.5 - 3.79", "3.5+") first; lists of
   // one-decimal values ("3.9", "3.8") get it rounded to the nearest tenth. A box asking for
   // one decimal place gets the rounded value too.
+  // "Is your GPA 3.0 or higher?": Yes/No from comparing your GPA with the cutoff.
+  {
+    key: 'gpaThreshold',
+    re: GPA_CUTOFF,
+    not: /^(?!.*(?:\bgpa\b|grade point))/,
+    choiceOnly: true,
+    value: (c, label) => {
+      const gpa = Number(latestSchool(c.profile)?.gpa?.trim());
+      const cutoff = gpaCutoff(label);
+      if (!gpa || !cutoff) return null;
+      return (cutoff.strict ? gpa > cutoff.value : gpa >= cutoff.value) ? 'Yes' : 'No';
+    },
+  },
   {
     key: 'gpa',
     re: /\bgpa\b|grade point|cumulative grade/,
