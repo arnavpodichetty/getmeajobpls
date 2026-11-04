@@ -68,12 +68,17 @@ const QUESTION_CONTAINER =
 
 // Hidden companion inputs (react-select's "requiredInput", Ashby's yes/no checkbox) are not separate questions.
 const CONTROL_SELECTOR =
-  'input:not([type=hidden]):not([aria-hidden="true"]):not([tabindex="-1"]), select, textarea, [role="combobox"], [contenteditable="true"]';
+  'input:not([type=hidden]):not([aria-hidden="true"]):not([tabindex="-1"]), select, textarea, [role="combobox"], [contenteditable="true"], [data-dropdown-id] > [role="button"]';
+
+/** A div dropdown's search and "Please specify" boxes belong to the dropdown; it counts once. */
+const isWidgetInternal = (c: Element) => !c.matches('[role="button"]') && !!c.closest('[data-dropdown-id]');
+const isDataDropdownBox = (el: Element) => el.matches('[data-dropdown-id] > [role="button"]');
+const controlsIn = (container: Element) => [...container.querySelectorAll(CONTROL_SELECTOR)].filter((c) => !isWidgetInternal(c));
 
 /** Distinct fields inside a container (radio/checkbox groups collapse by name). */
 function fieldCount(container: Element): number {
   const keys = new Set<string>();
-  container.querySelectorAll(CONTROL_SELECTOR).forEach((c, i) => {
+  controlsIn(container).forEach((c, i) => {
     const type = c.getAttribute('type');
     const name = c.getAttribute('name');
     keys.add((type === 'radio' || type === 'checkbox') && name ? `${type}:${name}` : `#${i}`);
@@ -137,12 +142,21 @@ function containerLabel(el: Element, group: Element[] = [el]): string {
   // still stops at the first ancestor that holds another question.
   for (let depth = 0; cur && depth < 12; depth++, cur = parentOf(cur)) {
     if (cur === document.body || cur === document.documentElement) break;
-    const controls = [...cur.querySelectorAll(CONTROL_SELECTOR)];
+    const controls = controlsIn(cur);
     const foreign = controls.filter((c) => !own.has(c) && !(group.length > 1 && c.getAttribute('name') === group[0].getAttribute('name')));
-    if (foreign.length && fieldCount(cur) > 1) break;
+    if (foreign.length && fieldCount(cur) > 1) {
+      // A div dropdown with a follow-up checkbox under it ("I have a secondary major"):
+      // the heading above the dropdown is still its own when no other question comes first.
+      if (isDataDropdownBox(el) && foreign.every((c) => el.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_FOLLOWING)) {
+        const heading = headingBefore(cur, el);
+        if (heading) return heading;
+      }
+      break;
+    }
     const heading = headingBefore(cur, el);
     if (heading) return heading;
-    if (!fallback && !isOptionLabel(cur)) {
+    // A dropdown's option list is not its question.
+    if (!fallback && !isOptionLabel(cur) && !cur.querySelector('[data-dropdown-selection]')) {
       const text = questionText(cur);
       if (text && text.length <= 1500 && !isGenericLabel(cleanLabel(text))) fallback = text;
     }

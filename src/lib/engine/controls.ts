@@ -225,7 +225,8 @@ export function fillButtons(members: HTMLElement[], value: string, tiers?: strin
   const option = pick.option;
   const chosen = () => option.getAttribute('aria-pressed') === 'true' || option.getAttribute('aria-checked') === 'true';
   if (!chosen()) {
-    realClick(option);
+    // Styled options (pronoun pickers) listen on an inner "clickable" part, not the row.
+    realClick(option.querySelector<HTMLElement>('[class*="clickable" i]') ?? option);
     // Web-component radios (SmartRecruiters spl-radio) may only react to their inner control or the keyboard.
     if (option.shadowRoot && option.hasAttribute('aria-checked') && !chosen()) {
       for (const inner of option.shadowRoot.querySelectorAll<HTMLElement>('input, .c-spl-radio, [class*="radio" i], label')) {
@@ -249,7 +250,9 @@ export const TIMING = { open: 1200, search: 4000, multi: 5000, noResults: 600 };
 const OPTION_SELECTOR =
   '[role="option"], [data-automation-id="promptOption"], [data-automation-id="menuItem"], .select__option, li[class*="option" i], spl-select-option, [role="gridcell"][aria-selected], ' +
   // Older react-select (v3/v4) options have no role, only an id like "react-select-3-option-0".
-  '[id^="react-select-"][id*="-option-"]';
+  '[id^="react-select-"][id*="-option-"], ' +
+  // Sites' own div dropdowns: <li data-dropdown-selection="Statistics">.
+  '[data-dropdown-selection]';
 const NON_OPTIONS = /^(no (results|options|matches)|loading|searching|type to search|start typing|no items)/i;
 
 function listboxFor(el: Element): Element | null {
@@ -265,7 +268,8 @@ function listboxFor(el: Element): Element | null {
 function allVisibleOptions(scope: ParentNode): HTMLElement[] {
   return queryAllDeep<HTMLElement>(OPTION_SELECTOR, scope).filter((o) => {
     const text = optionText(o);
-    return text && !NON_OPTIONS.test(text) && o.getAttribute('aria-disabled') !== 'true' && isVisible(o);
+    // A div dropdown's rows are all real choices, even ones folded under a closed category.
+    return text && !NON_OPTIONS.test(text) && o.getAttribute('aria-disabled') !== 'true' && (isVisible(o) || o.hasAttribute('data-dropdown-selection'));
   });
 }
 
@@ -421,9 +425,23 @@ export async function fillCombobox(
     return fail(options.length ? `${noOptionReason(value)} Options included ${seen}.` : 'The dropdown showed no options.');
   }
   const chosenText = optionText(pick.option);
+  // A row folded under a category ("Social media › LinkedIn") needs its category opened first.
+  if (!isVisible(pick.option)) {
+    const header = pick.option.closest('[class*="category" i]')?.querySelector<HTMLElement>('[class*="category-name" i], [class*="category-header" i]');
+    if (header) {
+      realClick(header);
+      await sleep(80);
+    }
+  }
   realClick(clickTarget(pick.option));
   await sleep(120);
   blur(el);
+  // Div dropdowns keep the pick in a hidden input; empty means the click was ignored.
+  const stored = pick.option.hasAttribute('data-dropdown-selection') ? el.querySelector<HTMLInputElement>('input[type=hidden]') : null;
+  if (stored && !stored.value) {
+    close(el, input);
+    return fail('The dropdown did not accept the selected option.');
+  }
   if (closestDeep(el, 'spl-autocomplete, spl-multiselect-autocomplete') && el instanceof HTMLInputElement
     && optionScore(el.value, chosenText) < CONFIDENT_OPTION_SCORE
     && !splSelectedValues(el).some((value) => optionScore(value, chosenText) >= CONFIDENT_OPTION_SCORE)) {

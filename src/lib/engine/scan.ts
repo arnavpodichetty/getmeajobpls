@@ -50,7 +50,17 @@ function choiceVisible(input: HTMLInputElement): boolean {
 }
 
 function isToggleButton(b: Element): boolean {
-  return b.hasAttribute('aria-pressed') || b.hasAttribute('data-option') || b.getAttribute('role') === 'radio';
+  return b.hasAttribute('aria-pressed') || b.hasAttribute('data-option') || b.getAttribute('role') === 'radio' || b.hasAttribute('data-pronouns');
+}
+
+/**
+ * A div dropdown built by the site itself: a role="button" box that opens a list
+ * of <li data-dropdown-selection> rows and keeps the pick in a hidden input.
+ */
+export function isDataDropdown(el: Element): boolean {
+  const id = el.getAttribute('aria-controls');
+  if (el.getAttribute('role') !== 'button' || !id) return false;
+  return !!el.ownerDocument.getElementById(id)?.querySelector('[data-dropdown-selection]');
 }
 
 /** Nearest ancestor holding ≥2 checkboxes and no other kind of control → one question. */
@@ -99,7 +109,8 @@ export function scanFields(root: ParentNode = document): Field[] {
   const all = composedElements(root);
 
   // Toggle-button groups (Ashby yes/no): buttons with aria-pressed/data-option sharing a parent.
-  const buttons = all.filter((el) => el.matches('button[aria-pressed], button[data-option], [role="radio"]:not(input)')) as HTMLButtonElement[];
+  // Styled pronoun pickers (div[data-pronouns]) work the same way.
+  const buttons = all.filter((el) => el.matches('button[aria-pressed], button[data-option], [role="radio"]:not(input), [data-pronouns]')) as HTMLButtonElement[];
   for (const button of buttons) {
     const parent = parentOf(button);
     if (!parent || seen.has(button) || !isVisible(button) || inCookiePanel(button)) continue;
@@ -116,12 +127,20 @@ export function scanFields(root: ParentNode = document): Field[] {
       ...(grouped.length > 1 && group ? group.querySelectorAll<HTMLElement>('input[type=radio]') : []),
     ])];
     hidden.forEach((h) => seen.add(h));
+    // The group's <label for> may point at a backing text box (a pronoun picker's
+    // "self-describe" input). Typing there would switch the answer to self-describe.
+    const backing = parent.querySelector(':scope > label[for]')?.getAttribute('for');
+    const backingInput = backing ? parent.ownerDocument.getElementById(backing) : null;
+    if (backingInput && backingInput.getAttribute('tabindex') === '-1') seen.add(backingInput);
     push('buttons', members[0], members, groupLabelFor([...members, ...hidden]));
   }
 
   const controls = all.filter((el) =>
-    el.matches('input, select, textarea, [role="combobox"], button[aria-haspopup="listbox"], [contenteditable="true"]'),
+    el.matches('input, select, textarea, [role="combobox"], button[aria-haspopup="listbox"], [contenteditable="true"], [role="button"][aria-controls]'),
   ) as HTMLElement[];
+  // A div dropdown's own search and "Please specify" boxes are part of it, not questions.
+  const dropdownRoots = controls.filter(isDataDropdown).map((el) => parentOf(el)).filter((r): r is Element => !!r);
+  const inDataDropdown = (el: HTMLElement) => el instanceof HTMLInputElement && dropdownRoots.some((r) => r.contains(el));
   // A dropdown's own search box shares its menu id (aria-controls) with the dropdown button.
   const menuIds = new Set(
     controls.filter((c) => !(c instanceof HTMLInputElement) && c.getAttribute('aria-controls')).map((c) => c.getAttribute('aria-controls')),
@@ -140,6 +159,9 @@ export function scanFields(root: ParentNode = document): Field[] {
     if (inCookiePanel(el)) continue; // cookie preference switches aren't questions
     if (el.getAttribute('role') === 'spinbutton') continue; // date parts; adapters fill these as dates
     if (isDropdownHelper(el)) continue;
+    if (inDataDropdown(el)) continue;
+    // Some sites keep tracking checkboxes on the page with title="hidden".
+    if (el.getAttribute('title') === 'hidden') continue;
 
     if (el instanceof HTMLInputElement) {
       const type = el.type.toLowerCase();
@@ -183,6 +205,10 @@ export function scanFields(root: ParentNode = document): Field[] {
     }
 
     if (!isVisible(el)) continue;
+    if (el.getAttribute('role') === 'button') {
+      if (isDataDropdown(el)) push('combobox', el, [el], labelFor(el));
+      continue;
+    }
     if (el instanceof HTMLSelectElement) push('select', el, [el], labelFor(el));
     else if (el instanceof HTMLTextAreaElement) {
       if (el.readOnly || el.name === 'g-recaptcha-response') continue;

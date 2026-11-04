@@ -1,0 +1,1970 @@
+<!doctype html>
+<!-- A company careers site with its own form: div dropdowns whose options carry data-dropdown-selection, and styled pronoun options. Trimmed; company name replaced. -->
+<html><body>
+<form enctype="multipart/form-data" method="POST" id="application-form" action="/record-application" novalidate="novalidate">
+    
+    
+
+    
+    
+    
+    
+    
+
+    
+    
+    
+
+    
+
+    
+    
+
+    <input type="checkbox" name="position" title="hidden">
+    <input id="jobIdInput" type="hidden" name="job_id" title="hidden">
+    <input id="js-enabled" type="hidden" name="javascript-enabled" title="hidden">
+
+
+    <input type="checkbox" name="city" title="hidden">
+
+    <div class="form-row">
+      <div class="name-inputs">
+        <span class="form-field ">
+  
+  <label class="form-field-label" id="first_name-label" for="first_name">
+    Legal first name<span class="req"> *</span>
+  </label>
+  
+  <input type="text" name="first_name" id="first_name" required="">
+</span>
+
+        <span class="form-field ">
+  
+  <label class="form-field-label" id="preferred_name-label" for="preferred_name">
+    Preferred first name
+  </label>
+  
+  <input type="text" name="preferred_name" id="preferred_name">
+</span>
+
+        <span class="form-field ">
+  
+  <label class="form-field-label" id="last_name-label" for="last_name">
+    Legal last name<span class="req"> *</span>
+  </label>
+  
+  <input type="text" name="last_name" id="last_name" required="">
+</span>
+
+      </div>
+      <div class="email-inputs">
+        <span class="form-field ">
+  
+  <label class="form-field-label" id="email-label" for="email">
+    Email<span class="req"> *</span>
+  </label>
+  
+  <input type="email" name="email" id="email" required="">
+</span>
+
+        <span class="form-field ">
+  
+  <label class="form-field-label" id="email_confirmation-label" for="email_confirmation">
+    Email confirmation<span class="req"> *</span>
+  </label>
+  
+  <input type="text" name="email_confirmation" id="email_confirmation" required="">
+</span>
+
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field phone-field">
+        <label class="form-field-label" id="phone-label" for="phone-number">
+          Phone<span class="req"> *</span>
+        </label>
+        <div class="phone-inputs">
+          
+          
+
+
+
+
+
+
+
+
+
+
+
+<div class="standard-dropdown phone-country-code phone_country_code-container required" data-dropdown-id="phone_country_code">
+	<div class="preview-box" role="button" tabindex="0" aria-expanded="false" aria-controls="phone_country_code-options">
+		<p class="text selected" data-placeholder="+1">+1</p>
+		
+		<input type="hidden" name="phone_country_code" class="dropdown-selection required" id="phone_country_code" autocomplete="off">
+	</div>
+
+	<div class="search-box" style="display:none">
+		<input type="text" class="dropdown-search-input" placeholder="Search">
+		
+	</div>
+
+	<div class="dropdown-container" id="phone_country_code-options" style="display:none">
+    
+		
+
+      <div class="items-container non-nested">
+        <ul>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Canada (+1)" data-dropdown-label="Canada (+1)">
+              Canada (+1)
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="United Kingdom (+44)" data-dropdown-label="United Kingdom (+44)">
+              United Kingdom (+44)
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="United States (+1)" data-dropdown-label="United States (+1)">
+              United States (+1)
+            </li>
+        </ul>
+      </div>
+
+		
+	</div>
+
+	<div class="specify-box" style="display:none">
+		<input type="text" class="specify-input" placeholder="Please specify *" name="" maxlength="128">
+	</div>
+
+</div>
+
+          <input type="tel" name="phone_number" id="phone-number" placeholder="Phone number" required="">
+        </div>
+        <input type="hidden" name="phone" id="phone" title="hidden">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        
+
+<div id="pronouns-options-list" class="form-field">
+
+  
+  <label class="form-field-label" id="pronouns-label" for="pronouns">
+    Pronouns <small>(Select one or more.)</small>
+  </label>
+  
+
+  
+  <div class="pronouns-option she-her-hers" data-pronouns="she/her/hers">
+    <div class="checkbox pronouns-clickable">
+      <div class="checkmark"></div>
+    </div>
+    <span class="label-text pronouns-clickable">she/her/hers</span>
+  </div>
+  
+  <div class="pronouns-option he-him-his" data-pronouns="he/him/his">
+    <div class="checkbox pronouns-clickable">
+      <div class="checkmark"></div>
+    </div>
+    <span class="label-text pronouns-clickable">he/him/his</span>
+  </div>
+  
+  <div class="pronouns-option they-them-theirs" data-pronouns="they/them/theirs">
+    <div class="checkbox pronouns-clickable">
+      <div class="checkmark"></div>
+    </div>
+    <span class="label-text pronouns-clickable">they/them/theirs</span>
+  </div>
+  
+
+  <div class="pronouns-option" data-pronouns="">
+    <div class="checkbox pronouns-clickable self-describe">
+      <div class="checkmark"></div>
+    </div>
+    <span class="label-text pronouns-clickable self-describe">self-describe, please specify:</span>
+  </div>
+
+</div>
+
+<input type="text" id="pronouns" name="pronouns" class="pronouns-input" tabindex="-1" maxlength="1000">
+
+      </div>
+    </div>
+
+    
+    <div class="form-row">
+      <span class="form-field ">
+  
+  <label class="form-field-label" id="linkedin_profile-label" for="linkedin_profile">
+    LinkedIn profile URL <small>(E.g., 'https://www.linkedin.com/in/yourname'.)</small>
+  </label>
+  
+  <input type="text" name="linkedin_profile" id="linkedin_profile">
+</span>
+
+    </div>
+    
+
+    
+    <input type="checkbox" name="category" title="hidden">
+    
+
+    
+    <div class="form-row">
+      <span class="form-field ">
+  
+  <label class="form-field-label" id="current_position-label" for="current_position">
+    Current or most recent employer<span class="req"> *</span>
+  </label>
+  
+  <input type="text" name="current_position" id="current_position" required="">
+</span>
+
+    </div>
+    
+
+    
+
+    <div class="form-row source-container">
+      <div class="form-field">
+        <p class="form-field-label">How did you hear about us? <span class="req">*</span></p>
+        
+        
+
+
+
+
+
+
+
+
+
+
+
+<div class="standard-dropdown application-source required" data-dropdown-id="source-dropdown" data-include-other="true">
+	<div class="preview-box" role="button" tabindex="0" aria-expanded="false" aria-controls="source-dropdown-options">
+		<p class="text" data-placeholder="Select an option">Select an option</p>
+		
+		<input type="hidden" name="source" class="dropdown-selection required" id="source-dropdown" autocomplete="off">
+	</div>
+
+	<div class="search-box" style="display:none">
+		<input type="text" class="dropdown-search-input" placeholder="Search">
+		
+	</div>
+
+	<div class="dropdown-container" id="source-dropdown-options" style="display:none">
+    
+		
+			
+        <div class="dropdown-category-container">
+          <div class="category-name-container dropdown-row keyboard-navigable">
+            <p class="category-text">Academic competition</p>
+            <span class="arrow"></span>
+          </div>
+          <div class="items-container nested" style="display:none">
+            <ul>
+              
+                <li class="dropdown-row" data-dropdown-selection="University-level competition (ICPC, Putnam, IMC, etc.)..." data-dropdown-label="University-level competition (ICPC, Putnam, IMC, etc.)..." data-requires-details="">
+                  University-level competition (ICPC, Putnam, IMC, etc.)...
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Pre-university academic competition (IOI, IMO, HMMT, AIME, etc.)..." data-dropdown-label="Pre-university academic competition (IOI, IMO, HMMT, AIME, etc.)..." data-requires-details="">
+                  Pre-university academic competition (IOI, IMO, HMMT, AIME, etc.)...
+                </li>
+              
+            </ul>
+          </div>
+        </div>
+			
+        <div class="dropdown-category-container">
+          <div class="category-name-container dropdown-row keyboard-navigable">
+            <p class="category-text">Academic, scholarship, or professional organization</p>
+            <span class="arrow"></span>
+          </div>
+          <div class="items-container nested" style="display:none">
+            <ul>
+              
+                <li class="dropdown-row" data-dropdown-selection="Academic camp..." data-dropdown-label="Academic camp..." data-requires-details="">
+                  Academic camp...
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Advent of Code" data-dropdown-label="Advent of Code">
+                  Advent of Code
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="AoPS - Art of Problem Solving" data-dropdown-label="AoPS - Art of Problem Solving">
+                  AoPS - Art of Problem Solving
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="BEAM - Bridge to Enter Advanced Mathematics" data-dropdown-label="BEAM - Bridge to Enter Advanced Mathematics">
+                  BEAM - Bridge to Enter Advanced Mathematics
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="ColorStack" data-dropdown-label="ColorStack">
+                  ColorStack
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="DS4A" data-dropdown-label="DS4A">
+                  DS4A
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="HireWomenStem" data-dropdown-label="HireWomenStem">
+                  HireWomenStem
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Math Association of America" data-dropdown-label="Math Association of America">
+                  Math Association of America
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="MLT" data-dropdown-label="MLT">
+                  MLT
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="NCWIT" data-dropdown-label="NCWIT">
+                  NCWIT
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="NSBE" data-dropdown-label="NSBE">
+                  NSBE
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Oxford Online Maths Club" data-dropdown-label="Oxford Online Maths Club">
+                  Oxford Online Maths Club
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Per Scholas" data-dropdown-label="Per Scholas">
+                  Per Scholas
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="POCIT" data-dropdown-label="POCIT">
+                  POCIT
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Rare Recruitment (UK)" data-dropdown-label="Rare Recruitment (UK)">
+                  Rare Recruitment (UK)
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="REU program" data-dropdown-label="REU program">
+                  REU program
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Ron Brown Scholar Program" data-dropdown-label="Ron Brown Scholar Program">
+                  Ron Brown Scholar Program
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Scientific Association of Mathematical Finance" data-dropdown-label="Scientific Association of Mathematical Finance">
+                  Scientific Association of Mathematical Finance
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Student Freedom Initiative" data-dropdown-label="Student Freedom Initiative">
+                  Student Freedom Initiative
+                </li>
+              
+            </ul>
+          </div>
+        </div>
+			
+        <div class="dropdown-category-container">
+          <div class="category-name-container dropdown-row keyboard-navigable">
+            <p class="category-text">Campus</p>
+            <span class="arrow"></span>
+          </div>
+          <div class="items-container nested" style="display:none">
+            <ul>
+              
+                <li class="dropdown-row" data-dropdown-selection="University club..." data-dropdown-label="University club..." data-requires-details="">
+                  University club...
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="University job board" data-dropdown-label="University job board">
+                  University job board
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="University-hosted event (e.g., career fair, career services event, etc.)..." data-dropdown-label="University-hosted event (e.g., career fair, career services event, etc.)..." data-requires-details="">
+                  University-hosted event (e.g., career fair, career services event, etc.)...
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Academic department" data-dropdown-label="Academic department">
+                  Academic department
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Faculty referral..." data-dropdown-label="Faculty referral..." data-requires-details="">
+                  Faculty referral...
+                </li>
+              
+            </ul>
+          </div>
+        </div>
+			
+        <div class="dropdown-category-container">
+          <div class="category-name-container dropdown-row keyboard-navigable">
+            <p class="category-text">Conference</p>
+            <span class="arrow"></span>
+          </div>
+          <div class="items-container nested" style="display:none">
+            <ul>
+              
+                <li class="dropdown-row" data-dropdown-selection="Afrotech" data-dropdown-label="Afrotech">
+                  Afrotech
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="ALT" data-dropdown-label="ALT">
+                  ALT
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="APS" data-dropdown-label="APS">
+                  APS
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="ASAP" data-dropdown-label="ASAP">
+                  ASAP
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Bsides" data-dropdown-label="Bsides">
+                  Bsides
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="CMD-IT; Tapia Conference" data-dropdown-label="CMD-IT; Tapia Conference">
+                  CMD-IT; Tapia Conference
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="CU*IP" data-dropdown-label="CU*IP">
+                  CU*IP
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="COLM" data-dropdown-label="COLM">
+                  COLM
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="COLT" data-dropdown-label="COLT">
+                  COLT
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="CVPR" data-dropdown-label="CVPR">
+                  CVPR
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="DBT Summit" data-dropdown-label="DBT Summit">
+                  DBT Summit
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="FAST" data-dropdown-label="FAST">
+                  FAST
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="FCCM" data-dropdown-label="FCCM">
+                  FCCM
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="FP Matsuri" data-dropdown-label="FP Matsuri">
+                  FP Matsuri
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="FPL" data-dropdown-label="FPL">
+                  FPL
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="EMNLP" data-dropdown-label="EMNLP">
+                  EMNLP
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Grace Hopper Celebration" data-dropdown-label="Grace Hopper Celebration">
+                  Grace Hopper Celebration
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="ICFP" data-dropdown-label="ICFP">
+                  ICFP
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="ICLR" data-dropdown-label="ICLR">
+                  ICLR
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="ICML" data-dropdown-label="ICML">
+                  ICML
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="ISFPGA" data-dropdown-label="ISFPGA">
+                  ISFPGA
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Latch-up Fossi" data-dropdown-label="Latch-up Fossi">
+                  Latch-up Fossi
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Lesbians Who Tech Summit" data-dropdown-label="Lesbians Who Tech Summit">
+                  Lesbians Who Tech Summit
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="LPAR" data-dropdown-label="LPAR">
+                  LPAR
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="MLSys" data-dropdown-label="MLSys">
+                  MLSys
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="NANOG" data-dropdown-label="NANOG">
+                  NANOG
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="NDC London" data-dropdown-label="NDC London">
+                  NDC London
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="NSDI" data-dropdown-label="NSDI">
+                  NSDI
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="NeurIPS" data-dropdown-label="NeurIPS">
+                  NeurIPS
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="NixCon" data-dropdown-label="NixCon">
+                  NixCon
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="OOPSLA" data-dropdown-label="OOPSLA">
+                  OOPSLA
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="OSDI" data-dropdown-label="OSDI">
+                  OSDI
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Out for Undergrad" data-dropdown-label="Out for Undergrad">
+                  Out for Undergrad
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Perspektywy Women in Tech" data-dropdown-label="Perspektywy Women in Tech">
+                  Perspektywy Women in Tech
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="PLDI" data-dropdown-label="PLDI">
+                  PLDI
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="POPL" data-dropdown-label="POPL">
+                  POPL
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Powershell Conference EU" data-dropdown-label="Powershell Conference EU">
+                  Powershell Conference EU
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Powershell Summit" data-dropdown-label="Powershell Summit">
+                  Powershell Summit
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="PPL" data-dropdown-label="PPL">
+                  PPL
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="PyCon" data-dropdown-label="PyCon">
+                  PyCon
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="PyTorch" data-dropdown-label="PyTorch">
+                  PyTorch
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Rust Asia" data-dropdown-label="Rust Asia">
+                  Rust Asia
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="SIGCOMM" data-dropdown-label="SIGCOMM">
+                  SIGCOMM
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="SOSP" data-dropdown-label="SOSP">
+                  SOSP
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="SPLASH" data-dropdown-label="SPLASH">
+                  SPLASH
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="SREcon" data-dropdown-label="SREcon">
+                  SREcon
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="STOC" data-dropdown-label="STOC">
+                  STOC
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="StrangeLoop" data-dropdown-label="StrangeLoop">
+                  StrangeLoop
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="VLDB" data-dropdown-label="VLDB">
+                  VLDB
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Other Conference..." data-dropdown-label="Other Conference..." data-requires-details="">
+                  Other Conference...
+                </li>
+              
+            </ul>
+          </div>
+        </div>
+			
+        <div class="dropdown-category-container">
+          <div class="category-name-container dropdown-row keyboard-navigable">
+            <p class="category-text">Example Group event</p>
+            <span class="arrow"></span>
+          </div>
+          <div class="items-container nested" style="display:none">
+            <ul>
+              
+                <li class="dropdown-row" data-dropdown-selection="Game night" data-dropdown-label="Game night">
+                  Game night
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Info session" data-dropdown-label="Info session">
+                  Info session
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Networking dinner" data-dropdown-label="Networking dinner">
+                  Networking dinner
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Estimathon" data-dropdown-label="Estimathon">
+                  Estimathon
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="ETC" data-dropdown-label="ETC">
+                  ETC
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Mystery Planet" data-dropdown-label="Mystery Planet">
+                  Mystery Planet
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="PuzzleCity" data-dropdown-label="PuzzleCity">
+                  PuzzleCity
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Figgie event" data-dropdown-label="Figgie event">
+                  Figgie event
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Tech Talks" data-dropdown-label="Tech Talks">
+                  Tech Talks
+                </li>
+              
+            </ul>
+          </div>
+        </div>
+			
+        <div class="dropdown-category-container">
+          <div class="category-name-container dropdown-row keyboard-navigable">
+            <p class="category-text">Example Group content or item</p>
+            <span class="arrow"></span>
+          </div>
+          <div class="items-container nested" style="display:none">
+            <ul>
+              
+                <li class="dropdown-row" data-dropdown-selection="Example Group games" data-dropdown-label="Example Group games">
+                  Example Group games
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Example Group puzzles" data-dropdown-label="Example Group puzzles">
+                  Example Group puzzles
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Example Group Blog" data-dropdown-label="Example Group Blog">
+                  Example Group Blog
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Figgie online" data-dropdown-label="Figgie online">
+                  Figgie online
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Example Group T-shirt or item" data-dropdown-label="Example Group T-shirt or item">
+                  Example Group T-shirt or item
+                </li>
+              
+            </ul>
+          </div>
+        </div>
+			
+        <div class="dropdown-category-container">
+          <div class="category-name-container dropdown-row keyboard-navigable">
+            <p class="category-text">Kaggle</p>
+            <span class="arrow"></span>
+          </div>
+          <div class="items-container nested" style="display:none">
+            <ul>
+              
+                <li class="dropdown-row" data-dropdown-selection="Kaggle" data-dropdown-label="Kaggle">
+                  Kaggle
+                </li>
+              
+            </ul>
+          </div>
+        </div>
+			
+        <div class="dropdown-category-container">
+          <div class="category-name-container dropdown-row keyboard-navigable">
+            <p class="category-text">Online job board</p>
+            <span class="arrow"></span>
+          </div>
+          <div class="items-container nested" style="display:none">
+            <ul>
+              
+                <li class="dropdown-row" data-dropdown-selection="Bright Network" data-dropdown-label="Bright Network">
+                  Bright Network
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="GradCracker" data-dropdown-label="GradCracker">
+                  GradCracker
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="HackerNews" data-dropdown-label="HackerNews">
+                  HackerNews
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Job Openings for Economists (JOE)" data-dropdown-label="Job Openings for Economists (JOE)">
+                  Job Openings for Economists (JOE)
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Mathjobs.org" data-dropdown-label="Mathjobs.org">
+                  Mathjobs.org
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Piazza" data-dropdown-label="Piazza">
+                  Piazza
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="STEM Women (UK organization)" data-dropdown-label="STEM Women (UK organization)">
+                  STEM Women (UK organization)
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="TLDR AI" data-dropdown-label="TLDR AI">
+                  TLDR AI
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Working Not Working" data-dropdown-label="Working Not Working">
+                  Working Not Working
+                </li>
+              
+            </ul>
+          </div>
+        </div>
+			
+        <div class="dropdown-category-container">
+          <div class="category-name-container dropdown-row keyboard-navigable">
+            <p class="category-text">Social media</p>
+            <span class="arrow"></span>
+          </div>
+          <div class="items-container nested" style="display:none">
+            <ul>
+              
+                <li class="dropdown-row" data-dropdown-selection="Facebook" data-dropdown-label="Facebook">
+                  Facebook
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Glassdoor" data-dropdown-label="Glassdoor">
+                  Glassdoor
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="LinkedIn" data-dropdown-label="LinkedIn">
+                  LinkedIn
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Online forum..." data-dropdown-label="Online forum..." data-requires-details="">
+                  Online forum...
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Twitter/X" data-dropdown-label="Twitter/X">
+                  Twitter/X
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="WeChat" data-dropdown-label="WeChat">
+                  WeChat
+                </li>
+              
+            </ul>
+          </div>
+        </div>
+			
+        <div class="dropdown-category-container">
+          <div class="category-name-container dropdown-row keyboard-navigable">
+            <p class="category-text">Personal connection</p>
+            <span class="arrow"></span>
+          </div>
+          <div class="items-container nested" style="display:none">
+            <ul>
+              
+                <li class="dropdown-row" data-dropdown-selection="Academic advisor" data-dropdown-label="Academic advisor">
+                  Academic advisor
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Current employee..." data-dropdown-label="Current employee..." data-requires-details="">
+                  Current employee...
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Current/former intern" data-dropdown-label="Current/former intern">
+                  Current/former intern
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Word of mouth" data-dropdown-label="Word of mouth">
+                  Word of mouth
+                </li>
+              
+            </ul>
+          </div>
+        </div>
+			
+        <div class="dropdown-category-container">
+          <div class="category-name-container dropdown-row keyboard-navigable">
+            <p class="category-text">YouTube or Podcast</p>
+            <span class="arrow"></span>
+          </div>
+          <div class="items-container nested" style="display:none">
+            <ul>
+              
+                <li class="dropdown-row" data-dropdown-selection="3Blue1Brown" data-dropdown-label="3Blue1Brown">
+                  3Blue1Brown
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Computerphile" data-dropdown-label="Computerphile">
+                  Computerphile
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Cracking the Cryptic" data-dropdown-label="Cracking the Cryptic">
+                  Cracking the Cryptic
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Dwarkesh Podcast" data-dropdown-label="Dwarkesh Podcast">
+                  Dwarkesh Podcast
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Example Group Get to Know Us" data-dropdown-label="Example Group Get to Know Us">
+                  Example Group Get to Know Us
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Example Group OCaml Unboxed" data-dropdown-label="Example Group OCaml Unboxed">
+                  Example Group OCaml Unboxed
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Example Group's Signals &amp; Threads podcast" data-dropdown-label="Example Group's Signals &amp; Threads podcast">
+                  Example Group's Signals &amp; Threads podcast
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Example Group Tech Talk on YouTube" data-dropdown-label="Example Group Tech Talk on YouTube">
+                  Example Group Tech Talk on YouTube
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Numberphile" data-dropdown-label="Numberphile">
+                  Numberphile
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Oxford Mathematics Plus" data-dropdown-label="Oxford Mathematics Plus">
+                  Oxford Mathematics Plus
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Periodic Videos" data-dropdown-label="Periodic Videos">
+                  Periodic Videos
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Real Numbers" data-dropdown-label="Real Numbers">
+                  Real Numbers
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Reconcilable Differences" data-dropdown-label="Reconcilable Differences">
+                  Reconcilable Differences
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Sixty Symbols" data-dropdown-label="Sixty Symbols">
+                  Sixty Symbols
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="StandUp Maths" data-dropdown-label="StandUp Maths">
+                  StandUp Maths
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Steve Mould" data-dropdown-label="Steve Mould">
+                  Steve Mould
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="The Art of the Problem" data-dropdown-label="The Art of the Problem">
+                  The Art of the Problem
+                </li>
+              
+                <li class="dropdown-row" data-dropdown-selection="Welch Labs" data-dropdown-label="Welch Labs">
+                  Welch Labs
+                </li>
+              
+            </ul>
+          </div>
+        </div>
+			
+
+      
+        <div class="items-container non-nested other-option-container">
+          <ul>
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Other..." data-other="">
+              Other...
+            </li>
+          </ul>
+        </div>
+      
+
+		
+	</div>
+
+	<div class="specify-box" style="display:none">
+		<input type="text" class="specify-input" placeholder="Please specify *" name="source_details" maxlength="128">
+	</div>
+
+</div>
+
+      </div>
+    </div>
+
+    
+    <div class="form-row recruiting_timelines-container">
+      <div class="form-field">
+        <p id="timeline-label" class="form-field-label">
+          Do you have any recruiting timelines we should be aware of? <span class="req">*</span>
+        </p>
+        <ul class="timeline-inputs checkbox-inputs">
+          <li>
+  <input type="radio" class="timelines" id="recruiting_timelines-true" name="recruiting_timelines" required="">
+<label for="recruiting_timelines-true">
+  <span></span>
+  <div class="label-table">
+    <div class="label-cell">Yes</div>
+  </div>
+</label>
+</li>
+          <li>
+  <input type="radio" class="timelines" id="recruiting_timelines-false" name="recruiting_timelines" required="">
+<label for="recruiting_timelines-false">
+  <span></span>
+  <div class="label-table">
+    <div class="label-cell">No</div>
+  </div>
+</label>
+</li>
+        </ul>
+      </div>
+      <div class="form-field recruiting-timeline-details" hidden="">
+        <label id="timeline-details-label" class="form-field-label" for="timeline-details">
+          Please share more details about the relevant timeline <span class="req">*</span>
+        </label>
+        <textarea name="recruiting_timelines_details" id="timeline-details" rows="4" maxlength="1000" disabled="" required=""></textarea>
+      </div>
+    </div>
+    
+    
+    
+    <div class="form-row interviewed-container">
+      <div class="form-field">
+        <p id="interviewed-label" class="form-field-label">
+          Have you interviewed with Example Group before?
+          <span class="req">*</span>
+        </p>
+        <ul class="interviewed-inputs checkbox-inputs">
+          <li>
+  <input type="radio" id="interviewed-true" name="interviewed" required="">
+<label for="interviewed-true">
+  <span></span>
+  <div class="label-table">
+    <div class="label-cell">Yes</div>
+  </div>
+</label>
+</li>
+          <li>
+  <input type="radio" id="interviewed-false" name="interviewed" required="">
+<label for="interviewed-false">
+  <span></span>
+  <div class="label-table">
+    <div class="label-cell">No</div>
+  </div>
+</label>
+</li>
+        </ul>
+      </div>
+    </div>
+    
+
+    <div class="form-row student-row student-container">
+      
+      <div class="form-field">
+        <p id="student-label" class="form-field-label">Are you currently a student? <span class="req">*</span></p>
+        <ul class="student-inputs checkbox-inputs">
+          <li>
+  <input type="radio" class="student" id="student-true" name="student" required="">
+<label for="student-true">
+  <span></span>
+  <div class="label-table">
+    <div class="label-cell">Yes</div>
+  </div>
+</label>
+</li>
+          <li>
+  <input type="radio" class="student" id="student-false" name="student" required="">
+<label for="student-false">
+  <span></span>
+  <div class="label-table">
+    <div class="label-cell">No</div>
+  </div>
+</label>
+</li>
+        </ul>
+      </div>
+      
+      
+      <div class="student-fields reveal-if-active active">
+        
+        <div class="form-field college-container">
+          <div>
+            <p class="form-field-label">Select your college/university/school. <span class="req">*</span></p>
+            <small>Please search via full name or acronym before selecting "Other"</small>
+          </div>
+          
+
+
+
+
+
+
+
+
+
+
+
+<div class="standard-dropdown college required" data-dropdown-id="college">
+	<div class="preview-box" role="button" tabindex="0" aria-expanded="false" aria-controls="college-options">
+		<p class="text" data-placeholder="Select an option">Select an option</p>
+		
+		<input type="hidden" name="college" class="dropdown-selection required" id="college" autocomplete="off">
+	</div>
+
+	<div class="search-box" style="display:none">
+		<input type="text" class="dropdown-search-input" placeholder="Search">
+		
+	</div>
+
+	<div class="dropdown-container" id="college-options" style="display:none">
+    
+		
+
+      <div class="items-container non-nested">
+        <ul>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Aalborg University" data-dropdown-label="Aalborg University">
+              Aalborg University
+            </li>
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Acme College" data-dropdown-label="Acme College">
+              Acme College
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Other" data-dropdown-label="Other">
+              Other
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="University of California - Berkeley" data-dropdown-label="University of California - Berkeley">
+              University of California - Berkeley
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="University of California - Los Angeles" data-dropdown-label="University of California - Los Angeles">
+              University of California - Los Angeles
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="University of Chicago" data-dropdown-label="University of Chicago">
+              University of Chicago
+            </li>
+        </ul>
+      </div>
+
+		
+	</div>
+
+	<div class="specify-box" style="display:none">
+		<input type="text" class="specify-input" placeholder="Please specify *" name="" maxlength="128">
+	</div>
+
+</div>
+
+        </div>
+        
+        <div class="form-field university-email-container">
+          <div>
+            <p class="form-field-label">Your primary college/university/school email <span class="req">*</span></p>
+            <small>We may use this email to verify your enrollment.</small>
+          </div>
+          <span class="form-field ">
+  
+  <input type="email" name="university_email" id="university_email" required="">
+</span>
+
+          <ul class="checkbox-inputs">
+            <li>
+              <input type="checkbox" id="no-university-email">
+              <label for="no-university-email">
+                <span></span>
+                <div class="label-table"><div class="label-cell">I don't have a school email.</div></div>
+              </label>
+            </li>
+          </ul>
+          <div class="form-field university-email-reason" hidden="">
+            <label class="form-field-label" for="university_email_reason">
+              If you do not have a school email, please provide a reason here <span class="req">*</span>
+            </label>
+            <textarea id="university_email_reason" rows="4" maxlength="1000" disabled="" required=""></textarea>
+          </div>
+        </div>
+        
+        
+        
+        
+        
+
+<div class="form-dropdown education_level-container">
+    <label for="education_level">education_level</label>
+    <label>What degree are you currently pursuing?<span class="req"> *</span></label>
+    
+        
+
+
+
+
+
+
+
+
+
+
+
+<div class="standard-dropdown required" data-dropdown-id="education_level">
+	<div class="preview-box" role="button" tabindex="0" aria-expanded="false" aria-controls="education_level-options">
+		<p class="text" data-placeholder="Select an option">Select an option</p>
+		
+		<input type="hidden" name="education_level" class="dropdown-selection required" id="education_level" autocomplete="off">
+	</div>
+
+	<div class="search-box" style="display:none">
+		<input type="text" class="dropdown-search-input" placeholder="Search">
+		
+	</div>
+
+	<div class="dropdown-container" id="education_level-options" style="display:none">
+    
+		
+
+      <div class="items-container non-nested">
+        <ul>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="High School" data-dropdown-label="High School">
+              High School
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Undergraduate" data-dropdown-label="Undergraduate">
+              Undergraduate
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Master's" data-dropdown-label="Master's">
+              Master's
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="PhD" data-dropdown-label="PhD">
+              PhD
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="JD" data-dropdown-label="JD">
+              JD
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="MD" data-dropdown-label="MD">
+              MD
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Other" data-dropdown-label="Other">
+              Other
+            </li>
+          
+          
+        </ul>
+      </div>
+
+		
+	</div>
+
+	<div class="specify-box" style="display:none">
+		<input type="text" class="specify-input" placeholder="Please specify *" name="" maxlength="128">
+	</div>
+
+</div>
+
+    
+</div>
+
+        
+        <div class="form-field major-container">
+          <p class="form-field-label">What is your major/field of study? <span class="req">*</span></p>
+          
+
+
+
+
+
+
+
+
+
+
+
+<div class="standard-dropdown major required" data-dropdown-id="major">
+	<div class="preview-box" role="button" tabindex="0" aria-expanded="false" aria-controls="major-options">
+		<p class="text" data-placeholder="Select an option">Select an option</p>
+		
+		<input type="hidden" name="major" class="dropdown-selection required" id="major" autocomplete="off">
+	</div>
+
+	<div class="search-box" style="display:none">
+		<input type="text" class="dropdown-search-input" placeholder="Search">
+		
+	</div>
+
+	<div class="dropdown-container" id="major-options" style="display:none">
+    
+		
+
+      <div class="items-container non-nested">
+        <ul>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Aerospace Engineering" data-dropdown-label="Aerospace Engineering">
+              Aerospace Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Actuarial Science" data-dropdown-label="Actuarial Science">
+              Actuarial Science
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Anthropology" data-dropdown-label="Anthropology">
+              Anthropology
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Applied Mathematics" data-dropdown-label="Applied Mathematics">
+              Applied Mathematics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Artificial Intelligence / Machine Learning" data-dropdown-label="Artificial Intelligence / Machine Learning">
+              Artificial Intelligence / Machine Learning
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Biology" data-dropdown-label="Biology">
+              Biology
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Business" data-dropdown-label="Business">
+              Business
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Business Analytics" data-dropdown-label="Business Analytics">
+              Business Analytics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Chemistry" data-dropdown-label="Chemistry">
+              Chemistry
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Architecture" data-dropdown-label="Computer Architecture">
+              Computer Architecture
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Engineering" data-dropdown-label="Computer Engineering">
+              Computer Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Science" data-dropdown-label="Computer Science">
+              Computer Science
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Science and Artificial Intelligence" data-dropdown-label="Computer Science and Artificial Intelligence">
+              Computer Science and Artificial Intelligence
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Science and Electrical Engineering" data-dropdown-label="Computer Science and Electrical Engineering">
+              Computer Science and Electrical Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Science and Mathematics" data-dropdown-label="Computer Science and Mathematics">
+              Computer Science and Mathematics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Science and Physics" data-dropdown-label="Computer Science and Physics">
+              Computer Science and Physics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Science and Statistics" data-dropdown-label="Computer Science and Statistics">
+              Computer Science and Statistics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Cyber Security" data-dropdown-label="Cyber Security">
+              Cyber Security
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Data Engineering" data-dropdown-label="Data Engineering">
+              Data Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Data Science" data-dropdown-label="Data Science">
+              Data Science
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Earth Sciences" data-dropdown-label="Earth Sciences">
+              Earth Sciences
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Economics" data-dropdown-label="Economics">
+              Economics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Electrical Engineering" data-dropdown-label="Electrical Engineering">
+              Electrical Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Engineering" data-dropdown-label="Engineering">
+              Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Engineering Mathematics" data-dropdown-label="Engineering Mathematics">
+              Engineering Mathematics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Engineering Physics" data-dropdown-label="Engineering Physics">
+              Engineering Physics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Environmental Studies" data-dropdown-label="Environmental Studies">
+              Environmental Studies
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Finance" data-dropdown-label="Finance">
+              Finance
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Information Systems" data-dropdown-label="Information Systems">
+              Information Systems
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Languages" data-dropdown-label="Languages">
+              Languages
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Law" data-dropdown-label="Law">
+              Law
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Linguistics" data-dropdown-label="Linguistics">
+              Linguistics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Manufacturing and Mechanics" data-dropdown-label="Manufacturing and Mechanics">
+              Manufacturing and Mechanics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Mathematics" data-dropdown-label="Mathematics">
+              Mathematics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Mathematics and Data Science" data-dropdown-label="Mathematics and Data Science">
+              Mathematics and Data Science
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Mathematics and Physics" data-dropdown-label="Mathematics and Physics">
+              Mathematics and Physics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Mathematics and Statistics" data-dropdown-label="Mathematics and Statistics">
+              Mathematics and Statistics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Medicine" data-dropdown-label="Medicine">
+              Medicine
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Natural Sciences" data-dropdown-label="Natural Sciences">
+              Natural Sciences
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Naval Science" data-dropdown-label="Naval Science">
+              Naval Science
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Operations Research / Financial Engineering" data-dropdown-label="Operations Research / Financial Engineering">
+              Operations Research / Financial Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Organizational Theory" data-dropdown-label="Organizational Theory">
+              Organizational Theory
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Philosophy" data-dropdown-label="Philosophy">
+              Philosophy
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Physics" data-dropdown-label="Physics">
+              Physics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Political Science" data-dropdown-label="Political Science">
+              Political Science
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Psychology" data-dropdown-label="Psychology">
+              Psychology
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Quantitative Finance" data-dropdown-label="Quantitative Finance">
+              Quantitative Finance
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Robotics" data-dropdown-label="Robotics">
+              Robotics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Software Engineering" data-dropdown-label="Software Engineering">
+              Software Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Statistics" data-dropdown-label="Statistics">
+              Statistics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Statistics and Decision Theory" data-dropdown-label="Statistics and Decision Theory">
+              Statistics and Decision Theory
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Veterinary Medicine" data-dropdown-label="Veterinary Medicine">
+              Veterinary Medicine
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Other" data-dropdown-label="Other">
+              Other
+            </li>
+          
+          
+        </ul>
+      </div>
+
+		
+	</div>
+
+	<div class="specify-box" style="display:none">
+		<input type="text" class="specify-input" placeholder="Please specify *" name="" maxlength="128">
+	</div>
+
+</div>
+
+          
+          <ul class="checkbox-inputs">
+            <li>
+              <input type="checkbox" id="has-secondary-major">
+              <label for="has-secondary-major">
+                <span></span>
+                <div class="label-table"><div class="label-cell">I have a secondary major.</div></div>
+              </label>
+            </li>
+          </ul>
+          
+        </div>
+
+        
+        <div class="form-field secondary-major-container" hidden="">
+          <p class="form-field-label">What is your secondary major/field of study? <span class="req">*</span></p>
+          
+
+
+
+
+
+
+
+
+
+
+
+<div class="standard-dropdown secondary-major required" data-dropdown-id="secondary_major">
+	<div class="preview-box" role="button" tabindex="0" aria-expanded="false" aria-controls="secondary_major-options">
+		<p class="text" data-placeholder="Select an option">Select an option</p>
+		
+		<input type="hidden" name="secondary_major" class="dropdown-selection required" id="secondary_major" autocomplete="off" disabled="">
+	</div>
+
+	<div class="search-box" style="display:none">
+		<input type="text" class="dropdown-search-input" placeholder="Search">
+		
+	</div>
+
+	<div class="dropdown-container" id="secondary_major-options" style="display:none">
+    
+      <ul class="selected-option hidden">
+        <li class="dropdown-row keyboard-navigable" data-dropdown-selection="">
+          <span class="selected-option-label"></span>
+          <button type="button" class="clear-selection" data-dropdown-selection="" aria-label="Clear selection" title="Clear selection">
+            
+          </button>
+        </li>
+      </ul>
+    
+		
+
+      <div class="items-container non-nested">
+        <ul>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Aerospace Engineering" data-dropdown-label="Aerospace Engineering">
+              Aerospace Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Actuarial Science" data-dropdown-label="Actuarial Science">
+              Actuarial Science
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Anthropology" data-dropdown-label="Anthropology">
+              Anthropology
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Applied Mathematics" data-dropdown-label="Applied Mathematics">
+              Applied Mathematics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Artificial Intelligence / Machine Learning" data-dropdown-label="Artificial Intelligence / Machine Learning">
+              Artificial Intelligence / Machine Learning
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Biology" data-dropdown-label="Biology">
+              Biology
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Business" data-dropdown-label="Business">
+              Business
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Business Analytics" data-dropdown-label="Business Analytics">
+              Business Analytics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Chemistry" data-dropdown-label="Chemistry">
+              Chemistry
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Architecture" data-dropdown-label="Computer Architecture">
+              Computer Architecture
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Engineering" data-dropdown-label="Computer Engineering">
+              Computer Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Science" data-dropdown-label="Computer Science">
+              Computer Science
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Science and Artificial Intelligence" data-dropdown-label="Computer Science and Artificial Intelligence">
+              Computer Science and Artificial Intelligence
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Science and Electrical Engineering" data-dropdown-label="Computer Science and Electrical Engineering">
+              Computer Science and Electrical Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Science and Mathematics" data-dropdown-label="Computer Science and Mathematics">
+              Computer Science and Mathematics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Science and Physics" data-dropdown-label="Computer Science and Physics">
+              Computer Science and Physics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Computer Science and Statistics" data-dropdown-label="Computer Science and Statistics">
+              Computer Science and Statistics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Cyber Security" data-dropdown-label="Cyber Security">
+              Cyber Security
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Data Engineering" data-dropdown-label="Data Engineering">
+              Data Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Data Science" data-dropdown-label="Data Science">
+              Data Science
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Earth Sciences" data-dropdown-label="Earth Sciences">
+              Earth Sciences
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Economics" data-dropdown-label="Economics">
+              Economics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Electrical Engineering" data-dropdown-label="Electrical Engineering">
+              Electrical Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Engineering" data-dropdown-label="Engineering">
+              Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Engineering Mathematics" data-dropdown-label="Engineering Mathematics">
+              Engineering Mathematics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Engineering Physics" data-dropdown-label="Engineering Physics">
+              Engineering Physics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Environmental Studies" data-dropdown-label="Environmental Studies">
+              Environmental Studies
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Finance" data-dropdown-label="Finance">
+              Finance
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Information Systems" data-dropdown-label="Information Systems">
+              Information Systems
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Languages" data-dropdown-label="Languages">
+              Languages
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Law" data-dropdown-label="Law">
+              Law
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Linguistics" data-dropdown-label="Linguistics">
+              Linguistics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Manufacturing and Mechanics" data-dropdown-label="Manufacturing and Mechanics">
+              Manufacturing and Mechanics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Mathematics" data-dropdown-label="Mathematics">
+              Mathematics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Mathematics and Data Science" data-dropdown-label="Mathematics and Data Science">
+              Mathematics and Data Science
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Mathematics and Physics" data-dropdown-label="Mathematics and Physics">
+              Mathematics and Physics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Mathematics and Statistics" data-dropdown-label="Mathematics and Statistics">
+              Mathematics and Statistics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Medicine" data-dropdown-label="Medicine">
+              Medicine
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Natural Sciences" data-dropdown-label="Natural Sciences">
+              Natural Sciences
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Naval Science" data-dropdown-label="Naval Science">
+              Naval Science
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Operations Research / Financial Engineering" data-dropdown-label="Operations Research / Financial Engineering">
+              Operations Research / Financial Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Organizational Theory" data-dropdown-label="Organizational Theory">
+              Organizational Theory
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Philosophy" data-dropdown-label="Philosophy">
+              Philosophy
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Physics" data-dropdown-label="Physics">
+              Physics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Political Science" data-dropdown-label="Political Science">
+              Political Science
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Psychology" data-dropdown-label="Psychology">
+              Psychology
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Quantitative Finance" data-dropdown-label="Quantitative Finance">
+              Quantitative Finance
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Robotics" data-dropdown-label="Robotics">
+              Robotics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Software Engineering" data-dropdown-label="Software Engineering">
+              Software Engineering
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Statistics" data-dropdown-label="Statistics">
+              Statistics
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Statistics and Decision Theory" data-dropdown-label="Statistics and Decision Theory">
+              Statistics and Decision Theory
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Veterinary Medicine" data-dropdown-label="Veterinary Medicine">
+              Veterinary Medicine
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="Other" data-dropdown-label="Other">
+              Other
+            </li>
+          
+          
+        </ul>
+      </div>
+
+		
+	</div>
+
+	<div class="specify-box" style="display:none">
+		<input type="text" class="specify-input" placeholder="Please specify *" name="" maxlength="128">
+	</div>
+
+</div>
+
+        </div>
+        
+        
+
+        
+          
+          
+
+          
+
+          
+
+          <div class="form-field high_school_grad_year-container">
+            <p class="form-field-label">
+              What year did you graduate from high school?
+              <span class="req">*</span>
+            </p>
+            
+
+
+
+
+
+
+
+
+
+
+
+<div class="standard-dropdown high-school-grad-year required" data-dropdown-id="high_school_grad_year">
+	<div class="preview-box" role="button" tabindex="0" aria-expanded="false" aria-controls="high_school_grad_year-options">
+		<p class="text" data-placeholder="Select an option">Select an option</p>
+		
+		<input type="hidden" name="high_school_grad_year" class="dropdown-selection required" id="high_school_grad_year" autocomplete="off">
+	</div>
+
+	<div class="search-box" style="display:none">
+		<input type="text" class="dropdown-search-input" placeholder="Search">
+		
+	</div>
+
+	<div class="dropdown-container" id="high_school_grad_year-options" style="display:none">
+    
+		
+
+      <div class="items-container non-nested">
+        <ul>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2006" data-dropdown-label="2006">
+              2006
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2007" data-dropdown-label="2007">
+              2007
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2008" data-dropdown-label="2008">
+              2008
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2009" data-dropdown-label="2009">
+              2009
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2010" data-dropdown-label="2010">
+              2010
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2011" data-dropdown-label="2011">
+              2011
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2012" data-dropdown-label="2012">
+              2012
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2013" data-dropdown-label="2013">
+              2013
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2014" data-dropdown-label="2014">
+              2014
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2015" data-dropdown-label="2015">
+              2015
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2016" data-dropdown-label="2016">
+              2016
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2017" data-dropdown-label="2017">
+              2017
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2018" data-dropdown-label="2018">
+              2018
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2019" data-dropdown-label="2019">
+              2019
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2020" data-dropdown-label="2020">
+              2020
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2021" data-dropdown-label="2021">
+              2021
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2022" data-dropdown-label="2022">
+              2022
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2023" data-dropdown-label="2023">
+              2023
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2024" data-dropdown-label="2024">
+              2024
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2025" data-dropdown-label="2025">
+              2025
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2026" data-dropdown-label="2026">
+              2026
+            </li>
+          
+            <li class="dropdown-row keyboard-navigable" data-dropdown-selection="2027" data-dropdown-label="2027">
+              2027
+            </li>
+          
+          
+        </ul>
+      </div>
+
+		
+	</div>
+
+	<div class="specify-box" style="display:none">
+		<input type="text" class="specify-input" placeholder="Please specify *" name="" maxlength="128">
+	</div>
+
+</div>
+
+          </div>
+        
+
+        
+        
+      </div>
+      
+    </div>
+
+    
+
+    
+
+    
+    <div class="form-row full-width-row comments-row">
+      <div class="form-field">
+        
+        <p class="application-comment-prompt">When we receive an application, we consider it for all available
+          positions worldwide to determine the best fit. If you are interested in
+          additional roles or offices other than what you've applied for above,
+          you do not need to submit multiple applications. You can also indicate
+          any further interests in the text box below.</p>
+        <p class="application-comment-prompt">We don't need a cover letter, but if there's any additional
+          information that could be helpful to us when reviewing your application,
+          use the space below to tell us. Things like:</p>
+        <ul class="application-comment-prompt">
+          <li>Why you're interested in Example Group</li>
+          <li>How you heard about us</li>
+          <li>If you have a job now, why you're looking for a new one</li>
+        </ul>
+        
+        <textarea class="comments" name="comments" id="comments" rows="10"></textarea>
+      </div>
+    </div>
+    
+
+    <div class="form-row full-width-row">
+      <div id="resume-row">
+        
+        <span class="form-field ">
+  
+  <label class="form-field-label" id="resume-label" for="resume">
+    Upload your resume as a PDF file<span class="req"> *</span>
+  </label>
+  
+  <input type="file" name="resume" id="resume" accept=".pdf,application/pdf" required="">
+</span>
+
+        
+      </div>
+    </div>
+
+    <div class="app-footer">
+      <p>By pressing submit I understand my information will be used as described on this page and in the <a href="/applicant-privacy-notice/">Global Applicant Privacy Notice</a>, <a href="/privacy-notice/">Global
+          Privacy Notice</a> and the
+        <a href="/ad-cookie-policy/">Ad and
+          Cookie Policy</a>.
+      </p>
+      <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" class="km_include">
+      <button type="submit" class="v4-button submit g-recaptcha">
+        <span class="label">Submit</span>
+      </button>
+
+      
+<div class="eeo-footnote">
+  <p>Example Group is an Equal Opportunity Employer</p>
+</div>
+
+
+    </div>
+  </form>
+</body></html>

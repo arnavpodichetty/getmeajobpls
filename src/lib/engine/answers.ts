@@ -689,6 +689,21 @@ const DEFS: Def[] = [
     choiceOnly: true,
     value: (c) => (c.profile.links.github || c.profile.links.portfolio || c.profile.links.website ? 'Yes' : null),
   },
+  // "Have you interviewed with Example Group before?" can't be Yes if you never applied.
+  {
+    key: 'interviewedBefore',
+    re: /\b(?:have|did) you (?:previously |ever )?interviewed? (?:with|at|for)\b/,
+    choiceOnly: true,
+    value: (c) => (c.profile.answers.appliedBefore === 'No' ? 'No' : null),
+  },
+  // "Do you have any recruiting timelines we should be aware of?" means offer deadlines.
+  {
+    key: 'recruitingTimelines',
+    re: /\b(?:recruiting|hiring|offer|decision) (?:timelines?|deadlines?)\b|\btimelines?\b.{0,40}\b(?:be aware of|know about)\b/,
+    not: /^(?:please )?(?:share|describe|explain|list|provide|tell)\b|\bdetails?\b/,
+    choiceOnly: true,
+    value: (c) => (c.profile.answers.currentOffers === 'No' ? 'No' : null),
+  },
   {
     key: 'appliedBefore',
     re: /(have you|did you) (previously |ever )?appl(y|ied) (to|for|with|at)|applied .{0,40}(within|in) the (past|last)|previously applied/,
@@ -741,7 +756,8 @@ const DEFS: Def[] = [
     key: 'currentStudent',
     re: /currently (enrolled|a student|pursuing)|are you a (current )?student|(?:working|studying) (?:towards?|on) (?:a |an |your )?(?:\w+ ){0,5}degree|pursuing (?:a |an )?(?:\w+ ){0,5}degree/,
     // "What type of degree program are you currently enrolled in?" asks which degree, not whether you study.
-    not: /\b(?:what|which)\b.{0,30}\b(?:type|kind|level)\b.{0,30}\bdegree\b|\bdegree (?:program )?(?:type|level)\b/,
+    // "What degree are you currently pursuing?" asks which degree too.
+    not: /\b(?:what|which)\b.{0,30}\b(?:type|kind|level)\b.{0,30}\bdegree\b|\bdegree (?:program )?(?:type|level)\b|^(?:what|which) (?:degree|major|program|field)\b/,
     value: currentStudentAnswer,
     // Full-time / Part-time / Not attending option lists answer with your enrollment status.
     tiers: (c, label) => {
@@ -825,6 +841,13 @@ const DEFS: Def[] = [
   { key: 'pronouns', short: true, re: /\bpronouns?\b/, value: (c) => c.profile.personal.pronouns || null, tiers: (c) => pronounTiers(c.profile.personal.pronouns) },
 
   // --- Contact ---
+  // "I don't have a school email." is a checkbox beside the school email box.
+  {
+    key: 'noSchoolEmail',
+    re: /\b(?:do not|don t|dont) have an? (?:school|university|college|student|academic|edu) e ?mail/,
+    choiceOnly: true,
+    value: (c) => (c.profile.personal.universityEmail || /\.edu(?:\.[a-z]+)?$/i.test(c.profile.personal.email) ? 'No' : null),
+  },
   { key: 'universityEmail', re: /(?:university|college|school|academic|student|campus).{0,25}e ?mail/, value: (c) => c.profile.personal.universityEmail || (/\.edu(?:\.[a-z]+)?$/i.test(c.profile.personal.email) ? c.profile.personal.email : null) },
   { key: 'email', short: true, re: /e ?mail/, not: /marketing|newsletter|receive|subscribe|opt.?in|updates/, value: (c) => c.profile.personal.email },
   { key: 'phoneCountryCode', re: /(country|phone|dial(ing)?) code|country calling/, choiceOnly: true, value: (c) => c.profile.personal.country || c.profile.personal.phoneCountryCode || null },
@@ -939,6 +962,14 @@ const DEFS: Def[] = [
     },
   },
   { key: 'degree', re: /\bdegree\b|level of education|highest education|education level/, not: /\b(?:date|year|completion|gpa|coursework|when|semester|term)\b|grade point/, value: (c) => latestSchool(c.profile)?.degree || null, tiers: (c) => degreeTiers(latestSchool(c.profile)?.degree ?? '') },
+  // "I have a secondary major." ticks only when you have one; the follow-up asks which.
+  {
+    key: 'hasSecondMajor',
+    re: /\b(?:i |do you )?have an? (?:secondary|second|double|additional) major\b/,
+    choiceOnly: true,
+    value: (c) => (latestSchool(c.profile) ? (latestSchool(c.profile)?.secondMajor ? 'Yes' : 'No') : null),
+  },
+  { key: 'secondMajor', re: /\b(?:secondary|second|double|additional) (?:major|field of study)\b/, value: (c) => latestSchool(c.profile)?.secondMajor || null },
   { key: 'major', short: true, re: /\bmajor\b|field of study|discipline|area of study|concentration|program of study/, value: (c) => latestSchool(c.profile)?.major || null, tiers: (c) => majorTiers(c.profile) },
   { key: 'minor', short: true, re: /\bminor\b/, value: (c) => latestSchool(c.profile)?.minor || null },
   // Choices: your exact GPA or the range holding it ("3.5 - 3.79", "3.5+") first; lists of
@@ -1068,6 +1099,8 @@ const DEFS: Def[] = [
   {
     key: 'referralSource',
     re: /how did you (?:first )?(hear|find|learn|come across|discover)|where did you (?:first )?(hear|find|learn|see|discover)|^(?:application |candidate |applicant |job |lead )?source(?: of hire)?$|referral source|source of (?:your )?(application|referral)|how were you referred|how you heard|what led you to apply|what prompted you to apply/,
+    // A comments box listing prompts ("Why you're interested… How you heard about us…") is not this question.
+    not: /\bwhy (?:you re|you are|are you) interested\b|\bcover letter\b|\bwhy you re looking\b/,
     value: (c) => c.profile.answers.referralSource || null,
     tiers: (c) => c.profile.answers.referralSource ? [c.profile.answers.referralSource, ...c.profile.answers.referralSourceFallbacks].filter(Boolean).map((source) => [source]) : [],
   },

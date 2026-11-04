@@ -535,6 +535,8 @@ export function degreeTiers(degree: string): string[][] {
   const tiers = [degreeVariants(degree)];
   const level = degreeLevel(degree);
   if (level) tiers.push([DEGREE_LEVEL + level]);
+  // "What degree are you currently pursuing?" with Undergraduate / Master's / PhD.
+  if (level === 'bachelor') tiers.push(['Undergraduate', 'Undergraduate degree', 'Undergrad']);
   return tiers;
 }
 
