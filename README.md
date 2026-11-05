@@ -33,8 +33,8 @@ What sets it apart:
 | --- | --- |
 | Greenhouse, Lever, Ashby, SmartRecruiters | Dedicated, tested live |
 | Workday, iCIMS, SAP SuccessFactors | Dedicated |
-| Workable, Rippling, Dover, Teamtailor, Recruitee, Jobvite, Breezy HR | Supported and tested |
-| BambooHR, JazzHR, Taleo, Oracle, ADP, UKG, Dayforce, Paylocity, Phenom, Eightfold, Avature and more | Supported, not yet tested live |
+| Workable, Rippling, Dover, Teamtailor, Recruitee, Jobvite, Breezy HR, Eightfold | Supported and tested |
+| BambooHR, JazzHR, Taleo, Oracle, ADP, UKG, Dayforce, Paylocity, Phenom, Avature and more | Supported, not yet tested live |
 | Any other site | Generic, matches fields by their labels |
 
 ## Install

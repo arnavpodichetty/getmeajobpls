@@ -95,7 +95,7 @@ export function questionSimilarity(a: string, b: string): number {
 export const DECLINE = '__decline__';
 
 const DECLINE_RE =
-  /decline|prefer not|not (?:to )?(?:wish|want)|don.?t wish|do not wish|choose not|rather not|not (?:to )?(?:say|disclose|answer|specify|self.?identify)|no answer|undisclosed|i don.?t know/;
+  /decline|prefer not|not (?:to )?(?:wish|want)|don.?t wish|do not wish|choose not|rather not|not (?:to )?(?:say|disclose|answer|specify|self.?identify)|no answer|undisclosed|\bnot declared\b|i don.?t know/;
 
 const YES_RE = /^(?:yes|y|true|i am|i do|i have|i will|i would|i agree|i acknowledge|i consent|i understand|i accept|i confirm|i certify|understand|understood|acknowledge|acknowledged|agree|agreed|accept|accepted|confirm|confirmed|correct|authorized)\b/;
 const NO_RE = /^(?:no|n|false|i am not|i do not|i don.?t|i have not|i haven.?t|i have never|i ve never|i will not|i won.?t|i disagree|do not|don.?t|disagree|not|never|none of (?:the above|these))\b/;
@@ -297,6 +297,11 @@ export function optionScore(optionText: string, wanted: string): number {
   // Phone country lists add the dial code: "United States +1" / "United States (+1)" is exactly "United States".
   const dialCode = optionText.trim().match(/^(.+?)\s*\(?\+\d{1,4}\)?$/);
   if (dialCode && w && normalize(dialCode[1]) === w) return 1;
+  // Otherwise score the country name alone, code before ("🇺🇸 (+1) United States of America") or after
+  // ("United States of America (+1)"), so "United States" doesn't tie with "U.S. Virgin Islands (+1)".
+  const leadingCode = optionText.trim().match(/^(?:\p{Regional_Indicator}{2}\s*)?\(\+\d{1,4}\)\s*(.+)$/u);
+  const country = leadingCode?.[1] ?? dialCode?.[1];
+  if (country && !/^\+?\d{1,4}$/.test(wanted.trim())) return optionScore(country, wanted);
   const rangeScore = rangeOptionScore(optionText, wanted);
   if (rangeScore !== null) return rangeScore;
   // N/A is a distinct answer from No. Prefer it when offered, then let an

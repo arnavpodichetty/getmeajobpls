@@ -6,6 +6,15 @@
 - **Read resume without Claude:** Options → Fill my profile → Read resume reads a resume PDF on your device, with no Claude setup. It copies your name, email, phone, city and state, LinkedIn / GitHub / website (including links hidden behind words like "LinkedIn"), schools (degree, majors, minor, GPA, coursework, dates), jobs (company, title, location, dates, bullets), projects and skills straight from the resume. Pick a resume from your library or choose any PDF. You tick what to keep in the same review list as before. Scanned PDFs (images with no text) can't be read this way; Read with Claude still handles those and unusual layouts.
 
 ### Fixes
+- **Eightfold application forms:** checked live on a careers/apply page (every field but a category-only "How did you hear about us?" filled green).
+  - Typed answers stick. The form checks a box as soon as you leave it, and the extension used to leave before the form saw the text, so filled names, email and phone still said "cannot be left blank". Every text box now gets a moment before it's left, on any site.
+  - Dropdowns no longer read the previous dropdown's list while it closes (country codes offered for "How did you hear about us?"). Options that belong to another control's list are ignored on every site, and a dropdown that doesn't open the first time gets a second try.
+  - Phone codes written "🇺🇸 (+1) United States of America" or "United States of America (+1)" pick the United States, not "United States Minor Outlying Islands" or "U.S. Virgin Islands".
+  - "Not declared" counts as declining to answer.
+  - "Are you a current recipient of DACA?" answers No for US citizens. It used to be read as an export-control question and answered Yes.
+  - Each "Yes, I have read and consent…" box is its own question. They were lumped with the other boxes in the section and flagged as a loose match.
+  - "Please enter today's date on your acknowledgement" fills today's date by clicking it in the calendar (the box can't be typed in). Date pickers that list days as `title="YYYY-MM-DD"` cells (Ant Design style) work the same way, moving months if needed.
+  - Questions revealed by earlier answers get a third pass: Country shows the phone code, which shows the phone number and device type.
 - **Degree lists that give examples (Workday):** "Bachelor's (BS, BA, BSN, etc.)", "Master's (MS, MA, etc.)", "Bachelor's Degree (e.g. B.A., B.S.)", "Bachelors - BA/BS", "Bachelor's / Undergraduate" and "Baccalaureate Degree" are now picked for your degree level. A named field ("Bachelor of Science") is still never picked for a different one.
 - **"Is your GPA 3.0 or higher?":** answered by comparing your GPA with the cutoff ("or higher", "at least", "above"), instead of being treated as a request for your GPA.
 - **"Will you be returning to schooling after the contract ends?":** read as a returning-to-school question; "schooling" wasn't recognized before.

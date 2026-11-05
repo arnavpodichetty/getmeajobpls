@@ -1,6 +1,7 @@
 // Turns a page into a list of logical fields: one entry per question, with
 // radio/checkbox/button groups collapsed and widget internals ignored.
 import { closestDeep, composedElements, isHoneypot, isVisible, parentOf, reactSelectControl, renderedText } from './dom';
+import { isCalendarInput } from './controls';
 import { groupLabelFor, labelFor, optionText, splSelectedValues, type FieldLabel } from './labels';
 
 export type FieldKind =
@@ -65,6 +66,11 @@ export function isDataDropdown(el: Element): boolean {
 
 /** Nearest ancestor holding ≥2 checkboxes and no other kind of control → one question. */
 function checkboxGroupRoot(input: HTMLInputElement): Element | null {
+  // A box wrapped in its own labelled group (Eightfold's "I consent" boxes, each named by
+  // its question's legend) is a question on its own, even when a section-wide fieldset holds others.
+  const labelled = input.parentElement?.closest('fieldset, [role="group"], [aria-labelledby]');
+  if (labelled?.hasAttribute('aria-labelledby') && !labelled.matches('fieldset, [role="group"], [role="region"], section, form')
+    && labelled.querySelectorAll('input[type=checkbox]').length === 1) return null;
   const set = input.closest('fieldset, [role="group"]');
   if (set && set.querySelectorAll('input[type=checkbox]').length > 1) return set;
   let cur = parentOf(input);
@@ -193,8 +199,10 @@ export function scanFields(root: ParentNode = document): Field[] {
         continue;
       }
       if (el.getAttribute('aria-hidden') === 'true' && el.tabIndex === -1) continue; // widget internals
-      if (!isVisible(el) || el.readOnly && el.getAttribute('role') !== 'combobox') continue;
-      if (el.getAttribute('role') === 'combobox' || el.getAttribute('aria-autocomplete') === 'list') {
+      if (!isVisible(el) || el.readOnly && el.getAttribute('role') !== 'combobox' && !isCalendarInput(el)) continue;
+      if (isCalendarInput(el)) {
+        push('date', el, [el], labelFor(el));
+      } else if (el.getAttribute('role') === 'combobox' || el.getAttribute('aria-autocomplete') === 'list') {
         push('combobox', el, [el], labelFor(el));
       } else if (type === 'date' || type === 'month') {
         push('date', el, [el], labelFor(el));

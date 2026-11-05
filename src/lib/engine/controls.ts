@@ -71,7 +71,7 @@ const MONTH_NAMES = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'se
 /** A month written out or abbreviated: "June", "Jun", "Sept." (not "Junior" or "Decline"). */
 const MONTH_WORD = /^(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?$/i;
 
-export function fillText(el: HTMLInputElement | HTMLTextAreaElement, value: string): Outcome {
+export function fillText(el: HTMLInputElement | HTMLTextAreaElement, value: string, opts: { blur?: boolean } = {}): Outcome {
   let text = value;
   let review: string | undefined;
   // A number box asking for a month takes 6, not "June".
@@ -89,9 +89,63 @@ export function fillText(el: HTMLInputElement | HTMLTextAreaElement, value: stri
     text = n;
   }
   typeInto(el, text);
-  blur(el);
+  if (opts.blur !== false) blur(el);
   if (el.value !== text && !sameDigits(el.value, text)) return fail('The site did not accept the value.');
   return { ok: true, review };
+}
+
+/** A read-only date box that opens a calendar (Eightfold, Ant Design pickers); typing into it does nothing. */
+export function isCalendarInput(el: Element): boolean {
+  if (!(el instanceof HTMLInputElement) || el.getAttribute('aria-haspopup') !== 'dialog') return false;
+  return /\bdate\b/i.test(`${el.placeholder} ${el.getAttribute('aria-label') ?? ''}`);
+}
+
+/**
+ * Open the calendar and click the day. Its cells carry the date as
+ * title="YYYY-MM-DD"; other months are reached with the header's next/previous buttons.
+ */
+export async function fillCalendarDate(el: HTMLInputElement, iso: string): Promise<Outcome> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return fail('This calendar needs a full date; your profile has only month and year.');
+  el.focus();
+  realClick(el);
+  const scope = (): ParentNode => listboxFor(el) ?? document;
+  const cells = () => queryAllDeep<HTMLElement>('td[title], [role="gridcell"][title]', scope()).filter(isVisible);
+  const cellFor = () => cells().find((c) => c.getAttribute('title') === iso) ?? null;
+  let cell = await waitForElement(cellFor, 1500);
+  for (let step = 0; !cell && step < 36; step++) {
+    // The calendar shows whole weeks; the middle cell is in the month on display.
+    const shown = cells().map((c) => c.getAttribute('title') ?? '').filter((t) => /^\d{4}-\d{2}-\d{2}$/.test(t));
+    if (!shown.length) break;
+    const month = shown[Math.floor(shown.length / 2)].slice(0, 7);
+    const forward = iso.slice(0, 7) > month;
+    const button = queryAllDeep<HTMLElement>(
+      forward ? '[class*="header-next-btn" i], [aria-label^="Next month" i]' : '[class*="header-prev-btn" i], [aria-label^="Previous month" i]',
+      scope(),
+    ).find(isVisible);
+    if (!button) break;
+    realClick(button);
+    cell = await waitForElement(cellFor, 400);
+  }
+  if (!cell) {
+    pressKey(el, 'Escape');
+    return fail("Couldn't find that day in the calendar.");
+  }
+  realClick(cell.querySelector<HTMLElement>('[role="button"]') ?? cell);
+  await sleep(200);
+  if (el.getAttribute('aria-expanded') === 'true') pressKey(el, 'Escape');
+  blur(el);
+  return el.value.trim() ? OK : fail('The calendar did not take the date.');
+}
+
+/**
+ * Type the value, then let the page take it before leaving the box. Forms that validate on
+ * blur (Eightfold) otherwise check the old, empty value and keep "cannot be left blank" up.
+ */
+export async function typeText(el: HTMLInputElement | HTMLTextAreaElement, value: string): Promise<Outcome> {
+  const outcome = fillText(el, value, { blur: false });
+  await sleep(50);
+  blur(el);
+  return outcome;
 }
 
 /** Phone inputs reformat as you type: "(415) 555-0100" may become "+1 415-555-0100". */
@@ -282,7 +336,26 @@ function visibleOptions(el: Element): HTMLElement[] {
   const box = listboxFor(el);
   const inBox = box ? allVisibleOptions(box) : [];
   // Web-component menus (SmartRecruiters) slot their options outside the menu element.
-  return inBox.length ? inBox : allVisibleOptions(document).filter((o) => !staleOptions.has(o));
+  if (inBox.length) return inBox;
+  const owners = new Map<Element, Element | null>();
+  return allVisibleOptions(document).filter((o) => !staleOptions.has(o) && !ownedByOther(o, el, owners));
+}
+
+/**
+ * The option sits in a list another control opens (aria-controls / aria-owns). A list
+ * that's still closing after the last dropdown (Eightfold re-renders it as it fades)
+ * isn't this dropdown's, even though its rows are new on the page.
+ */
+function ownedByOther(option: Element, el: Element, owners: Map<Element, Element | null>): boolean {
+  for (let list = option.closest('[id]'); list; list = list.parentElement?.closest('[id]') ?? null) {
+    if (!owners.has(list)) {
+      const id = CSS.escape(list.id);
+      owners.set(list, list.ownerDocument.querySelector(`[aria-controls~="${id}"], [aria-owns~="${id}"]`));
+    }
+    const owner = owners.get(list);
+    if (owner) return owner !== el && !owner.contains(el) && !el.contains(owner);
+  }
+  return false;
 }
 
 const NO_RESULTS = /^(?:no (?:results|options|matches|items)|nothing found)\b/i;
@@ -387,6 +460,14 @@ export async function fillCombobox(
   staleOptions = new Set(allVisibleOptions(document));
   open(el);
   let options = await waitForOptions(el, TIMING.open);
+  // The page can re-render as the previous field is left (Eightfold) and swallow the
+  // first open. A closed dropdown gets one more try.
+  if (!options.length && el.isConnected && el.getAttribute('aria-expanded') !== 'true') {
+    open(el);
+    options = await waitForOptions(el, TIMING.open);
+  }
+  // What the list offered before any search, for the review note when nothing fits.
+  const offered = options;
   let pick: ReturnType<typeof pickFrom> = null;
   const input = searchInput(el);
 
@@ -420,9 +501,10 @@ export async function fillCombobox(
   }
 
   if (!pick) {
-    const seen = options.slice(0, 4).map((o) => `"${o.textContent?.trim()}"`).join(', ');
+    const shown = options.length ? options : offered;
+    const seen = shown.slice(0, 4).map((o) => `"${o.textContent?.trim()}"`).join(', ');
     close(el, input);
-    return fail(options.length ? `${noOptionReason(value)} Options included ${seen}.` : 'The dropdown showed no options.');
+    return fail(shown.length ? `${noOptionReason(value)} Options included ${seen}.` : 'The dropdown showed no options.');
   }
   const chosenText = optionText(pick.option);
   // A row folded under a category ("Social media › LinkedIn") needs its category opened first.

@@ -11,12 +11,14 @@ import {
   fillButtons,
   fillCheckbox,
   fillCheckboxes,
+  fillCalendarDate,
   fillCombobox,
   fillMultiCombobox,
+  isCalendarInput,
   fillRadio,
   fillRichText,
   fillSelect,
-  fillText,
+  typeText,
   formatDate,
   highlightTarget,
   monthName,
@@ -211,7 +213,8 @@ async function fillField(field: Field, answer: Answer): Promise<Outcome> {
       if (one === DECLINE) return { ok: false, review: 'Decline-to-answer question with a text box.' };
       return fillTextOrNumber(field.el as HTMLInputElement, one);
     case 'date':
-      return fillText(field.el as HTMLInputElement, typeof answer.value === 'string' ? formatDate(answer.value, field.el, field.label) : one);
+      if (isCalendarInput(field.el) && typeof answer.value === 'string') return fillCalendarDate(field.el as HTMLInputElement, answer.value);
+      return typeText(field.el as HTMLInputElement, typeof answer.value === 'string' ? formatDate(answer.value, field.el, field.label) : one);
     case 'richtext':
       return fillRichText(field.el, one);
     case 'select':
@@ -248,12 +251,12 @@ const markedInvalid = (el: HTMLElement) => el.getAttribute('aria-invalid') === '
 
 /** Type the answer; if the site rejects a pay figure as not a number, type just the number. */
 async function fillTextOrNumber(el: HTMLInputElement | HTMLTextAreaElement, value: string): Promise<Outcome> {
-  const outcome = fillText(el, value);
+  const outcome = await typeText(el, value);
   const amount = bareAmount(value);
   if (!amount) return outcome;
   await sleep(60);
   if (!markedInvalid(el)) return outcome;
-  const retry = fillText(el, amount);
+  const retry = await typeText(el, amount);
   await sleep(60);
   return markedInvalid(el) ? { ok: false, review: `The site rejected "${value}" and "${amount}".` } : retry;
 }
@@ -390,10 +393,11 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
   // 1b. Transcript uploads ("Please upload a copy of your unofficial transcript").
   await attachTranscripts(ctx, root, results, notes, () => filled++);
 
-  // 2. Every other field, twice: answers can reveal follow-up questions.
+  // 2. Every other field, up to three passes: answers reveal follow-up questions, and those
+  // can reveal more (Eightfold: Country shows the phone code, which shows the phone number).
   // Whether this form marks its required fields: only then is an unmarked box truly optional.
   let marksRequired = false;
-  for (let pass = 0; pass < 2; pass++) {
+  for (let pass = 0; pass < 3; pass++) {
     const fields = scanFields(root).filter((f) => f.kind !== 'file' && !f.members.some((m) => handled.has(m)));
     marksRequired ||= fields.some((f) => f.required);
     if (pass > 0 && !fields.length) break;

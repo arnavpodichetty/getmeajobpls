@@ -529,6 +529,16 @@ const DEFS: Def[] = [
     },
   },
   {
+    // "Are you a current recipient of DACA?" (often asked for export-control screening).
+    // A US citizen can't hold DACA or Temporary Protected Status, so No. Left for you
+    // otherwise, or when the question also lists citizens ("citizen, refugee or asylee"),
+    // where a citizen would answer Yes.
+    key: 'immigrationProgram',
+    re: /\bdaca\b|\bdeferred action\b|\btemporary protected status\b/,
+    choiceOnly: true,
+    value: (c, label) => isUS(c.profile.answers.citizenship) && !/\b(?:citizens?|nationals?|permanent residents?|u s persons?)\b/.test(label) ? 'No' : null,
+  },
+  {
     // Export-control / "U.S. person" / citizenship-status lists: pick the US-citizen option.
     key: 'usPersonStatus',
     re: /export (?:control|compliance)|\bu s person\b|\bitar\b|\bear\b.{0,40}\b(?:regulat|export)|citizenship status|immigration status|(?:describes|is) your (?:current )?(?:citizenship|immigration|residency|work authori[sz]ation) status/,
@@ -679,6 +689,15 @@ const DEFS: Def[] = [
     re: /\b(?:also|continue to) be (?:involved|engaged) in\b.{0,30}\b(?:other|outside|additional) (?:jobs?|employment|business)|\bother jobs?\b.{0,60}\b(?:business investments?|board memberships?|political positions?)/,
     choiceOnly: true,
     value: (c) => (c.profile.experience.some((x) => x.current) ? null : yesNo(c.profile.answers.conflictOfInterest)),
+  },
+  // An acknowledgement whose box asks for the date it was signed ("…Please enter today's date on
+  // your acknowledgement."). Checked before the conflict-of-interest and agreeToTerms rules, which would read it as a Yes/No.
+  {
+    key: 'todayDate',
+    re: /\b(?:enter|provide|insert|type|write|select|put|add)\b.{0,20}\b(?:today s|the current|current) date\b|\b(?:today s|the current) date\b.{0,40}\b(?:acknowledg\w*|signature|below|here)\b/,
+    textOnly: true,
+    isDate: true,
+    value: () => today(),
   },
   // Having awarded or overseen this company's work (as a client or public official) is a conflict of interest.
   {
