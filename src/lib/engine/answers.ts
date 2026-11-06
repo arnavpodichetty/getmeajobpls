@@ -334,6 +334,19 @@ const DEFS: Def[] = [
     not: /work for you|acceptable|suitable|residen|address|statement|acknowledg|declaration/,
     value: (c) => c.profile.answers.locationPreferences.join(', ') || null,
   },
+  // "Which type of engineering work are you most excited to do? Select your second choice."
+  // The Nth area in your list answers the Nth choice; with no Nth area it's left for you.
+  {
+    key: 'interestArea',
+    re: /\b(?:which|what)\b(?: \w+){0,3} (?:types?|kinds?|areas?|fields?|tracks?|focus areas?) of (?:work|engineering(?: work)?|software engineering|problems|projects|technology)\b.{0,60}\b(?:interested|excited|passionate)\b|\b(?:engineering|technical) interests?\b.{0,40}\b(?:choice|preference|rank\w*)\b/,
+    not: /\bwhy\b|\bdescribe\b|\bexplain\b|\blocat|\boffices?\b|\bcit(?:y|ies)\b|\bschedule\b|\bshifts?\b|\b(?:full|part) time\b/,
+    choiceOnly: true,
+    value: (c, label) => c.profile.answers.interestAreas[locationPreferenceRank(label) - 1] || null,
+    tiers: (c, label) => {
+      const area = c.profile.answers.interestAreas[locationPreferenceRank(label) - 1];
+      return area ? [[area]] : [];
+    },
+  },
   // First-generation college student questions and their "if Yes" follow-ups: not in your
   // profile, so left for you. ("college" in them must not pull in your school.)
   { key: 'firstGeneration', re: /\bfirst gen(?:eration)?\b/, value: () => null },
@@ -368,6 +381,16 @@ const DEFS: Def[] = [
   },
   // Sponsorship examples may mention OPT; answer the sponsorship question itself.
   // "Will you require employer support to obtain … authorization to work?" is sponsorship too.
+  // "Would you require an export license…?" A US citizen never needs one; otherwise it depends on
+  // the countries the form lists, so it's left for you.
+  {
+    key: 'exportLicense',
+    re: /\b(?:require|need)\w*\b.{0,40}\bexport licen[cs]es?\b/,
+    choiceOnly: true,
+    value: (c) => (isUS(c.profile.answers.citizenship) ? 'No' : null),
+  },
+  // "Do you require work authorization?" asks whether you need sponsorship, not whether you have it.
+  { key: 'needsSponsorship', re: /\b(?:require|need)\w*\b (?:\w+ ){0,3}(?:work|employment) authori[sz]ation\b/, value: (c) => yesNo(c.profile.answers.needsSponsorship) },
   { key: 'needsSponsorship', re: /sponsor|visa (status|support)|\bvisa petitions?\b|\bpetition (?:for|on) (?:a |your |my )?(?:visa|behalf)\b|h ?1 ?b|immigration (case|support)|\b(?:require|need)\w*\b.{0,40}\b(?:support|assistance|help)\b.{0,60}\b(?:authori[sz]\w*|work permits?|visas?|immigration)\b/, value: (c) => yesNo(c.profile.answers.needsSponsorship) },
   {
     key: 'stemOptEligible',
@@ -492,6 +515,24 @@ const DEFS: Def[] = [
       const m = label.match(STATE_RESIDENCY);
       const asked = m?.[1] ?? m?.[2] ?? '';
       return (US_STATES[asked] ?? asked) === (US_STATES[home] ?? home) ? 'Yes' : 'No';
+    },
+  },
+  // "Please provide the state/region in which you currently reside." Your state; when the list
+  // names only a few states, its "Another State in the US" choice.
+  {
+    key: 'stateOfResidence',
+    re: /\b(?:state|region|province)s?\b.{0,40}\b(?:reside|resides|residing|live|living)\b|\b(?:reside|live)\b.{0,30}\b(?:state|region|province)\b|\bstate of residen(?:ce|cy)\b/,
+    // Yes/No questions ("Do you live in a state that…") and city-and-state boxes aren't this.
+    not: /\bunited states\b|\bcountry\b|\bcity\b|^(?:do|does|are|is|have|has|will|would|can)\b/,
+    value: (c) => c.profile.personal.state || null,
+    tiers: (c) => {
+      const state = c.profile.personal.state.trim();
+      if (!state) return [];
+      const n = normalize(state);
+      const full = US_STATES[n] ?? n;
+      const abbreviation = Object.keys(US_STATES).find((key) => US_STATES[key] === full);
+      if (!abbreviation || !isUS(c.profile.personal.country || 'United States')) return [[state]];
+      return [[state, full, abbreviation.toUpperCase()], ['Another State in the US', 'Another US State', 'Other US State', 'Another state in the United States', 'Other state in the United States']];
     },
   },
   { key: 'governmentRelationshipDetails', re: /if yes.{0,40}(?:entity|government).{0,40}(?:role|name)|(?:name of the government entity|their relationship to you|their position job title)/, value: (c) => c.profile.answers.governmentOfficial === 'No' ? 'N/A' : null },
@@ -747,6 +788,13 @@ const DEFS: Def[] = [
     value: (c) => yesNo(c.profile.answers.agreeToTerms),
   },
   { key: 'nonCompete', re: /non ?compete|restrictive covenant|non ?solicit|agreements? not to (?:compete|solicit)|\brestrictions?\b.{0,30}\b(?:former|previous|prior|current) employer|\b(?:former|previous|prior|current) employer\b.{0,40}\brestrict/, value: (c) => yesNo(c.profile.answers.nonCompete) },
+  // "Are you currently located outside of the United States?"
+  {
+    key: 'locatedOutsideUS',
+    re: /\b(?:located|based|living|live|resid\w*)\b.{0,20}\boutside (?:of )?(?:the )?(?:us|u s|usa|united states(?: of america)?)\b/,
+    choiceOnly: true,
+    value: (c) => (c.profile.personal.country ? (isUS(c.profile.personal.country) ? 'No' : 'Yes') : null),
+  },
   {
     key: 'locatedInUS',
     re: /(currently )?(located|based|reside|residing|living|live) in (the )?(us|u s|united states|usa)\b/,
@@ -782,12 +830,34 @@ const DEFS: Def[] = [
         : [[clearance], ['Yes']];
     },
   },
+  // "Do you have, or are you obtaining, a Bachelor's degree or above in computer science, computer
+  // engineering, or related field?" Yes when your degree level is asked for and your major is named.
+  // A field the question doesn't name ("related field") is left for you.
+  {
+    key: 'degreeInField',
+    re: /^(?=.*\b(?:have|has|hold|holds|obtaining|pursuing|working towards?|enrolled)\b)(?=.*\b(?:bachelor|master|ph ?d|doctora)\w*\b)(?=.*\bdegree\b.{0,40}\bin\b)/,
+    choiceOnly: true,
+    value: (c, label) => {
+      const school = latestSchool(c.profile);
+      const level = degreeTiers(school?.degree ?? '').flat().find((t) => t.startsWith('degree-level:'))?.slice('degree-level:'.length);
+      const major = normalize(school?.major ?? '');
+      if (!level || !major) return null;
+      const rank = (l: string) => ['associate', 'bachelor', 'master', 'doctor'].indexOf(l);
+      const asked = [...label.matchAll(/\b(bachelor|master|ph ?d|doctora)\w*/g)].map((m) => (/^(?:ph|doctora)/.test(m[1]) ? 'doctor' : m[1]));
+      const orAbove = /\b(?:or (?:above|higher|greater|more)|and (?:above|higher))\b/.test(label);
+      const levelOk = asked.includes(level) || (orAbove && asked.some((a) => rank(level) >= rank(a)));
+      // A level you aren't at ("pursuing a Master's" as an undergraduate) is No, whatever the field.
+      if (!levelOk) return 'No';
+      return new RegExp(`\\b${major.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(label) ? 'Yes' : null;
+    },
+  },
   {
     key: 'currentStudent',
     re: /currently (enrolled|a student|pursuing)|are you a (current )?student|(?:working|studying) (?:towards?|on) (?:a |an |your )?(?:\w+ ){0,5}degree|pursuing (?:a |an )?(?:\w+ ){0,5}degree/,
     // "What type of degree program are you currently enrolled in?" asks which degree, not whether you study.
     // "What degree are you currently pursuing?" asks which degree too.
-    not: /\b(?:what|which)\b.{0,30}\b(?:type|kind|level)\b.{0,30}\bdegree\b|\bdegree (?:program )?(?:type|level)\b|^(?:what|which) (?:degree|major|program|field)\b/,
+    // "If you are currently enrolled…, what is your expected graduation date?" asks the date.
+    not: /\b(?:what|which)\b.{0,30}\b(?:type|kind|level)\b.{0,30}\bdegree\b|\bdegree (?:program )?(?:type|level)\b|^(?:what|which) (?:degree|major|program|field)\b|\b(?:what|when|which)\b.{0,60}\b(?:graduat\w*|date|year|term|semester)\b|\b(?:graduation|completion) (?:date|year|term|semester)\b/,
     value: currentStudentAnswer,
     // Full-time / Part-time / Not attending option lists answer with your enrollment status.
     tiers: (c, label) => {
@@ -880,7 +950,7 @@ const DEFS: Def[] = [
   },
   { key: 'universityEmail', re: /(?:university|college|school|academic|student|campus).{0,25}e ?mail/, value: (c) => c.profile.personal.universityEmail || (/\.edu(?:\.[a-z]+)?$/i.test(c.profile.personal.email) ? c.profile.personal.email : null) },
   { key: 'email', short: true, re: /e ?mail/, not: /marketing|newsletter|receive|subscribe|opt.?in|updates/, value: (c) => c.profile.personal.email },
-  { key: 'phoneCountryCode', re: /(country|phone|dial(ing)?) code|country calling/, choiceOnly: true, value: (c) => c.profile.personal.country || c.profile.personal.phoneCountryCode || null },
+  { key: 'phoneCountryCode', re: /(country|phone|dial(ing)?) code|phone number code|country calling/, choiceOnly: true, value: (c) => c.profile.personal.country || c.profile.personal.phoneCountryCode || null },
   { key: 'phoneType', re: /phone (device )?type|type of phone/, choiceOnly: true, value: () => 'Mobile' },
   // Extensions stay blank; the number goes only in the number field.
   { key: 'phoneExtension', re: /\bext(ension)?\b|\bext\b/, value: () => null },
@@ -889,7 +959,7 @@ const DEFS: Def[] = [
   { key: 'street', short: true, re: /street|address line 1|^address( 1)?$|home address|mailing address|street address|residential address/, value: (c) => c.profile.personal.street || null },
   { key: 'zip', short: true, re: /zip|postal|post code|postcode/, value: (c) => c.profile.personal.zip || null },
   { key: 'city', short: true, re: /^city\b|\bcity$|city town|town city|location city/, value: (c) => c.profile.personal.city || null },
-  { key: 'state', short: true, re: /\b(state|province|region)\b/, not: /united states|statement|state your/, value: (c) => c.profile.personal.state || null },
+  { key: 'state', short: true, re: /\b(state|province|region)\b/, not: /united states|statement|state your|\bcountry\b/, value: (c) => c.profile.personal.state || null },
   { key: 'country', short: true, re: /\bcountry\b/, value: (c) => c.profile.personal.country || null },
   {
     key: 'location',
@@ -947,7 +1017,7 @@ const DEFS: Def[] = [
     key: 'school',
     re: /school|university|college|\binstitutions?\b/,
     // Yes/No questions that mention college ("Are you a college student?") aren't asking which one.
-    not: /high school|\bgraduat|\bgpa\b|grade point|^(?:are|do|does|did|have|has|is|was|were|will|would|can|could)\b|^if (?:you )?(?:selected|answered|checked)\b/,
+    not: /^(?:what|which) (?:type|kind) of\b|high school|\bgraduat(?!ed\b)|\bgraduated\b.*\b(?:when|year|date|month)\b|\b(?:when|year|date|month)\b.*\bgraduated\b|\bgpa\b|grade point|^(?:are|do|does|did|have|has|is|was|were|will|would|can|could)\b|^if (?:you )?(?:selected|answered|checked)\b/,
     value: (c) => latestSchool(c.profile)?.school || null,
     tiers: (c) => [schoolVariants(latestSchool(c.profile)?.school ?? '')],
   },
@@ -1031,6 +1101,19 @@ const DEFS: Def[] = [
   },
   // \bgraduat: "undergraduate" names your level, not your graduation date.
   { key: 'graduationDate', re: /\bgraduat|expected (completion|grad)|completion date|degree (end|completion)|\b(?:when|what (?:year|semester|term|month|date))\b.{0,50}\b(?:receiv|earn|complet|finish|obtain|conferr|award)\w*\b.{0,40}\bdegree\b/, not: /(?<!month (?:and )?)year$/, isDate: true, value: (c) => c.profile.answers.graduationDate || latestSchool(c.profile)?.end || null, tiers: graduationTiers },
+  // "Do you have experience in one of the following programming languages: Java, Python, Ruby…?"
+  // Yes (flagged for a look) when one of your skills is named; how much experience is yours to judge.
+  {
+    key: 'skillExperience',
+    re: /^(?:do|does) you (?:currently )?have\b.{0,30}\b(?:experience|knowledge|familiarity|proficiency|exposure)\b|^have you (?:ever )?(?:used|worked with|programmed in)\b|^are you (?:familiar|proficient|experienced|comfortable) (?:with|in)\b/,
+    not: /\byears?\b|\bprofessional\b|\bnon internship\b/,
+    choiceOnly: true,
+    confidence: 'low',
+    value: (c, label) => (c.skills.some((skill) => {
+      const n = normalize(skill);
+      return n.length >= 2 && new RegExp(`\\b${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(label);
+    }) ? 'Yes' : null),
+  },
   { key: 'programmingLanguages', re: /programming languages|coding languages/, value: (c) => c.skills },
   // Language proficiency: Workday asks reading / writing / speaking / comprehension / overall separately.
   {
@@ -1141,7 +1224,7 @@ const DEFS: Def[] = [
   },
   {
     key: 'referralSource',
-    re: /how did you (?:first )?(hear|find|learn|come across|discover)|where did you (?:first )?(hear|find|learn|see|discover)|^(?:application |candidate |applicant |job |lead )?source(?: of hire)?$|referral source|source of (?:your )?(application|referral)|how were you referred|how you heard|what led you to apply|what prompted you to apply/,
+    re: /how did you (?:first )?(hear|find|learn|come across|discover)|how did you (?:first )?(?:connect|get connected|get in touch) with us|where did you (?:first )?(hear|find|learn|see|discover)|^(?:application |candidate |applicant |job |lead )?source(?: of hire)?$|referral source|source of (?:your )?(application|referral)|how were you referred|how you heard|what led you to apply|what prompted you to apply/,
     // A comments box listing prompts ("Why you're interested… How you heard about us…") is not this question.
     not: /\bwhy (?:you re|you are|are you) interested\b|\bcover letter\b|\bwhy you re looking\b/,
     value: (c) => c.profile.answers.referralSource || null,

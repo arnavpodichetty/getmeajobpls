@@ -269,7 +269,7 @@ export function ownText(el: Element | null): string {
   const clone = el.cloneNode(true) as Element;
   clone
     .querySelectorAll(
-      'input, select, textarea, option, button, [role="listbox"], [role="option"], [role="radiogroup"] label, script, style, svg, [aria-hidden="true"], [hidden], .ng-hide, [role="combobox"], [role="alert"], [class*="error" i]',
+      'input, select, textarea, option, button, [role="listbox"], [role="option"], [role="radiogroup"] label, script, style, svg, [aria-hidden="true"], [hidden], .ng-hide, [role="combobox"], [role="alert"], [class*="error" i], .ada-unique-content',
     )
     .forEach((n) => n.remove());
   return (clone.textContent ?? '').replace(/\s+/g, ' ').trim();

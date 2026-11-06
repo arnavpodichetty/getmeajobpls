@@ -55,11 +55,19 @@ export function formatDate(iso: string, el: Element, label = ''): string {
   if (/dd.?mm.?yyyy/.test(hint)) return `${d}/${m}/${y}`;
   if (/mm.?dd.?yyyy/.test(hint)) return `${m}/${d}/${y}`;
   if (/mm.?yyyy/.test(hint)) return `${m}/${y}`;
+  if (/yyyy.?mm.?dd/.test(hint)) return `${y}-${m}-${d}`;
   if (/yyyy.?mm/.test(hint)) return `${y}-${m}`;
   if (/^\s*yyyy\s*$/.test(hint)) return y;
   // Otherwise a question asking for "(Month/Year)" or "month and year" wants words: "May 2028".
   if (/\bmonth\s*(?:\/|and|,|&|-)?\s*year\b/i.test(label) && !/\bday\b/i.test(label)) return `${monthName(iso)} ${y}`;
   return iso.length > 7 ? `${m}/${d}/${y}` : `${m}/${y}`;
+}
+
+/** The box wants a day as well as a month and year (a date input, or "DD" in its format). */
+export function dateWantsDay(el: Element, label = ''): boolean {
+  if ((el as HTMLInputElement).type === 'date') return true;
+  const hint = `${el.getAttribute('placeholder') ?? ''} ${el.getAttribute('aria-label') ?? ''} ${label}`.toLowerCase();
+  return /\bdd\b|dd.?mm|mm.?dd|yyyy.?mm.?dd|\bday\b/.test(hint);
 }
 
 export const monthName = (iso: string): string => MONTHS[Number(iso.split('-')[1]) - 1] ?? '';
@@ -306,7 +314,9 @@ const OPTION_SELECTOR =
   // Older react-select (v3/v4) options have no role, only an id like "react-select-3-option-0".
   '[id^="react-select-"][id*="-option-"], ' +
   // Sites' own div dropdowns: <li data-dropdown-selection="Statistics">.
-  '[data-dropdown-selection]';
+  '[data-dropdown-selection], ' +
+  // Selectize typeaheads: <div class="option" data-selectable>.
+  '.selectize-dropdown-content [data-selectable]';
 const NON_OPTIONS = /^(no (results|options|matches)|loading|searching|type to search|start typing|no items)/i;
 
 function listboxFor(el: Element): Element | null {
@@ -550,6 +560,12 @@ export async function fillCombobox(
       close(el, input);
       return fail('The dropdown did not accept the selected option.');
     }
+  }
+  // Selectize adds an .item for the pick; without one the click didn't take.
+  const selectize = el.closest('.selectize-input');
+  if (selectize && ![...selectize.querySelectorAll(':scope > .item')].some((item) => showsPick(item.textContent ?? ''))) {
+    close(el, input);
+    return fail('The dropdown did not accept the selected option.');
   }
   const reactControl = el instanceof HTMLInputElement && el.getAttribute('aria-autocomplete') === 'list'
     ? reactSelectControl(el) : null;

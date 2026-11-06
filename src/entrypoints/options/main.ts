@@ -301,7 +301,7 @@ function profileSections(): HTMLElement[] {
     section(
       'answers',
       'Standard answers',
-      'Set your defaults for eligibility, travel, consent, statements, location preferences and application status here. Blank answers are left for you to fill (they show up as "needs review" when required). Preferred work locations are comma-separated, highest priority first; clear the list to choose manually.',
+      'Set your defaults for eligibility, travel, consent, statements, location preferences and application status here. Blank answers are left for you to fill (they show up as "needs review" when required). Preferred work locations and areas of interest are comma-separated, highest priority first (the first goes to "first choice" questions, the second to "second choice"); clear a list to choose manually.',
       grid(
         selectField('Authorized to work in the US?', p.answers, 'workAuthorized', YES_NO, s),
         selectField('Will you need visa sponsorship?', p.answers, 'needsSponsorship', YES_NO, s),
@@ -310,6 +310,7 @@ function profileSections(): HTMLElement[] {
         selectField('Available for the required work hours and program duration?', p.answers, 'workScheduleAvailable', YES_NO, s),
         selectField('Available to attend hiring / recruiting events?', p.answers, 'eventAttendance', YES_NO, s),
         listField('Preferred work locations, in priority order', p.answers, 'locationPreferences', s, { placeholder: 'California, New York' }),
+        listField('Areas of work you are most interested in, in priority order', p.answers, 'interestAreas', s, { placeholder: 'Backend, Product, Security' }),
         textField('Travel willingness / percentage', p.answers, 'travelPercentage', s, { list: 'travel-list', placeholder: 'e.g. 25-50%' }),
         selectField('Consent to telephone calls / text messages?', p.answers, 'phoneTextConsent', YES_NO, s),
         selectField('Allow AI / automated tools to review your application?', p.answers, 'aiReviewConsent', YES_NO, s),

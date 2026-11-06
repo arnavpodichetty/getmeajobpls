@@ -377,7 +377,8 @@ export function optionScore(optionText: string, wanted: string): number {
   const wantedTokens = w.split(' ').map((t) => US_STATES[t] ?? t).join(' ').split(' ');
   const optTokens = new Set(opt.split(' ').concat(...opt.split(' ').map((t) => (US_STATES[t] ?? t).split(' '))));
   const placeLike = /,/.test(wanted) && w.split(' ').length <= 5 && w.split(' ').some((t) => US_STATES[t] || STATE_NAMES.has(t) || expand(t).includes('united states'));
-  if (placeLike && wantedTokens.every((t) => optTokens.has(t))) best = Math.max(best, 0.9);
+  // The city must come first: "Calabasas, Los Angeles, CA, USA" is a different town in that county.
+  if (placeLike && wantedTokens.every((t) => optTokens.has(t))) best = Math.max(best, opt.startsWith(`${w.split(' ')[0]} `) ? 0.9 : 0.8);
   // Fuzzy overlap alone is never confident (always below CONFIDENT_OPTION_SCORE).
   // Spelling-level similarity is for long names (schools, employers); on short answers
   // it confuses different words ("Male" / "Female", "Intern" / "International").

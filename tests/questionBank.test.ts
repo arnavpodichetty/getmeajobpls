@@ -37,6 +37,33 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Legally authorized to work in the US', 'Yes'],
     ['Work Authorization: Are you currently authorized to work in the country where this role is located?', 'Yes'],
   ],
+  'work authorization needed (means sponsorship)': [
+    ['Do you require work authorization?', 'No'],
+    ['Will you need employment authorization to work in the US?', 'No'],
+  ],
+  'export license': [
+    ['Would you require an export license under the circumstances described below?', 'No'],
+  ],
+  'located outside the US': [
+    ['Are you currently located outside of the United States?', 'No'],
+    ['Do you live outside the US?', 'No'],
+  ],
+  'country you are in (not your state)': [
+    ['What country/region are you currently located?', 'United States'],
+  ],
+  'degree in a named field': [
+    ["Do you currently have, or are in the process of obtaining, a Bachelor's degree or above in computer science, computer engineering, or related field?", 'Yes'],
+    ["Are you pursuing a Master's degree in Computer Science?", 'No'],
+    ["Do you have a Bachelor's degree in Mechanical Engineering?", null],
+  ],
+  'academic term system (left for you)': [
+    ['What type of academic term system does your university/college have?', null],
+  ],
+  'state you live in': [
+    ['Please provide the state/region in which you currently reside.', 'CA'],
+    ['State of residence', 'CA'],
+    ['Do you live in a state that requires a pay disclosure?', null],
+  ],
   'visa type (left for you)': [
     ['If you are or are not currently authorized to work in the US, what visa are you on or will you require?', null],
     ['What type of visa do you currently hold?', null],
@@ -306,6 +333,8 @@ const BANK: Record<string, [string, string | null][]> = {
   'school is only for "which school" questions': [
     ['Are you currently a college student?', null],
     ['Which university do you attend?', 'University of California, Los Angeles'],
+    ['What school or university are you currently attending or from which you recently graduated? Please use your university\'s full name.', 'University of California, Los Angeles'],
+    ['Year graduated from college', '2028-06'],
   ],
   'graduation year with degree level': [
     ['What year do you intend to complete your degree program? If you are considering further education, please use that graduation date as your selection.', '2028-06'],
@@ -327,6 +356,10 @@ const BANK: Record<string, [string, string | null][]> = {
     ['What month and year did you begin your undergraduate studies?', '2024-09'],
     ['When did you start your degree program?', '2024-09'],
     ['What is your expected graduation date?', '2028-06'],
+    // The condition before the comma says who's asked; the question is the date.
+    ['If you are currently enrolled in university or a program, what is your expected graduation date?', '2028-06'],
+    ['If you are currently a student, when do you expect to graduate?', '2028-06'],
+    ['Our internships are designed for students currently enrolled in a degree program who will be returning to their studies following the completion of the internship. Please provide your anticipated graduation date in order to access your eligibility for this opportunity.', '2028-06'],
     ['What undergraduate university do you attend?', 'University of California, Los Angeles'],
   ],
   'Oracle Recruiting': [
@@ -561,5 +594,15 @@ describe('relocation follow-ups', () => {
     p.answers.willingToRelocate = 'No';
     expect(resolveAnswer('If yes, which states would you be open to relocating to?', '', null, { profile: p, skills: [] }, false).answer?.value).toBe('N/A');
     expect(answerFor('Are you open to relocating?')).toBe('Yes');
+  });
+});
+
+describe('city suggestions', () => {
+  it('prefers the city itself over towns inside it', () => {
+    const options = ['Calabasas, Los Angeles, CA, USA', 'Los Angeles, CA, USA', 'Carson, Los Angeles, CA, USA'];
+    const pick = bestOptionTiered(options, (o) => o, [['Los Angeles, CA']])!;
+    expect(pick.option).toBe('Los Angeles, CA, USA');
+    expect(pick.score).toBeGreaterThanOrEqual(CONFIDENT_OPTION_SCORE);
+    expect(bestOptionTiered(['Calabasas, Los Angeles, CA, USA'], (o) => o, [['Los Angeles, CA']])!.score).toBeLessThan(CONFIDENT_OPTION_SCORE);
   });
 });

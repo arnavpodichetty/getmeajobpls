@@ -169,6 +169,9 @@ export function scanFields(root: ParentNode = document): Field[] {
     // Some sites keep tracking checkboxes on the page with title="hidden".
     if (el.getAttribute('title') === 'hidden') continue;
 
+    // Selectize hides the real <select> and shows its own typeahead box; that box is the question.
+    if (el instanceof HTMLSelectElement && el.classList.contains('selectized')) continue;
+
     if (el instanceof HTMLInputElement) {
       const type = el.type.toLowerCase();
       if (type === 'hidden' || type === 'submit' || type === 'button' || type === 'reset' || type === 'image' || type === 'password') continue;
@@ -202,7 +205,7 @@ export function scanFields(root: ParentNode = document): Field[] {
       if (!isVisible(el) || el.readOnly && el.getAttribute('role') !== 'combobox' && !isCalendarInput(el)) continue;
       if (isCalendarInput(el)) {
         push('date', el, [el], labelFor(el));
-      } else if (el.getAttribute('role') === 'combobox' || el.getAttribute('aria-autocomplete') === 'list') {
+      } else if (el.getAttribute('role') === 'combobox' || el.getAttribute('aria-autocomplete') === 'list' || el.closest('.selectize-input')) {
         push('combobox', el, [el], labelFor(el));
       } else if (type === 'date' || type === 'month') {
         push('date', el, [el], labelFor(el));
@@ -267,6 +270,9 @@ export function currentValue(field: Field): string {
     case 'combobox': {
       const splValues = splSelectedValues(el);
       if (splValues.length) return splValues.join(', ');
+      // Selectize shows each pick as an .item beside its search box; the box itself stays empty.
+      const selectize = el.closest('.selectize-input');
+      if (selectize) return [...selectize.querySelectorAll(':scope > .item')].map((item) => item.textContent?.trim() ?? '').filter(Boolean).join(', ');
       // react-select / MUI show the chosen value in a sibling element
       const container = el.closest('[class*="control" i]') ?? el.closest('[class*="container" i], [class*="select" i], [data-automation-id]') ?? parentOf(el);
       const shown = container?.querySelector('[class*="single-value" i], [class*="singleValue" i], [class*="selected" i], [data-automation-id="selectedItem"]');

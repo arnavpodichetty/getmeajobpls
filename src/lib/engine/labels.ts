@@ -89,6 +89,8 @@ function fieldCount(container: Element): number {
 /** Container text without the option labels of radio/checkbox groups. */
 function questionText(container: Element): string {
   const clone = container.cloneNode(true) as Element;
+  // Styled options (Rippling's div role="radio" rows) are answers, not the question.
+  clone.querySelectorAll('[role="radio"], [role="checkbox"], [role="option"]').forEach((option) => option.remove());
   clone.querySelectorAll('label').forEach((label) => {
     if (label.querySelector('input[type=radio], input[type=checkbox]')) label.remove();
     const target = label.getAttribute('for');
@@ -172,9 +174,25 @@ function humanize(value: string): string {
     .trim();
 }
 
+/** Widget-part test ids that say nothing about the question. */
+const GENERIC_TESTID = /^(?:input-.*|select-.*|field|screen-reader-only|chip|overlay|VStack|ButtonGroup)$/i;
+
+/**
+ * The nearest wrapper's data-testid that names the field ("phone_number-code" around
+ * Rippling's unlabeled country-code picker).
+ */
+function wrapperTestId(el: Element): string {
+  let cur = el.parentElement;
+  for (let depth = 0; cur && depth < 6; depth++, cur = cur.parentElement) {
+    const id = cur.getAttribute('data-testid');
+    if (id && !GENERIC_TESTID.test(id)) return id;
+  }
+  return '';
+}
+
 function hintsFor(el: Element): string {
-  return ['name', 'id', 'data-automation-id', 'data-qa', 'data-testid', 'autocomplete', 'placeholder', 'aria-label']
-    .map((a) => el.getAttribute(a) ?? '')
+  return [...['name', 'id', 'data-automation-id', 'data-qa', 'data-testid', 'autocomplete', 'placeholder', 'aria-label']
+    .map((a) => el.getAttribute(a) ?? ''), wrapperTestId(el)]
     .filter((v) => v && !/^[:\-\w]{0,3}\d+:?$/.test(v) && !/^[0-9a-f-]{20,}$/i.test(v))
     .map(humanize)
     .join(' | ');

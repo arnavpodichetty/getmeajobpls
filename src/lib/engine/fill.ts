@@ -11,6 +11,7 @@ import {
   fillButtons,
   fillCheckbox,
   fillCheckboxes,
+  dateWantsDay,
   fillCalendarDate,
   fillCombobox,
   fillMultiCombobox,
@@ -35,6 +36,8 @@ export interface Override {
   key: string;
   value: (c: AnswerContext) => AnswerValue | null | undefined;
   isDate?: boolean;
+  /** Spellings for choice fields, tried tier by tier (as on Answer). */
+  tiers?: (c: AnswerContext) => string[][];
 }
 
 /** A question the profile couldn't answer (flagged for review when required). */
@@ -180,6 +183,13 @@ function usCitizenOption(field: Field, c: AnswerContext): Answer | null {
   return option ? { key: 'usCitizenOption', value: option, confidence: 'high' } : null;
 }
 
+/** `shown` is `expected` with more characters after it (typed twice, or another script added some). */
+export function grewPast(expected: string, shown: string): boolean {
+  const a = expected.trim();
+  const b = shown.trim();
+  return !!a && b.length > a.length && b.toLowerCase().startsWith(a.toLowerCase());
+}
+
 function asText(value: AnswerValue): string {
   return Array.isArray(value) ? value.join(', ') : value;
 }
@@ -207,13 +217,24 @@ async function fillField(field: Field, answer: Answer): Promise<Outcome> {
   // The hint is often in parentheses, which label matching ignores, so check the full label here.
   if (answer.key === 'gpa' && typeof value === 'string' && TENTH_GPA.test(`${field.label} ${(field.el as HTMLInputElement).placeholder ?? ''}`)) value = gpaToTenth(value);
   const one = asText(value);
+  // Your profile has only the month; a box that needs the day gets the 1st, flagged.
+  const guessedDay = answer.isDate && typeof answer.value === 'string' && /^\d{4}-\d{2}$/.test(answer.value)
+    && (field.kind === 'text' || field.kind === 'date') && dateWantsDay(field.el, field.label);
+  if (guessedDay) {
+    const outcome = await fillField(field, { ...answer, value: `${answer.value}-01` });
+    return outcome.ok && !outcome.review ? { ...outcome, review: 'Day picked as the 1st; your profile has only month and year.' } : outcome;
+  }
   switch (field.kind) {
     case 'text':
     case 'textarea':
       if (one === DECLINE) return { ok: false, review: 'Decline-to-answer question with a text box.' };
       return fillTextOrNumber(field.el as HTMLInputElement, one);
     case 'date':
-      if (isCalendarInput(field.el) && typeof answer.value === 'string') return fillCalendarDate(field.el as HTMLInputElement, answer.value);
+      if (isCalendarInput(field.el) && typeof answer.value === 'string') {
+        const picked = await fillCalendarDate(field.el as HTMLInputElement, answer.value);
+        // A calendar we can't click through still takes the date typed in its format (bootstrap-datepicker).
+        if (picked.ok || (field.el as HTMLInputElement).readOnly) return picked;
+      }
       return typeText(field.el as HTMLInputElement, typeof answer.value === 'string' ? formatDate(answer.value, field.el, field.label) : one);
     case 'richtext':
       return fillRichText(field.el, one);
@@ -320,12 +341,29 @@ async function attachTranscripts(ctx: FillContext, root: ParentNode, results: Fi
   }
 }
 
+const EDUCATION_SECTION = '[class*="education" i], [id*="education" i], [data-automation-id*="education" i]';
+
+/**
+ * "Education start date month" for a start-date box inside an education entry (its month or
+ * year box by the hints or placeholder), so it gets your school start, not your job start.
+ */
+export function educationStartLabel(field: Field): string | null {
+  if (!closestDeep(field.el, EDUCATION_SECTION)) return null;
+  const placeholder = (field.el as HTMLInputElement).placeholder ?? '';
+  const text = normalize(`${field.label} ${field.hints} ${placeholder}`);
+  // Field names ("job_questions[…][start_date][month]") can say "job"; only the shown label rules it out.
+  if (!/\bstart(?:ing)?(?: date)?\b/.test(text) || /\b(?:end|graduat\w*|availab\w*|earliest|job|position|role|work)\b/.test(normalize(field.label))) return null;
+  const part = /\b(?:month|mm)\b/.test(text) ? ' month' : /\b(?:year|yyyy)\b/.test(text) ? ' year' : '';
+  return part ? `Education start date${part}` : 'When did you start your degree program';
+}
+
 function overrideFor(field: Field, overrides: Override[], c: AnswerContext): Answer | null {
   for (const o of overrides) {
     if (!field.members.some((m) => m.matches(o.selector) || closestDeep(m, o.selector))) continue;
     const value = o.value(c);
     if (value === null || value === undefined || (Array.isArray(value) ? !value.length : !value)) return null;
-    return { key: o.key, value, confidence: 'high', isDate: o.isDate };
+    const tiers = o.tiers?.(c).filter((t) => t.length);
+    return { key: o.key, value, confidence: 'high', isDate: o.isDate, tiers: tiers?.length ? tiers : undefined };
   }
   return null;
 }
@@ -355,8 +393,12 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
   // Dropdowns marked filled, re-checked at the end: Workday re-renders a
   // questionnaire as it's answered and can put an earlier pick back to "Select One".
   const picked: { field: Field; index: number }[] = [];
+  // Text boxes marked filled and what they showed right after typing, re-checked at the end:
+  // a site re-rendering a row can clear a box or add to it after we leave.
+  const typed: { field: Field; index: number; shown: string }[] = [];
   const record = (field: Field, status: FieldResult['status'], reason?: string) => {
     if (status === 'filled' && field.el.matches('button[aria-haspopup="listbox"], select')) picked.push({ field, index: results.length });
+    if (status === 'filled' && (field.kind === 'text' || field.kind === 'textarea')) typed.push({ field, index: results.length, shown: currentValue(field) });
     results.push({ label: displayLabel(field), status, reason });
     if (status !== 'skipped') highlight(field, status, ctx.settings.highlightFields);
     if (status === 'filled') filled++;
@@ -418,7 +460,10 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
         continue;
       }
 
-      const resolution = resolveAnswer(field.label, field.hints, field.el.getAttribute('autocomplete'), answers, isChoice(field));
+      let resolution = resolveAnswer(field.label, field.hints, field.el.getAttribute('autocomplete'), answers, isChoice(field));
+      // A bare "Start date" in an education block is when school started, not when you can start the job.
+      const schoolDate = resolution.matchedKey === 'earliestStartDate' || !resolution.matchedKey ? educationStartLabel(field) : null;
+      if (schoolDate) resolution = resolveAnswer(schoolDate, '', null, answers, isChoice(field));
       let answer = resolution.matchedKey === 'locationPreference'
         ? resolution.answer
         : overrideFor(field, opts.overrides ?? [], answers) ?? usCitizenOption(field, answers) ?? resolution.answer;
@@ -484,6 +529,11 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
       } catch (err) {
         outcome = { ok: false, review: `Error while filling: ${err instanceof Error ? err.message : err}` };
       }
+      // The box shows more than we typed ("Software Engineering Interna"): something else typed into it too.
+      if (outcome.ok && !outcome.review && (field.kind === 'text' || field.kind === 'textarea') && typeof answer.value === 'string') {
+        const shown = currentValue(field);
+        if (grewPast(asText(answer.value), shown)) outcome = { ok: true, review: `The box shows "${shown}", not "${asText(answer.value)}".` };
+      }
       if (!outcome.ok) record(field, 'review', outcome.review);
       else if (outcome.review || answer.confidence === 'low') record(field, 'review', outcome.review ?? 'Matched loosely — please check.');
       else record(field, 'filled');
@@ -504,6 +554,15 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
     const label = displayLabel(field);
     for (let i = results.length - 1; i >= 0; i--) if (results[i].label === label && results[i].status === 'skipped') results.splice(i, 1);
     record(field, outcome.review ? 'review' : 'filled', outcome.review);
+  }
+
+  for (const { field, index, shown } of typed) {
+    if (!field.el.isConnected) continue;
+    const now = currentValue(field);
+    if (now && !grewPast(shown, now)) continue;
+    results[index] = { ...results[index], status: 'review', reason: now ? `The site changed this to "${now}" after it was typed.` : 'The site cleared this answer after it was typed. Type it again.' };
+    highlight(field, 'review', ctx.settings.highlightFields);
+    filled--;
   }
 
   for (const { field, index } of picked) {

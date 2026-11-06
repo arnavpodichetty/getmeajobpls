@@ -54,6 +54,7 @@ export function emptyProfile(): Profile {
       workScheduleAvailable: 'Yes',
       eventAttendance: 'No',
       locationPreferences: [],
+      interestAreas: [],
       travelPercentage: '25-50%',
       phoneTextConsent: 'No',
       aiReviewConsent: 'Yes',
@@ -219,7 +220,7 @@ export function normalizeProfile(raw: unknown): Profile {
     languages: (Array.isArray(p.languages) ? p.languages : []).map((l: unknown) =>
       typeof l === 'string' ? { ...emptyLanguage(), language: l } : { ...emptyLanguage(), ...(l as Partial<Language>) },
     ),
-    answers: { ...base.answers, ...p.answers, locationPreferences: list(p.answers?.locationPreferences ?? base.answers.locationPreferences), referralSourceFallbacks: referralFallbacks(list(p.answers?.referralSourceFallbacks)) },
+    answers: { ...base.answers, ...p.answers, locationPreferences: list(p.answers?.locationPreferences ?? base.answers.locationPreferences), interestAreas: list(p.answers?.interestAreas ?? base.answers.interestAreas), referralSourceFallbacks: referralFallbacks(list(p.answers?.referralSourceFallbacks)) },
     eeo: (() => {
       const eeo = { ...base.eeo, ...p.eeo };
       // Options once offered Asian subgroups; the dropdown is just "Asian" now.
