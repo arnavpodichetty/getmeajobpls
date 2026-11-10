@@ -2,9 +2,6 @@
 
 ## 1.4.1 (2026-11-05)
 
-### New
-- **Areas of interest:** a ranked list in Options → Standard answers (highest first, e.g. "Backend, Product"). It answers "Which type of work are you most excited to do? Select your first choice / second choice" dropdowns; your first area goes to the first choice, your second to the second. Without a list they're left for you.
-
 ### Fixes
 - **Greenhouse Employment blocks:** each block gets its own job from your profile (block 1 your first job, block 2 your second), with that job's start and end month and year. They used to all get your latest job and your school dates. A current job leaves the end date empty and ticks "Current role" (no more "End date must be in the past"). Blocks beyond your jobs are left alone. The emailed verification-code boxes are never touched.
 - **Boxes the site changed after typing:** a text box that ends up empty, or showing more than was typed ("Software Engineering Interna"), is flagged orange instead of staying green.
@@ -25,6 +22,16 @@
   - "Do you have, or are you obtaining, a Bachelor's degree or above in computer science…?" is Yes when your degree level and major are named, and No for a level you aren't at. An unnamed "related field" is left for you.
   - "Do you have experience in Java, Python…?" / "knowledge of SQL?" is Yes when a skill of yours is named, flagged for a look. Questions about years of experience or skills you haven't listed are left for you.
   - "What school or university are you attending or from which you recently graduated?" gets your school, not your graduation date. "What type of academic term system does your university have?" is left for you instead of getting your school name.
+- **SmartRecruiters screening questions:**
+  - Checkboxes, text boxes and uploads are read by their own question. They were read as the section heading ("Preliminary questions"), so the attestation and privacy boxes weren't ticked.
+  - The resume no longer goes into an "Additional attachments" box. When a note above that box asks for your transcript, your transcript goes there instead (flagged if you haven't saved one).
+  - The language row gets your language in the text box and its level in the dropdown.
+  - "Please indicate the month / year in which you will receive your degree" gets your graduation month and year. It was answered as "are you a student?".
+  - "Will you be enrolled in a degree program at the time of the internship?" is Yes when you graduate after your earliest start date. It was read as a degree-type question.
+  - "Will you have completed 30 college credit hours at the time of the internship?" is Yes once enough school years (about 30 credits each) are done by your earliest start date. Otherwise it's left for you.
+  - "Spouse/domestic partner of a member of the US Armed Forces" is the military-spouse question (No).
+  - "Do you have links/URLs of your portfolios or work samples?" is Yes when your profile has a portfolio, website or GitHub link.
+  - "Are you a current or former member of any professional organizations?" is no longer answered "No" as if it asked about past employment. It's left for you.
 - **Rippling:** Yes/No questions drawn as styled rows get their question as the label (they were read as "YesNo" and skipped). The unlabeled phone country-code picker is filled.
 - **Date boxes asking for YYYY-MM-DD** get the full date (the day was dropped). A calendar the extension can't click through gets the date typed. When your profile has only the month, the day is the 1st and flagged.
 

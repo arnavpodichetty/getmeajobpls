@@ -310,7 +310,6 @@ function profileSections(): HTMLElement[] {
         selectField('Available for the required work hours and program duration?', p.answers, 'workScheduleAvailable', YES_NO, s),
         selectField('Available to attend hiring / recruiting events?', p.answers, 'eventAttendance', YES_NO, s),
         listField('Preferred work locations, in priority order', p.answers, 'locationPreferences', s, { placeholder: 'California, New York' }),
-        listField('Areas of work you are most interested in, in priority order', p.answers, 'interestAreas', s, { placeholder: 'Backend, Product, Security' }),
         textField('Travel willingness / percentage', p.answers, 'travelPercentage', s, { list: 'travel-list', placeholder: 'e.g. 25-50%' }),
         selectField('Consent to telephone calls / text messages?', p.answers, 'phoneTextConsent', YES_NO, s),
         selectField('Allow AI / automated tools to review your application?', p.answers, 'aiReviewConsent', YES_NO, s),

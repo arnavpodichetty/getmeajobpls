@@ -41,7 +41,6 @@ const id = (label: RegExp) => scanFields().find((f) => label.test(f.label))!.el.
 describe('captured Greenhouse application (capture D)', () => {
   it('reads each question as what it asks', () => {
     const ctx = context();
-    ctx.profile.answers.interestAreas = ['Backend', 'Product'];
     const answer = (label: RegExp) => {
       const field = scanFields().find((f) => label.test(f.label))!;
       return resolveAnswer(field.label, field.hints, null, { profile: ctx.profile, skills: [] }, field.kind === 'combobox').answer;
@@ -49,8 +48,9 @@ describe('captured Greenhouse application (capture D)', () => {
     expect(answer(/connect with us/)?.key).toBe('referralSource');
     // Not "Yes" to "are you enrolled": the question is the graduation date.
     expect(answer(/expected graduation date/)?.key).toBe('graduationDate');
-    expect(answer(/first choice/)?.value).toBe('Backend');
-    expect(answer(/second choice/)?.value).toBe('Product');
+    // Which work excites you most is your call.
+    expect(answer(/first choice/)).toBeNull();
+    expect(answer(/second choice/)).toBeNull();
     expect(answer(/authorized to work/)?.value).toBe('Yes');
     expect(answer(/worked for Acme before/)?.value).toBe('No');
     // Essays stay for you.
@@ -60,7 +60,6 @@ describe('captured Greenhouse application (capture D)', () => {
 
   it('fills the dropdowns, picking the right town and leaving only the essays', async () => {
     const ctx = context();
-    ctx.profile.answers.interestAreas = ['Backend', 'Product'];
     ctx.profile.answers.graduationDate = '2028-06-15';
     simulateMenus({
       country: ['Canada +1', 'United States +1'],
@@ -82,12 +81,14 @@ describe('captured Greenhouse application (capture D)', () => {
     expect(value(/^Location/)).toBe('Los Angeles, California, United States');
     expect(value(/connect with us/)).toBe('LinkedIn');
     expect(value(/expected graduation date/)).toBe('June 2028');
-    expect(value(/first choice/)).toBe('Backend/Infrastructure');
-    expect(value(/second choice/)).toBe('Product');
+    expect(value(/first choice/)).toBe('');
+    expect(value(/second choice/)).toBe('');
     expect(value(/authorized to work/)).toBe('Yes');
     expect(value(/worked for Acme before/)).toBe('No');
     expect(report.fields.filter((f) => f.status === 'review').map((f) => f.label).sort()).toEqual([
       "Based on the engineering work you listed above that you're most excited to do at Acme, briefly (2-4 sentences) describe a past project or experience that best reflects your interest in those areas.",
+      'Which type of engineering work are you most excited to do at Acme? Select your first choice.',
+      'Which type of engineering work are you most excited to do at Acme? Select your second choice.',
       'Why do you want to join Acme?',
     ]);
   });

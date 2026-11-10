@@ -115,7 +115,6 @@ export interface Profile {
     eventAttendance: YesNo;
     locationPreferences: string[];
     /** Kinds of work you'd most like to do, highest first ("Backend", "Product"), for "first choice / second choice" interest dropdowns. */
-    interestAreas: string[];
     travelPercentage: string;
     phoneTextConsent: YesNo;
     aiReviewConsent: YesNo;

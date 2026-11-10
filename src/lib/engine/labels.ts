@@ -37,7 +37,9 @@ const GENERIC = new Set(
 
 export function isGenericLabel(text: string): boolean {
   const n = normalize(text);
-  return !n || n.length < 2 || GENERIC.has(n) || /^(?:select|choose)\b.{0,12}$/.test(n);
+  return !n || n.length < 2 || GENERIC.has(n) || /^(?:select|choose)\b.{0,12}$/.test(n)
+    // A drop zone's own prompt: "Choose a file or drop it here".
+    || /^(?:choose|select|browse(?: for)?|upload|attach|drag) (?:a |an |your )?files?(?: (?:or|and) (?:drag (?:and drop )?|drop )(?:it |them |files? )?here)?$/.test(n);
 }
 
 /** Text of the elements an aria-labelledby/-describedby attribute points to. */
@@ -206,6 +208,26 @@ function ariaLabelMinusValue(el: Element): string {
   return label.replace(/\brequired\b/gi, ' ').replace(/\s+/g, ' ').trim();
 }
 
+/** SmartRecruiters field hosts; each carries its own question. */
+const SPL_FIELD_HOST = /^(?:spl-(?:autocomplete|multiselect-autocomplete|input|textarea|checkbox|dropzone|select)|sr-question-custom-form-field)$/i;
+
+/**
+ * SPL puts the question on the field's host, several shadow roots away from
+ * its input: slotted into "label-content", or as the host's aria-label. The
+ * nearest host that names something wins, so a language level is not read as
+ * the "Languages" block around it. The input's own label is an empty slot.
+ */
+function splLabel(el: Element): string {
+  let cur = parentOf(el);
+  for (let depth = 0; cur && depth < 30; depth++, cur = parentOf(cur)) {
+    if (!SPL_FIELD_HOST.test(cur.tagName)) continue;
+    const slotted = ownText(cur.querySelector(':scope > [slot="label-content"]:not(slot)'));
+    const text = slotted || (cur.getAttribute('aria-label') ?? '').replace(/^Select\s+/i, '');
+    if (text.trim()) return text;
+  }
+  return '';
+}
+
 /** Label for a single control. */
 export function labelFor(el: Element): FieldLabel {
   const { label, marked } = pick([
@@ -213,13 +235,7 @@ export function labelFor(el: Element): FieldLabel {
     () => ownText(labelElementFor(el)),
     () => ownText(el.closest('label')),
     () => ariaLabelMinusValue(el),
-    // SPL puts the question on the autocomplete host, several shadow roots
-    // away from its input. The input's own label is an empty slot.
-    () => {
-      const host = closestDeep(el, 'spl-autocomplete, spl-multiselect-autocomplete');
-      return ownText(host?.querySelector(':scope > [slot="label-content"]') ?? null)
-        || (host?.getAttribute('aria-label') ?? '').replace(/^Select\s+/i, '');
-    },
+    () => splLabel(el),
     // Workday's questionnaire uses legends, including long consent text.
     // Read the legend directly so validation errors cannot hide the question
     // or push it past the container-label length limit.

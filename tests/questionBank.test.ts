@@ -376,6 +376,33 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Do you have experience with Kubernetes?', null],
     ['Describe a time you led a team through a difficult project.', null],
   ],
+  // The profile graduates 2028-06, started 2024-09, and can start 2027-05-26.
+  'enrollment and credits at the time of the internship': [
+    ['Will you be enrolled in a college degree program (Associates, Bachelors, Graduate, etc.) at an Accredited Institution at the time of the Internship you are applying for?', 'Yes'],
+    ['Will you still be a student during the internship?', 'Yes'],
+    ['Will you have completed 30 college credit hours at the time of the internship term for which you are applying?', 'Yes'],
+    ['Will you have earned 60 credits by the start of the internship?', 'Yes'],
+    // Four school years done by May 2027 is more than this profile has: left for you.
+    ['Will you have completed 120 credit hours prior to the internship?', null],
+  ],
+  'graduation month and year': [
+    ['Please indicate the month in which you will receive your degree (Associates, Bachelors, Masters, etc.) which you are currently pursuing.', '2028-06'],
+    ['Please indicate the year in which you will receive your degree (Associates, Bachelors, Masters, etc.) which you are currently pursuing.', '2028-06'],
+    ['What month and year do you expect to complete your degree?', '2028-06'],
+  ],
+  'memberships are not employment': [
+    ['Are you a current or former member of any professional, academic or industry organizations? If yes, please list below separated by comma.', null],
+    ['Are you a current or former employee of Acme?', 'No'],
+  ],
+  'military spouse wordings': [
+    ['Are you a current spouse/domestic partner of a member of the US Armed Forces (Active or Guard/Reserve), NOAA or USPHS Commissioned Corps?', 'No'],
+    ['Are you the spouse of a military service member?', 'No'],
+    ['Is your spouse employed by Acme?', 'No'],
+  ],
+  'portfolio and work samples': [
+    ['Do you have attachments to upload or links/URLs of your portfolios or work samples?', 'Yes'],
+    ['Will you be including a link on your resume to samples of projects you have worked on?', 'Yes'],
+  ],
 };
 
 describe.each(Object.entries(BANK))('%s', (_group, cases) => {

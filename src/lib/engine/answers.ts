@@ -190,9 +190,11 @@ function studiedAt(p: Profile, label: string): boolean {
 }
 
 /** The language a single "Language" / proficiency question is about: English if listed, else the first. */
-function primaryLanguage(p: Profile) {
+function primaryLanguage(p: Profile, label = '') {
   const langs = p.languages.filter((l) => l.language);
-  return langs.find((l) => /english/i.test(l.language)) ?? langs[0];
+  // "Level for Spanish language entry 1" is about the language it names.
+  const named = label && langs.find((l) => normalize(l.language).length > 2 && new RegExp(`\\b${normalize(l.language)}\\b`).test(label));
+  return named || (langs.find((l) => /english/i.test(l.language)) ?? langs[0]);
 }
 
 /** Your major first; each fallback (e.g. Computer Science) only if the form has no option for it. */
@@ -288,7 +290,7 @@ const DEFS: Def[] = [
   // Military spouse status is about your marriage, not your service or a relative working here.
   {
     key: 'militarySpouse',
-    re: /military spouse|spouse of (?:a |an )?(?:\w+ ){0,2}(?:service ?member|military|veteran)|married to (?:a |an )?(?:member of (?:the )?)?(?:u s |us )?(?:military|armed forces|service ?member)/,
+    re: /military spouse|spouse of (?:a |an )?(?:\w+ ){0,2}(?:service ?member|military|veteran)|\b(?:spouse|domestic partner)\b.{0,40}\b(?:of|to) (?:a |an )?(?:member of (?:the )?)?(?:u s |us )?(?:armed forces|military|uniformed services|national guard)\b|married to (?:a |an )?(?:member of (?:the )?)?(?:u s |us )?(?:military|armed forces|service ?member)/,
     choiceOnly: true,
     value: () => 'No',
   },
@@ -335,17 +337,12 @@ const DEFS: Def[] = [
     value: (c) => c.profile.answers.locationPreferences.join(', ') || null,
   },
   // "Which type of engineering work are you most excited to do? Select your second choice."
-  // The Nth area in your list answers the Nth choice; with no Nth area it's left for you.
+  // Your call, not in your profile: left for you (and kept from other rules).
   {
     key: 'interestArea',
     re: /\b(?:which|what)\b(?: \w+){0,3} (?:types?|kinds?|areas?|fields?|tracks?|focus areas?) of (?:work|engineering(?: work)?|software engineering|problems|projects|technology)\b.{0,60}\b(?:interested|excited|passionate)\b|\b(?:engineering|technical) interests?\b.{0,40}\b(?:choice|preference|rank\w*)\b/,
     not: /\bwhy\b|\bdescribe\b|\bexplain\b|\blocat|\boffices?\b|\bcit(?:y|ies)\b|\bschedule\b|\bshifts?\b|\b(?:full|part) time\b/,
-    choiceOnly: true,
-    value: (c, label) => c.profile.answers.interestAreas[locationPreferenceRank(label) - 1] || null,
-    tiers: (c, label) => {
-      const area = c.profile.answers.interestAreas[locationPreferenceRank(label) - 1];
-      return area ? [[area]] : [];
-    },
+    value: () => null,
   },
   // First-generation college student questions and their "if Yes" follow-ups: not in your
   // profile, so left for you. ("college" in them must not pull in your school.)
@@ -701,7 +698,8 @@ const DEFS: Def[] = [
   {
     key: 'previouslyEmployed',
     re: /(previously|ever|before) (been )?(?:(?:directly|formally|officially|actually) )?(employed|worked)|(employed|worked) (by|for|at|with) .{0,40}(before|previously|in the past)|former employee|current or former|(?:currently|formerly|previously)(?: or (?:currently|formerly|previously))? (?:employed|working)\b|have you (ever )?worked (for|at)|(contingent|contract) work(er)?|contractor (for|at|with)|been a contractor|(?:currently|formerly|previously).{0,80}\b(?:independent contractor|contract labor|contingent worker|consultant)\b|\b(?:do|are) you (?:currently |presently |now )?work(?:ing)? (?:for|at)\b|\bare you an? (?:current|existing|former|past|previous)\b.{0,50}\bemployee/,
-    not: /government|public official|public (?:agenc|institution|sector)|willing|able to|relatives?\b|family members?|related to|(?:towards?|pursuing|enrolled in|studying for)\b.{0,40}\bdegree/,
+    // "A current or former member of any professional organizations?" is about memberships.
+    not: /government|public official|public (?:agenc|institution|sector)|willing|able to|relatives?\b|family members?|related to|(?:towards?|pursuing|enrolled in|studying for)\b.{0,40}\bdegree|\bmembers? (?:of|in)\b.{0,40}\b(?:organi[sz]ations?|associations?|societ(?:y|ies)|clubs?|unions?|fraternit\w*|sororit\w*)\b/,
     // "…or were you previously associated with the University as a student?" is Yes only for your own school.
     value: (c, label) => (workedAt(c.profile, label) || studiedAt(c.profile, label) ? 'Yes' : yesNo(c.profile.answers.previouslyEmployed)),
     // Company-list dropdowns ("select the most recent … company, or none") take None.
@@ -756,7 +754,7 @@ const DEFS: Def[] = [
   // "Will you be including a link on your resume to samples of projects you've worked on?"
   {
     key: 'workSamplesLink',
-    re: /\b(?:include|including|have|has|contain|containing)\b.{0,20}\blinks?\b.{0,40}\bresume\b.{0,80}\b(?:samples?|projects?|portfolio|work)\b|\bresume\b.{0,40}\b(?:include|includes|contain|contains|have|has)\b.{0,20}\blinks?\b.{0,40}\b(?:samples?|projects?|portfolio)\b/,
+    re: /^do you have\b.{0,60}\b(?:links?|urls?)\b.{0,30}\b(?:portfolios?|work samples?|samples of (?:your )?work)\b|\b(?:include|including|have|has|contain|containing)\b.{0,20}\blinks?\b.{0,40}\bresume\b.{0,80}\b(?:samples?|projects?|portfolio|work)\b|\bresume\b.{0,40}\b(?:include|includes|contain|contains|have|has)\b.{0,20}\blinks?\b.{0,40}\b(?:samples?|projects?|portfolio)\b/,
     choiceOnly: true,
     value: (c) => (c.profile.links.github || c.profile.links.portfolio || c.profile.links.website ? 'Yes' : null),
   },
@@ -851,13 +849,49 @@ const DEFS: Def[] = [
       return new RegExp(`\\b${major.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(label) ? 'Yes' : null;
     },
   },
+  // "Will you be enrolled in a degree program at the time of the internship?": you are if you
+  // graduate after it starts. Needs your graduation date and earliest start date.
+  {
+    key: 'enrolledDuringInternship',
+    re: /\b(?:will|would) you (?:still )?be (?:currently )?(?:enrolled|a student|attending)\b.{0,160}\b(?:at the time of|during|while (?:completing|doing))\b.{0,15}\b(?:the |this |your )?(?:internship|co ?op)\b/,
+    choiceOnly: true,
+    value: (c) => {
+      const end = (c.profile.answers.graduationDate || latestSchool(c.profile)?.end || '').slice(0, 7);
+      const start = c.profile.answers.earliestStartDate.slice(0, 7);
+      if (!end || !start) return null;
+      return end > start ? 'Yes' : 'No';
+    },
+  },
+  // "Will you have completed 30 college credit hours at the time of the internship term?"
+  // A full-time student earns about 30 credits a school year. Yes once enough school years are
+  // done by your earliest start date; anything less is left for you (transfer or AP credit counts).
+  {
+    key: 'creditHoursByInternship',
+    re: /\b(?:completed|earned|have)\b.{0,20}\b(\d{1,3}) (?:college |semester |academic )?credit(?: hours?|s)?\b.{0,80}\b(?:at the time of|by the start of|before|prior to)\b.{0,30}\b(?:internship|co ?op|program|start)\b/,
+    choiceOnly: true,
+    value: (c, label) => {
+      const credits = Number(label.match(/\b(\d{1,3}) (?:college |semester |academic )?credit/)?.[1]);
+      // A degree you've already finished means well over any credit bar.
+      if (c.profile.education.some((e) => e.degree && e.end && e.end.slice(0, 7) <= today().slice(0, 7))) return 'Yes';
+      const school = latestSchool(c.profile);
+      const begin = school?.start?.slice(0, 7);
+      const start = c.profile.answers.earliestStartDate.slice(0, 7);
+      if (!credits || !begin || !start || /part/i.test(c.profile.answers.enrollmentStatus)) return null;
+      const [by, bm] = begin.split('-').map(Number);
+      const [sy, sm] = start.split('-').map(Number);
+      const months = (sy - by) * 12 + (sm - bm);
+      // September to May is one school year.
+      const years = Math.floor((months + 4) / 12);
+      return years * 30 >= credits ? 'Yes' : null;
+    },
+  },
   {
     key: 'currentStudent',
     re: /currently (enrolled|a student|pursuing)|are you a (current )?student|(?:working|studying) (?:towards?|on) (?:a |an |your )?(?:\w+ ){0,5}degree|pursuing (?:a |an )?(?:\w+ ){0,5}degree/,
     // "What type of degree program are you currently enrolled in?" asks which degree, not whether you study.
     // "What degree are you currently pursuing?" asks which degree too.
     // "If you are currently enrolled…, what is your expected graduation date?" asks the date.
-    not: /\b(?:what|which)\b.{0,30}\b(?:type|kind|level)\b.{0,30}\bdegree\b|\bdegree (?:program )?(?:type|level)\b|^(?:what|which) (?:degree|major|program|field)\b|\b(?:what|when|which)\b.{0,60}\b(?:graduat\w*|date|year|term|semester)\b|\b(?:graduation|completion) (?:date|year|term|semester)\b/,
+    not: /\b(?:what|which)\b.{0,30}\b(?:type|kind|level)\b.{0,30}\bdegree\b|\bdegree (?:program )?(?:type|level)\b|^(?:what|which) (?:degree|major|program|field)\b|\b(?:what|when|which)\b.{0,60}\b(?:graduat\w*|date|year|term|semester)\b|\b(?:graduation|completion) (?:date|year|term|semester)\b|\b(?:month|year|date|term|semester) (?:in which|when|that) you\b/,
     value: currentStudentAnswer,
     // Full-time / Part-time / Not attending option lists answer with your enrollment status.
     tiers: (c, label) => {
@@ -1061,7 +1095,7 @@ const DEFS: Def[] = [
       return end && end.slice(0, 7) > todayISO().slice(0, 7) ? [['In Progress', 'In progress', 'Currently enrolled', 'Pursuing'], ['No']] : [['Yes', 'Completed']];
     },
   },
-  { key: 'degree', re: /\bdegree\b|level of education|highest education|education level/, not: /\b(?:date|year|completion|gpa|coursework|when|semester|term)\b|grade point/, value: (c) => latestSchool(c.profile)?.degree || null, tiers: (c) => degreeTiers(latestSchool(c.profile)?.degree ?? '') },
+  { key: 'degree', re: /\bdegree\b|level of education|highest education|education level/, not: /\b(?:date|year|month|completion|gpa|coursework|when|semester|term)\b|grade point/, value: (c) => latestSchool(c.profile)?.degree || null, tiers: (c) => degreeTiers(latestSchool(c.profile)?.degree ?? '') },
   // "I have a secondary major." ticks only when you have one; the follow-up asks which.
   {
     key: 'hasSecondMajor',
@@ -1100,7 +1134,7 @@ const DEFS: Def[] = [
     },
   },
   // \bgraduat: "undergraduate" names your level, not your graduation date.
-  { key: 'graduationDate', re: /\bgraduat|expected (completion|grad)|completion date|degree (end|completion)|\b(?:when|what (?:year|semester|term|month|date))\b.{0,50}\b(?:receiv|earn|complet|finish|obtain|conferr|award)\w*\b.{0,40}\bdegree\b/, not: /(?<!month (?:and )?)year$/, isDate: true, value: (c) => c.profile.answers.graduationDate || latestSchool(c.profile)?.end || null, tiers: graduationTiers },
+  { key: 'graduationDate', re: /\bgraduat|expected (completion|grad)|completion date|degree (end|completion)|\b(?:when|what (?:year|semester|term|month|date))\b.{0,50}\b(?:receiv|earn|complet|finish|obtain|conferr|award)\w*\b.{0,40}\bdegree\b|\b(?:year|semester|term|month|date) (?:in which|when) you (?:will|expect to|plan to|are expected to) (?:receiv|earn|complet|finish|obtain)\w*\b.{0,40}\bdegree\b/, not: /(?<!month (?:and )?)year$/, isDate: true, value: (c) => c.profile.answers.graduationDate || latestSchool(c.profile)?.end || null, tiers: graduationTiers },
   // "Do you have experience in one of the following programming languages: Java, Python, Ruby…?"
   // Yes (flagged for a look) when one of your skills is named; how much experience is yours to judge.
   {
@@ -1123,20 +1157,22 @@ const DEFS: Def[] = [
   },
   {
     key: 'languageProficiency',
-    re: /^(?:\d{1,2}[ .)]+)?(read|reading|write|writing|speak|speaking|listen|listening|understand|understanding|comprehension|comprehend|overall|oral|verbal|written|spoken|conversation|conversational|fluency)( proficiency(?: level)?| skills?| level| ability| competency)?$|^(?:language )?proficiency(?: level)?$|(?:english|language).{0,30}(?:proficiency|fluency)|(?:proficiency|fluency).{0,30}(?:english|language)|language level|how well do you (speak|write|read|understand)|(assess|rate) your .{0,30}(english|language|writing|speaking)/,
-    value: (c) => {
-      const language = primaryLanguage(c.profile);
+    re: /^(?:\d{1,2}[ .)]+)?(read|reading|write|writing|speak|speaking|listen|listening|understand|understanding|comprehension|comprehend|overall|oral|verbal|written|spoken|conversation|conversational|fluency)( proficiency(?: level)?| skills?| level| ability| competency)?$|^(?:language )?proficiency(?: level)?$|(?:english|language).{0,30}(?:proficiency|fluency)|(?:proficiency|fluency).{0,30}(?:english|language)|language level|\blevel for (?:[a-z]+ )?language\b|how well do you (speak|write|read|understand)|(assess|rate) your .{0,30}(english|language|writing|speaking)/,
+    value: (c, label) => {
+      const language = primaryLanguage(c.profile, label);
       if (!language) return null;
       return language.proficiency || null;
     },
     // A fluent speaker tries Native, Fluent, Expert, Advanced, and nothing else:
     // every extra spelling is another search on typeahead dropdowns.
-    tiers: (c) => {
-      const language = primaryLanguage(c.profile);
+    tiers: (c, label) => {
+      const language = primaryLanguage(c.profile, label);
       if (!language || !(language.fluent || /native|bilingual|fluent|expert/i.test(language.proficiency))) return [];
       return LANGUAGE_LEVEL_TIERS;
     },
   },
+  // SmartRecruiters' language rows: one language per row, with its level beside it.
+  { key: 'languageEntry', re: /^language (?:input )?for entry 1$/, textOnly: true, value: (c) => primaryLanguage(c.profile)?.language || null },
   {
     key: 'languages',
     re: /\blanguages?\b|english/,

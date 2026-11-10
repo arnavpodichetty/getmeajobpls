@@ -1,6 +1,7 @@
-import { fillText } from '../lib/engine/controls';
+import { attachFile, fillText } from '../lib/engine/controls';
 import { queryAllDeep, queryDeep, realClick, sleep, waitForElement } from '../lib/engine/dom';
-import { fillPage } from '../lib/engine/fill';
+import { fillPage, isTranscriptUpload } from '../lib/engine/fill';
+import { labelFor } from '../lib/engine/labels';
 import { currentValue, scanFields } from '../lib/engine/scan';
 import { optionScore, normalize, schoolVariants } from '../lib/engine/text';
 import type { Education, FillReport } from '../lib/types';
@@ -18,7 +19,49 @@ const SELECTORS = {
   educationEdit: '[data-test="education-entry-edit"]',
   educationForm: '[data-test="education-edit-form"]',
   educationSave: '[data-test="education-save"]',
+  // Screening questions: each sits in its own container. An info block can ask
+  // for a document that the "Additional attachments" upload under it takes.
+  question: '[data-test="question-container"]',
+  info: 'sr-question-field-info',
+  attachments: 'sr-question-field-files',
+  fileInput: 'input[type=file]',
+  attachedFile: '.c-spl-file-list-item-name',
 } as const;
+
+/** Uploads for something other than the resume. */
+const OTHER_UPLOAD = /\b(?:additional|other|cover|transcripts?|portfolio|writing sample|supporting)\b/;
+
+/** The resume drop zone, never an "Additional attachments" box. */
+function resumeUpload(): HTMLElement | null {
+  return queryAllDeep<HTMLElement>(SELECTORS.resume).find((el) => !OTHER_UPLOAD.test(normalize(labelFor(el).label))) ?? null;
+}
+
+const attachedNames = (container: Element) => queryAllDeep(SELECTORS.attachedFile, container).map((el) => (el.textContent ?? '').trim());
+
+/**
+ * "Please submit a school transcript (REQUIRED)" as an info block, with the
+ * "Additional attachments" upload right after it: the transcript goes there.
+ */
+async function attachRequestedTranscript(ctx: FillContext, report: FillReport): Promise<void> {
+  for (const container of queryAllDeep(SELECTORS.question)) {
+    const input = queryDeep(SELECTORS.attachments, container) ? queryDeep<HTMLInputElement>(SELECTORS.fileInput, container) : null;
+    const prev = container.previousElementSibling;
+    if (!input || !prev?.matches(SELECTORS.question) || !queryDeep(SELECTORS.info, prev)) continue;
+    const request = queryAllDeep('[slot="label-content"]', prev).map((el) => el.textContent ?? '').join(' ');
+    if (!isTranscriptUpload(request)) continue;
+    const label = 'Transcript';
+    if (!ctx.transcript) {
+      report.fields.push({ label, status: 'review', reason: 'This job asks for your transcript. Add it under Options → Transcript, or attach it here.' });
+      continue;
+    }
+    const name = ctx.transcript.file.name;
+    if (attachedNames(container).includes(name)) continue;
+    const outcome = attachFile(input, ctx.transcript.file, 'transcript');
+    if (outcome.ok) await waitForElement(() => (attachedNames(container).includes(name) ? container : null), 4000);
+    const shown = attachedNames(container).includes(name);
+    report.fields.push({ label: `${label} (${name})`, status: outcome.ok && (shown || !outcome.review) ? 'filled' : 'review', reason: shown ? undefined : outcome.review });
+  }
+}
 
 /** The real <button> inside an spl-button / oc-button host. */
 const innerButton = (host: Element): HTMLElement => (host instanceof HTMLButtonElement ? host : queryDeep<HTMLElement>('button', host) ?? (host as HTMLElement));
@@ -81,7 +124,7 @@ export const smartrecruiters: Adapter = {
     const report = await fillPage(ctx, {
       ats: this.name,
       incremental: ctx.incremental,
-      resumeTarget: () => queryDeep<HTMLElement>(SELECTORS.resume),
+      resumeTarget: resumeUpload,
       skip: (field) => {
         if (!/if .*other.*university/i.test(field.label)) return false;
         const school = ctx.profile.education[0]?.school;
@@ -91,6 +134,7 @@ export const smartrecruiters: Adapter = {
         return !!primary && schoolVariants(school).some((variant) => optionScore(currentValue(primary), variant) >= 0.85);
       },
     });
+    await attachRequestedTranscript(ctx, report);
     if (!ctx.incremental) {
       await fillEducationCards(ctx, report);
       await syncConfirmEmail(report);
