@@ -47,7 +47,7 @@ async function importBackup(file: File): Promise<void> {
   if (!profileData || typeof profileData !== 'object' || !('personal' in profileData)) {
     throw new Error('Not a getmeajobpls backup or profile JSON');
   }
-  const fileCount = isBackup ? (data.resumes?.length ?? 0) : 0;
+  const fileCount = isBackup && Array.isArray(data.resumes) ? data.resumes.length : 0;
   const msg =
     'Replace your current profile' +
     (isBackup ? ', settings and resume rules' : '') +
@@ -60,8 +60,12 @@ async function importBackup(file: File): Promise<void> {
     if (data.settings) {
       await saveSettings(normalizeSettings(data.settings));
     }
-    if (Array.isArray(data.rules)) await saveRules(data.rules);
-    for (const r of (data.resumes ?? []) as Backup['resumes'] & {}) {
+    // A rule without its keyword list or resume would break picking a resume on every page.
+    if (Array.isArray(data.rules)) {
+      await saveRules((data.rules as ResumeRule[]).filter((r) => r && typeof r.id === 'string' && typeof r.resumeId === 'string' && Array.isArray(r.keywords)));
+    }
+    for (const r of (Array.isArray(data.resumes) ? data.resumes : []) as Backup['resumes'] & {}) {
+      if (!r || typeof r.id !== 'string' || typeof r.base64 !== 'string') continue;
       const { base64, ...meta } = r;
       await putResume({ ...meta, blob: base64ToBlob(base64, meta.mimeType || 'application/pdf') });
     }

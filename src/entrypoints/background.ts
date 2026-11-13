@@ -48,7 +48,7 @@ export default defineBackground(() => {
     }
 
     // Content scripts can't open the extension's IndexedDB, so they fetch resume files here.
-    if (msg.type === 'getResumeFile') {
+    if (msg?.type === 'getResumeFile') {
       (async (): Promise<ResumeFilePayload | null> => {
         const rec = await getResume(msg.id);
         if (!rec) return null;

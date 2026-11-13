@@ -112,7 +112,11 @@ export function decodeEntities(text: string): string {
 const str = (v: unknown) => (typeof v === 'string' || typeof v === 'number' ? clean(decodeEntities(String(v))) : '');
 const nameOf = (v: unknown) => (typeof v === 'object' && v ? str((v as Json).name) : str(v));
 
-function jobPostings(doc: Document): Json[] {
+// The page is asked "is this a posting?" every time it changes, so each data block is parsed
+// once and parsed again only if its text changes.
+const parsedPostings = new WeakMap<Element, { text: string; postings: Json[] }>();
+
+function postingsIn(text: string): Json[] {
   const out: Json[] = [];
   const visit = (node: unknown) => {
     for (const item of asArray(node)) {
@@ -122,12 +126,21 @@ function jobPostings(doc: Document): Json[] {
       if (obj['@graph']) visit(obj['@graph']);
     }
   };
+  try {
+    visit(JSON.parse(text));
+  } catch {
+    // Not JSON; ignore.
+  }
+  return out;
+}
+
+function jobPostings(doc: Document): Json[] {
+  const out: Json[] = [];
   for (const script of doc.querySelectorAll('script[type="application/ld+json"]')) {
-    try {
-      visit(JSON.parse(script.textContent ?? ''));
-    } catch {
-      // Not JSON; ignore.
-    }
+    const text = script.textContent ?? '';
+    let parsed = parsedPostings.get(script);
+    if (!parsed || parsed.text !== text) parsedPostings.set(script, (parsed = { text, postings: postingsIn(text) }));
+    out.push(...parsed.postings);
   }
   return out;
 }

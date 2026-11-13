@@ -5,7 +5,7 @@ import type { FillContext } from '../../adapters/types';
 import { setTimeZone } from '../clock';
 import { jobInfoForPage } from '../jobInfo';
 import type { FieldResult, FillReport } from '../types';
-import { gpaToTenth, LEAVE_EMPTY, resolveAnswer, TENTH_GPA, type Answer, type AnswerContext, type AnswerValue } from './answers';
+import { fullAddress, gpaToTenth, LEAVE_EMPTY, resolveAnswer, TENTH_GPA, type Answer, type AnswerContext, type AnswerValue } from './answers';
 import {
   attachFile,
   fillButtons,
@@ -295,6 +295,25 @@ export function asksForTranscript(el: HTMLElement): boolean {
   return isTranscriptUpload(`${label} ${hints}`);
 }
 
+/**
+ * What an address box wants, from its question and help text: the street alone (the form has
+ * its own City, State and Zip boxes), the whole address on one line ("Complete current mailing
+ * address", "Address (street, city, state, zip)", a multi-line box), or only city and state.
+ */
+export function addressForm(text: string, multiline: boolean, separateCity: boolean): 'street' | 'full' | 'cityState' {
+  const n = normalize(text);
+  const city = /\b(?:city|town)\b/.test(n);
+  const street = /\bstreet\b|\bline 1\b|\baddress 1\b/.test(n);
+  const zip = /\b(?:zip|postal|post code|postcode)\b/.test(n);
+  const whole = /\b(?:full|complete|entire|whole)\b/.test(n);
+  if (city && !street && !zip && !whole && !multiline) return 'cityState';
+  if (whole || (city && (zip || /\bstate\b/.test(n)))) return 'full';
+  if (street) return 'street';
+  return multiline || !separateCity ? 'full' : 'street';
+}
+
+const CITY_BOX = /\b(?:city|town)\b/;
+
 /** Score file inputs: the resume field, not the cover letter or "autofill from resume" box. */
 export function findResumeTarget(fields: Field[]): HTMLElement | null {
   const files = fields.filter((f) => f.kind === 'file');
@@ -440,7 +459,10 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
   // Whether this form marks its required fields: only then is an unmarked box truly optional.
   let marksRequired = false;
   for (let pass = 0; pass < 3; pass++) {
-    const fields = scanFields(root).filter((f) => f.kind !== 'file' && !f.members.some((m) => handled.has(m)));
+    const scanned = scanFields(root);
+    const fields = scanned.filter((f) => f.kind !== 'file' && !f.members.some((m) => handled.has(m)));
+    // A form with its own City box wants only the street in "Address"; one without wants it all there.
+    const cityBoxes = scanned.filter((f) => f.kind !== 'file' && CITY_BOX.test(normalize(`${f.label} ${f.hints}`)));
     marksRequired ||= fields.some((f) => f.required);
     if (pass > 0 && !fields.length) break;
     for (const field of fields) {
@@ -464,6 +486,12 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
       // A bare "Start date" in an education block is when school started, not when you can start the job.
       const schoolDate = resolution.matchedKey === 'earliestStartDate' || !resolution.matchedKey ? educationStartLabel(field) : null;
       if (schoolDate) resolution = resolveAnswer(schoolDate, '', null, answers, isChoice(field));
+      if (resolution.matchedKey === 'street' && resolution.answer && (field.kind === 'text' || field.kind === 'textarea')) {
+        const form = addressForm(`${field.label} ${textOfIds(field.el, 'aria-describedby')}`, field.kind === 'textarea', cityBoxes.some((f) => f !== field));
+        const { city, state } = answers.profile.personal;
+        const value = form === 'full' ? fullAddress(answers.profile) : form === 'cityState' ? [city, state].map((x) => x.trim()).filter(Boolean).join(', ') : '';
+        if (value) resolution = { ...resolution, answer: { ...resolution.answer, key: form === 'full' ? 'fullAddress' : 'location', value } };
+      }
       let answer = resolution.matchedKey === 'locationPreference'
         ? resolution.answer
         : overrideFor(field, opts.overrides ?? [], answers) ?? usCitizenOption(field, answers) ?? resolution.answer;

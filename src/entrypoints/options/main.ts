@@ -62,7 +62,12 @@ let profile: Profile;
 let settings: Settings;
 /** Your resumes (not tailored copies), for linking skill sets to them. */
 let ownResumes: ResumeMeta[] = [];
-const saveP = debounce(() => saveProfile(profile));
+/** The profile as this page last wrote it, to tell its own saves from another tab's. */
+let lastSavedProfile = '';
+const saveP = debounce(() => {
+  lastSavedProfile = JSON.stringify(profile);
+  return saveProfile(profile);
+});
 const saveS = debounce(() => saveSettings(settings));
 
 // ---------------------------------------------------------------------------
@@ -546,7 +551,13 @@ const NAV: [string, string][] = [
   ['credits', 'Credits'],
 ];
 
-export async function renderAll(): Promise<void> {
+/** Renders run one at a time: two at once could leave the page editing one copy of the profile while saving another. */
+let rendering: Promise<void> = Promise.resolve();
+export function renderAll(): Promise<void> {
+  return (rendering = rendering.then(render, render));
+}
+
+async function render(): Promise<void> {
   [profile, settings] = await Promise.all([loadProfile(), loadSettings()]);
   const library = await listResumes();
   // A profile page handed over by the toolbar popup ("Use this page for my profile").
@@ -614,3 +625,15 @@ function trackActiveSection(): void {
 }
 
 renderAll().then(trackActiveSection);
+
+// The profile can change while this page is open: "Save my answers" on an application adds to
+// it from another tab. Load that change, or the next edit here would save this page's older
+// copy over it and the new answers would be gone.
+browser.storage.onChanged?.addListener((changes, area) => {
+  const change = area === 'local' ? changes.profile : undefined;
+  if (!change || !profile) return;
+  const incoming = JSON.stringify(change.newValue);
+  if (incoming === lastSavedProfile || incoming === JSON.stringify(profile)) return;
+  const y = window.scrollY;
+  void renderAll().then(() => window.scrollTo(0, y));
+});

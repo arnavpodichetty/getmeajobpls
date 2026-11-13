@@ -139,6 +139,20 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Can you obtain and maintain a security clearance?', 'Yes'],
     ['Are you eligible to obtain a U.S. Government security clearance?', 'Yes'],
     ['Are you willing to undergo a security clearance investigation?', 'Yes'],
+    // Department of Defense in a clearance question is about the clearance, not DoD employment.
+    ["To the best of your knowledge, are you able to obtain a US Department of Defense Security Clearance if you don't currently hold one?", 'Yes'],
+    ['Do you currently hold a US Department of Defense Security Clearance?  If so, what level of clearance?', 'No'],
+  ],
+  'citizenship in other or listed countries': [
+    ['The previous question addressed citizenship in certain countries subject to contractual restrictions. In addition to U.S. citizenship, do you currently hold citizenship in any other country (including dual or multiple citizenship)?', 'No'],
+    ['Do you hold citizenship in another country?', 'No'],
+    ['Are you a dual citizen?', 'No'],
+  ],
+  'drug-free workplace': [
+    ['Drug Free Workplace', 'Yes'],
+    ['Drug-Free Workplace Acknowledgement', 'Yes'],
+    ['Are you willing to submit to a drug and/or alcohol screen?', 'Yes'],
+    ['Do you consent to pre-employment drug testing?', 'Yes'],
   ],
   'government and military service': [
     ['Are you a current or former government official?', 'No'],
@@ -453,6 +467,10 @@ const CHOICES: [string, string[], string | null, boolean][] = [
   ['Ethnicity', ['White', 'East Asian', 'Hispanic or Latino', 'Black or African American'], 'East Asian', true],
   ['Do you hold an active U.S. Government Security Clearance?', ['Yes - Secret', 'Yes - Top Secret', 'No, I do not hold an active U.S. Government Security Clearance.'], 'No, I do not hold an active U.S. Government Security Clearance.', true],
   ['Security clearance', ['None', 'Secret', 'Top Secret', 'TS/SCI'], 'None', true],
+  ["To the best of your knowledge, are you able to obtain a US Department of Defense Security Clearance if you don't currently hold one?", ['Yes', 'No', 'I currently hold an active security clearance'], 'Yes', true],
+  ['Drug Free Workplace', ['Yes', 'No'], 'Yes', true],
+  ['Certain U.S. government contracts supported by our company prohibit employment of individuals who hold citizenship (including dual citizenship) in specific countries designated by the U.S. Department of State. Please indicate whether you currently hold citizenship (including dual citizenship) in any of the following countries:', ['I do not hold citizenship in any of the countries listed', 'Algeria', 'Cuba', 'Vietnam'], 'I do not hold citizenship in any of the countries listed', true],
+  ['Do you hold citizenship in any of the countries listed below?', ['Cuba', 'Iran', 'North Korea', 'None of the above'], 'None of the above', true],
   ['Security clearance', ['Yes', 'No'], 'No', true],
   ['Do you currently possess an active security clearance?*', ['Yes, I possess an active security clearance.', 'No, I do not possess an active security clearance.'], 'No, I do not possess an active security clearance.', true],
   // "Sponsored" here is the clearance's agency, not visa sponsorship.

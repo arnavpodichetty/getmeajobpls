@@ -437,5 +437,7 @@ describe('finding the job description for an application page', () => {
   it('turns API HTML into plain text, including Greenhouse\'s escaped HTML', () => {
     expect(htmlToText('&lt;p&gt;Pay: $100K &amp;amp; equity&lt;/p&gt;&lt;p&gt;Remote&lt;/p&gt;')).toBe('Pay: $100K & equity\nRemote');
     expect(htmlToText('<h2>About</h2><p>We&#39;re&nbsp;hiring</p>')).toBe("About\nWe're hiring");
+    // A character code no character has is left as written, not thrown on.
+    expect(htmlToText('<p>Pay &#99999999; and &#x41;</p>')).toBe('Pay &#99999999; and A');
   });
 });

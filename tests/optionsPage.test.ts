@@ -4,7 +4,7 @@ import 'fake-indexeddb/auto';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
 import { putResume } from '../src/lib/resumeDb';
-import { loadProfile, loadSettings, saveRules } from '../src/lib/storage';
+import { loadProfile, loadSettings, saveProfile, saveRules } from '../src/lib/storage';
 import { resolveAnswer } from '../src/lib/engine/answers';
 
 
@@ -231,5 +231,19 @@ describe('options page', () => {
       expect((await loadSettings()).reviewBusinessLines).toBe(false);
       expect((await loadSettings()).reviewExperienceLevels).toBe(false);
     });
+  });
+
+  it('keeps answers saved from another tab when you edit the profile afterwards', async () => {
+    // "Save my answers" on an application page, while this page is open.
+    const elsewhere = await loadProfile();
+    elsewhere.savedAnswers.push({ id: 'from-panel', question: 'Favorite analytical engine?', answer: 'The second one' });
+    await saveProfile(elsewhere);
+    await vi.waitFor(() => expect(document.querySelector('#saved-answers')!.innerHTML).toContain('Favorite analytical engine?'));
+
+    const city = [...document.querySelectorAll<HTMLLabelElement>('#personal label')].find((l) => /^City/.test(l.textContent ?? ''))!.querySelector('input')!;
+    city.value = 'Springfield';
+    city.dispatchEvent(new Event('input', { bubbles: true }));
+    await vi.waitFor(async () => expect((await loadProfile()).personal.city).toBe('Springfield'));
+    expect((await loadProfile()).savedAnswers.map((a) => a.id)).toContain('from-panel');
   });
 });

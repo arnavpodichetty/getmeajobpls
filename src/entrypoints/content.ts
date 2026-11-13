@@ -148,7 +148,35 @@ export default defineContentScript({
       let lastUrl = '';
       let checking = false;
       let checkTimer: number | undefined;
-      const stopAt = Date.now() + 15 * 60_000;
+      let checkDue = 0;
+      // Look for a form for 15 minutes after the page opens, changes address, or is clicked or
+      // typed in. A single-page site left open longer still gets its panel when you click Apply.
+      const ACTIVE_MS = 15 * 60_000;
+      let stopAt = Date.now() + ACTIVE_MS;
+      let seenUrl = location.href;
+      // Checks since the page last gave a reason to look (new address, a click, a key). A page that
+      // keeps changing without becoming an application (mail, chat, video) is checked less and less often.
+      let misses = 0;
+      const checkDelay = () => (misses < 10 ? 300 : misses < 30 ? 1000 : 3000);
+      const wake = () => {
+        misses = 0;
+        stopAt = Date.now() + ACTIVE_MS;
+      };
+      // Whether each iframe address belongs to an ATS; the same frames are asked about on every check.
+      const atsFrames = new Map<string, boolean>();
+      const isAtsFrame = (src: string): boolean => {
+        let known = atsFrames.get(src);
+        if (known === undefined) {
+          try {
+            known = detectAdapter(new URL(src, location.href), document).id !== 'generic';
+          } catch {
+            known = false;
+          }
+          if (atsFrames.size > 200) atsFrames.clear();
+          atsFrames.set(src, known);
+        }
+        return known;
+      };
       // Scanning a form on an unrecognized site reads every field's label. Busy pages
       // (mail, chat, docs) change constantly, so space those scans out; a later check still runs.
       const FORM_SCAN_GAP = 1000;
@@ -157,14 +185,7 @@ export default defineContentScript({
       /** Local test before involving the background: ATS site, embedded ATS, or a form that looks like a job application. */
       const mightBeApplication = () => {
         if (adapter().id !== 'generic' || isJobPosting()) return true;
-        const embedded = [...document.querySelectorAll('iframe[src]')].some((f) => {
-          try {
-            return detectAdapter(new URL((f as HTMLIFrameElement).src, location.href), document).id !== 'generic';
-          } catch {
-            return false;
-          }
-        });
-        if (embedded) return true;
+        for (const f of document.querySelectorAll<HTMLIFrameElement>('iframe[src]')) if (isAtsFrame(f.src)) return true;
         // Cheap count first; only scan the form when there's enough of one.
         if (formControlCount() < 4) return false;
         const wait = lastFormScan + FORM_SCAN_GAP - Date.now();
@@ -185,6 +206,7 @@ export default defineContentScript({
       const check = async () => {
         if (ctx.isInvalid || checking || panel.dismissed || Date.now() > stopAt) return;
         // Single-page apps (Workday) change URL without reloading; re-evaluate then.
+        misses++;
         if (!needsCheck()) return;
         if (!mightBeApplication()) return;
         checking = true;
@@ -210,16 +232,32 @@ export default defineContentScript({
       const schedule = (ms: number) => {
         if (ctx.isInvalid) return;
         clearTimeout(checkTimer);
+        checkDue = Date.now() + ms;
         checkTimer = ctx.setTimeout(() => { checkTimer = undefined; void runSafely(check); }, ms);
       };
       schedule(100);
       // Forms often render after load; look again shortly after the page changes.
       // Throttled, not debounced: a busy page must not keep pushing the check back.
       const panelObserver = new MutationObserver(() => {
-        if (!panel.dismissed && needsCheck() && checkTimer === undefined) schedule(300);
+        if (panel.dismissed || checkTimer !== undefined) return;
+        if (location.href !== seenUrl) {
+          seenUrl = location.href;
+          wake();
+        }
+        if (Date.now() > stopAt) return;
+        // A posting's panel compares field counts in the check itself, not on every change to the page.
+        if (panel.postingOnly || !panel.shown || location.href !== lastUrl) schedule(checkDelay());
       });
       panelObserver.observe(document.documentElement, { childList: true, subtree: true });
+      // Forms appear because you did something (clicked Apply, picked a job): look promptly again.
+      const onUserInput = () => {
+        wake();
+        if (checkTimer !== undefined && checkDue - Date.now() > 300) schedule(300);
+      };
+      const inputEvents = ['pointerdown', 'keydown'] as const;
+      for (const type of inputEvents) window.addEventListener(type, onUserInput, { capture: true, passive: true });
       ctx.onInvalidated(() => {
+        for (const type of inputEvents) window.removeEventListener(type, onUserInput, { capture: true });
         panelObserver.disconnect();
         clearTimeout(checkTimer);
         panel.remove();

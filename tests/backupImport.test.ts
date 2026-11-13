@@ -54,4 +54,27 @@ describe('backup import', () => {
       expect(rec?.fileName).toBe(r.fileName);
     }
   });
+
+  it('drops damaged entries instead of saving something that breaks every page', async () => {
+    const backup = JSON.parse(fictionalBackup());
+    backup.profile.education = 'none';
+    backup.profile.experience = [null, backup.profile.experience[0]];
+    backup.profile.savedAnswers = [null, 7];
+    backup.rules = [null, { id: 'bad', resumeId: 'r1' }, ...backup.rules];
+    backup.resumes = [null, { id: 'no-file', name: 'Empty' }, ...backup.resumes];
+    const text = JSON.stringify(backup);
+    let imported = false;
+    const section = backupSection(async () => { imported = true; });
+    const input = section.querySelector<HTMLInputElement>('input[type=file]')!;
+    Object.defineProperty(input, 'files', { value: [new File([text], 'backup.json', { type: 'application/json' })], configurable: true });
+    input.dispatchEvent(new Event('change'));
+    await vi.waitFor(() => expect(imported).toBe(true), { timeout: 10_000 });
+
+    const profile = await loadProfile();
+    expect(profile.education).toEqual([]);
+    expect(profile.experience).toHaveLength(1);
+    expect(profile.savedAnswers).toEqual([]);
+    expect((await loadRules()).map((r) => r.id)).toEqual(['rule-r1']);
+    expect((await listResumes()).map((r) => r.id)).toEqual(['r1']);
+  });
 });

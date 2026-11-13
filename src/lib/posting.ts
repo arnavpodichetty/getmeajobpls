@@ -24,7 +24,11 @@ export function htmlToText(html: string): string {
   const entities: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
   const decode = (s: string) =>
     s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e: string) => {
-      if (e[0] === '#') return String.fromCodePoint(e[1].toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10));
+      if (e[0] === '#') {
+        const code = e[1].toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+        // An out-of-range number ("&#99999999;") would throw and lose the whole description.
+        return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : m;
+      }
       return entities[e.toLowerCase()] ?? m;
     });
   // Greenhouse escapes its HTML once more.

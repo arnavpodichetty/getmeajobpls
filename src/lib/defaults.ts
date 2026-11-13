@@ -188,6 +188,8 @@ export function normalizeSettings(raw: unknown): Settings {
 
 
 const list = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []);
+/** The entries of a stored list that are objects; a damaged or hand-edited backup can hold anything. */
+const records = <T>(v: unknown): Partial<T>[] => (Array.isArray(v) ? v.filter((x) => !!x && typeof x === 'object') : []);
 
 /**
  * Deep-merge stored data onto defaults so older backups / partial imports
@@ -209,14 +211,14 @@ export function normalizeProfile(raw: unknown): Profile {
       return { ...personal, phone: phoneDigits(String(personal.phone ?? ''), String(personal.phoneCountryCode ?? '')) };
     })(),
     links: { ...base.links, ...p.links },
-    education: (p.education ?? []).map((e) => ({ ...emptyEducation(), ...e, majorFallbacks: list(e.majorFallbacks) })),
-    experience: (p.experience ?? []).map((e) => ({ ...emptyExperience(), ...e })),
-    projects: (p.projects ?? []).map((e) => ({ ...emptyProject(), ...e })),
+    education: records<Education>(p.education).map((e) => ({ ...emptyEducation(), ...e, majorFallbacks: list(e.majorFallbacks) })),
+    experience: records<Experience>(p.experience).map((e) => ({ ...emptyExperience(), ...e })),
+    projects: records<Project>(p.projects).map((e) => ({ ...emptyProject(), ...e })),
     skills: list(p.skills),
     tailoringSkills: list(p.tailoringSkills),
-    skillSets: (p.skillSets ?? []).map((x) => ({ ...emptySkillSet(), ...x, keywords: list(x.keywords), skills: list(x.skills) })),
+    skillSets: records<SkillSet>(p.skillSets).map((x) => ({ ...emptySkillSet(), ...x, keywords: list(x.keywords), skills: list(x.skills) })),
     // Older profiles stored languages as plain strings.
-    languages: (Array.isArray(p.languages) ? p.languages : []).map((l: unknown) =>
+    languages: (Array.isArray(p.languages) ? p.languages : []).filter((l: unknown) => typeof l === 'string' || (!!l && typeof l === 'object')).map((l: unknown) =>
       typeof l === 'string' ? { ...emptyLanguage(), language: l } : { ...emptyLanguage(), ...(l as Partial<Language>) },
     ),
     answers: { ...base.answers, ...p.answers, locationPreferences: list(p.answers?.locationPreferences ?? base.answers.locationPreferences), referralSourceFallbacks: referralFallbacks(list(p.answers?.referralSourceFallbacks)) },
@@ -226,6 +228,6 @@ export function normalizeProfile(raw: unknown): Profile {
       if (/^(?:south|east|southeast) asian$/i.test(String(eeo.raceEthnicity ?? '').trim())) eeo.raceEthnicity = 'Asian';
       return eeo;
     })(),
-    savedAnswers: (p.savedAnswers ?? []).map((a) => ({ ...emptySavedAnswer(), ...a })),
+    savedAnswers: records<SavedAnswer>(p.savedAnswers).map((a) => ({ ...emptySavedAnswer(), ...a })),
   };
 }

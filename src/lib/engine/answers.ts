@@ -160,6 +160,17 @@ function livesInJobCity(c: AnswerContext): boolean | null {
 
 const isUS = (country: string) => /^(united states|usa|us|u s|united states of america)$/.test(normalize(country));
 const location = (p: Profile) => [p.personal.city, p.personal.state].filter(Boolean).join(', ');
+/** Your whole address on one line, the way you'd write it: "1 Main St, Springfield, IL, 62701". */
+export function fullAddress(p: Profile): string {
+  const { street, addressLine2, city, state, zip, country } = p.personal;
+  if (!street.trim()) return '';
+  const n = normalize(state);
+  const abbreviation = US_STATES[n] ? n : Object.keys(US_STATES).find((k) => US_STATES[k] === n);
+  const parts = [street, addressLine2, city, abbreviation ? abbreviation.toUpperCase() : state, zip].map((x) => x.trim()).filter(Boolean);
+  if (country.trim() && !isUS(country)) parts.push(country.trim());
+  return parts.join(', ');
+}
+
 export const fullName = (p: Profile) => p.personal.fullName.trim() || [p.personal.firstName, p.personal.lastName].filter(Boolean).join(' ');
 const optTiers = (value: string): string[][] => value === 'N/A' ? [['N/A', 'Not applicable', 'Does not apply'], ['No']] : value ? [[value]] : [];
 
@@ -591,6 +602,25 @@ const DEFS: Def[] = [
     re: /authori[sz](ed|ation)? to work|work authori[sz]ation|legally (authorized|eligible|permitted|able)|eligib(le|ility) to work|right to work|legal right\b.{0,60}\bto work\b|permitted to work|lawfully/,
     value: (c) => yesNo(c.profile.answers.workAuthorized),
   },
+  // "Please indicate whether you hold citizenship (including dual citizenship) in any of the following
+  // countries": none of them, unless your citizenship is one listed.
+  {
+    key: 'restrictedCitizenship',
+    re: /\bcitizenships?\b.{0,160}\b(?:the )?(?:following|listed|these|below|designated|specified) countr/,
+    value: (c) => (c.profile.answers.citizenship ? 'No' : null),
+    tiers: (c) => {
+      const citizenship = c.profile.answers.citizenship.trim();
+      if (!citizenship) return [];
+      const none = ['I do not hold citizenship in any of the countries listed', 'None of the above', 'None of these countries', 'None of the listed countries', 'None', 'Not applicable', 'N/A'];
+      return [...(isUS(citizenship) ? [] : [[citizenship]]), none, ['No']];
+    },
+  },
+  // "In addition to U.S. citizenship, do you hold citizenship in any other country?" ("If no, enter N/A").
+  {
+    key: 'otherCitizenship',
+    re: /\b(?:hold|have|possess)\b.{0,30}\bcitizenships? (?:in|of|with|from) (?:any |an )?(?:other|another|additional)\b|\b(?:any |an )?(?:other|another|additional) (?:countr(?:y|ies) of )?citizenships?\b|\bare you an? (?:dual|multiple) (?:citizen|national)\b/,
+    value: (c) => (c.profile.answers.citizenship ? 'No' : null),
+  },
   { key: 'usCitizen', re: /(are you )?(a )?(us|u s|united states|american) citizen/, value: (c) => (c.profile.answers.citizenship ? (isUS(c.profile.answers.citizenship) ? 'Yes' : 'No') : null) },
   // "Citizen of any country other than the U.S.?" / dual citizenship: your profile lists one citizenship.
   {
@@ -613,6 +643,13 @@ const DEFS: Def[] = [
       return same ? 'Yes' : 'No';
     },
     confidence: 'low',
+  },
+  // "Drug Free Workplace" (agree to a drug and/or alcohol screen): always Yes.
+  {
+    key: 'drugFreeWorkplace',
+    re: /\bdrug ?free\b|\b(?:drug|alcohol)(?: and(?: or)? (?:drug|alcohol))? (?:screen|screening|test|testing)s?\b/,
+    not: /\b(?:fail\w*|positive|refus\w*|convict\w*|ever (?:been|had))\b/,
+    value: () => 'Yes',
   },
   {
     key: 'backgroundCheck',
@@ -719,6 +756,8 @@ const DEFS: Def[] = [
     key: 'governmentOfficial',
     // Includes past government / Department of Defense employment ("post-government employment", DoD Section 847).
     re: /public official|government (official|entity|employee|agency)|politically exposed|foreign official|state.owned|(?:employed|worked) (?:by|for) (?:a |the |any )?(?:(?:u s|us|federal|united states|state|local|foreign|or|and) )*government|post government employment|department of defen[cs]e|\bdod\b|(?:official|employee) of (?:the )?(?:u s |us |federal )?(?:government|armed forces)/,
+    // "Do you hold a US Department of Defense Security Clearance?" is about a clearance, not DoD employment.
+    not: /\bclearances?\b/,
     value: (c) => yesNo(c.profile.answers.governmentOfficial),
   },
   // "If you join, will you also be involved in any other jobs, business investments, board
@@ -990,7 +1029,7 @@ const DEFS: Def[] = [
   { key: 'phoneExtension', re: /\bext(ension)?\b|\bext\b/, value: () => null },
   { key: 'phone', short: true, re: /phone|mobile|cell|telephone|contact number/, not: /\bext(ension)?\b|country (phone )?code|device type|phone type/, value: (c) => c.profile.personal.phone },
   { key: 'addressLine2', short: true, re: /address line 2|^(?:street )?address 2$|^street 2$|apartment|\bapt\b|suite|unit number/, value: (c) => c.profile.personal.addressLine2 || null },
-  { key: 'street', short: true, re: /street|address line 1|^address( 1)?$|home address|mailing address|street address|residential address/, value: (c) => c.profile.personal.street || null },
+  { key: 'street', short: true, re: /street|address line 1|^address( 1)?$|(?:home|mailing|street|residential|current|permanent|present|postal|physical) address|^(?:full|complete) address$|\byour (?:\w+ ){0,2}address$/, not: /e ?mail|\bweb|\bip address|\burl\b|billing|employer|company|school|reference/, value: (c) => c.profile.personal.street || null },
   { key: 'zip', short: true, re: /zip|postal|post code|postcode/, value: (c) => c.profile.personal.zip || null },
   { key: 'city', short: true, re: /^city\b|\bcity$|city town|town city|location city/, value: (c) => c.profile.personal.city || null },
   { key: 'state', short: true, re: /\b(state|province|region)\b/, not: /united states|statement|state your|\bcountry\b/, value: (c) => c.profile.personal.state || null },

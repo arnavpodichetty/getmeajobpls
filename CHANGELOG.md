@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.4.2 (2026-11-12)
+
+### Fixes
+- **Saved answers lost with Options open:** answers saved from an application ("Save my answers") while the Options page was open in another tab were wiped by the next edit in Options, which saved its older copy of the profile over them. Options now loads the change first.
+- **Panel on sites left open a long time:** a single-page site (Workday, a careers site) open for more than 15 minutes stopped getting the panel, even after you opened a new job. It looks again whenever the address changes or you click or type.
+- **Damaged backup files:** importing a backup with a broken entry (an empty slot in a list, a resume rule without keywords, a resume without its file) skips that entry. It used to stop halfway, or save a rule that kept the panel from showing on every page.
+- **Tailoring:** a job description containing an invalid character code is still read, and a half-written resume cache file is read again instead of failing every time.
+- **Lighter on pages that are not applications:** a page that keeps changing (mail, chat, video) is checked for a form less and less often, and promptly again when you click or type. The page's job data is read once instead of on every check, and a posting's panel no longer counts the form fields on every change to the page.
+- **Address boxes:** a box that holds your whole address ("Complete current mailing address", "Address (street, city, state, zip)", a multi-line address box, or any address box on a form with no separate City box) gets it on one line: "1 Main St, Springfield, IL, 62701". Forms with their own City, State and Zip boxes still get only the street in Address. "Address (City, State)" gets city and state.
+- **Defense contractor questions:**
+  - "Are you able to obtain a US Department of Defense Security Clearance?" is Yes for US citizens. It was read as a Department of Defense employment question and answered No.
+  - "Do you currently hold a US Department of Defense Security Clearance?" is answered from your clearance, not as DoD employment.
+  - "Please indicate whether you hold citizenship in any of the following countries" ticks "I do not hold citizenship in any of the countries listed" (or "None of the above"). It used to be left unticked.
+  - "In addition to U.S. citizenship, do you hold citizenship in any other country?" is No, typed as N/A when the form asks for N/A. It was answered Yes, as if it asked "are you a US citizen?".
+- **"Drug Free Workplace"** and drug or alcohol screening questions are always Yes.
+
 ## 1.4.1 (2026-11-05)
 
 ### Fixes

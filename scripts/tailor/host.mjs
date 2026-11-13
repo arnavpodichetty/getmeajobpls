@@ -75,7 +75,14 @@ function log(line) {
 async function baseDoc(bin, pdf, work) {
   const hash = createHash('sha256').update(pdf).digest('hex');
   const cacheFile = join(DATA_DIR, 'base', `${hash}.json`);
-  if (existsSync(cacheFile)) return JSON.parse(readFileSync(cacheFile, 'utf8'));
+  if (existsSync(cacheFile)) {
+    try {
+      const cached = JSON.parse(readFileSync(cacheFile, 'utf8'));
+      if (cached?.doc?.sections?.length) return cached;
+    } catch {
+      // A half-written cache file (the helper was stopped mid-write): read the resume again.
+    }
+  }
   writeFileSync(join(work, 'resume.pdf'), pdf);
   const doc = normalizeDoc(await extractResume(bin, work));
   if (!doc.name || !doc.sections.length) throw new Error('Claude could not read this resume PDF.');
