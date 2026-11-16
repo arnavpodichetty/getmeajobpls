@@ -15,6 +15,9 @@
   - "Please indicate whether you hold citizenship in any of the following countries" ticks "I do not hold citizenship in any of the countries listed" (or "None of the above"). It used to be left unticked.
   - "In addition to U.S. citizenship, do you hold citizenship in any other country?" is No, typed as N/A when the form asks for N/A. It was answered Yes, as if it asked "are you a US citizen?".
 - **"Drug Free Workplace"** and drug or alcohol screening questions are always Yes.
+- **Lever Race:** the Race dropdown is filled again. Lever puts the race descriptions (hidden until you open them) inside the question, and because they mention "Hispanic or Latino", the question was read as a Hispanic yes/no question and left for review. Hidden "more info" text is no longer read as part of any question.
+- **Lever Pronouns:** the pronoun checkbox matching your profile ("he/him" → He/him) is ticked. If none matches, the question is flagged for you and nothing is ticked.
+- **Mixed pronouns:** pronouns like "she/they" are no longer treated as "she/her" when a form lists only She/Her.
 
 ## 1.4.1 (2026-11-05)
 

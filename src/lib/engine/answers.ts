@@ -84,15 +84,17 @@ const raceTiers = (race: string): string[][] => {
   return subgroup ? [[race.trim(), ...subgroup.aliases], [subgroup.category]] : [];
 };
 /** "he/him" is also written "He/His/Him", "He/Him/His". */
-const pronounTiers = (pronouns: string): string[][] => {
+export const pronounTiers = (pronouns: string): string[][] => {
   const n = normalize(pronouns);
   const sets: Record<string, string[]> = {
     he: ['He/Him', 'He/Him/His', 'He/His/Him', 'He/His'],
     she: ['She/Her', 'She/Her/Hers', 'She/Hers/Her', 'She/Hers'],
     they: ['They/Them', 'They/Them/Theirs', 'They/Theirs/Them'],
   };
-  const first = n.split(' ')[0];
-  return sets[first] && n.split(' ').every((w) => /^(?:he|him|his|she|her|hers|they|them|theirs)$/.test(w)) ? [[pronouns, ...sets[first]]] : [];
+  const words = n.split(' ');
+  // Every word from one set: "she/they" is its own answer, not a spelling of she/her.
+  const own: Record<string, RegExp> = { he: /^(?:he|him|his)$/, she: /^(?:she|her|hers)$/, they: /^(?:they|them|theirs)$/ };
+  return sets[words[0]] && words.every((w) => own[words[0]].test(w)) ? [[pronouns, ...sets[words[0]]]] : [];
 };
 const today = todayISO;
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];

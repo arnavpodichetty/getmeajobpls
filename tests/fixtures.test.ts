@@ -154,10 +154,33 @@ describe('Lever', () => {
     expect(status(r, /describes your gender/)).toBe('filled');
   });
 
-  it('does not tick pronoun or marketing checkboxes', async () => {
-    await run('lever-b', 'lever');
-    const pronouns = [...document.querySelectorAll<HTMLInputElement>('input[name="pronouns"], #customPronounsOption')];
-    expect(pronouns.some((p) => p.checked)).toBe(false);
+  const tickedPronouns = () =>
+    [...document.querySelectorAll<HTMLInputElement>('input[name="pronouns"], #customPronounsOption')].filter((p) => p.checked).map((p) => p.closest('label')?.textContent?.trim());
+
+  it('ticks only the pronoun checkbox that matches the profile', async () => {
+    const r = await run('lever-b', 'lever');
+    expect(tickedPronouns()).toEqual(['She/her']);
+    expect(status(r, /^Pronouns$/)).toBe('filled');
+  });
+
+  it('leaves pronouns with no matching option for review', async () => {
+    loadFixture('lever-c');
+    const ctx = context();
+    ctx.profile.personal.pronouns = 'she/they';
+    const r = await adapterFor('lever').fill(ctx);
+    expect(tickedPronouns()).toEqual([]);
+    expect(status(r, /^Pronouns$/)).toBe('review');
+  });
+
+  it('reads "Race" without its collapsed descriptions and picks the race option', async () => {
+    loadFixture('lever-c');
+    const ctx = context();
+    Object.assign(ctx.profile.eeo, { raceEthnicity: 'Asian', hispanicLatino: 'No' });
+    ctx.profile.personal.pronouns = 'he/him';
+    const r = await adapterFor('lever').fill(ctx);
+    expect(r.fields.find((f) => f.label === 'Race')?.status).toBe('filled');
+    expect(value('select[name="eeo[race]"]')).toBe('Asian (Not Hispanic or Latino)');
+    expect(tickedPronouns()).toEqual(['He/him']);
   });
 
   it('answers yes/no questions and flags other-country citizenship as a guess', async () => {

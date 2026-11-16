@@ -1,7 +1,9 @@
 import { bestOption, MIN_OPTION_SCORE } from '../lib/engine/text';
 import { todayISO } from '../lib/clock';
 import { blur, isVisible, realClick, sleep, typeInto, waitForElement } from '../lib/engine/dom';
-import { TIMING } from '../lib/engine/controls';
+import { fillCheckbox, TIMING } from '../lib/engine/controls';
+import { pronounTiers } from '../lib/engine/answers';
+import { normalize } from '../lib/engine/text';
 import { fillPage, type Override } from '../lib/engine/fill';
 import type { FieldResult } from '../lib/types';
 import type { Adapter, FillContext } from './types';
@@ -22,6 +24,7 @@ const SELECTORS = {
   location: '#location-input',
   locationResult: '.dropdown-results .dropdown-location, .dropdown-results > div',
   pronouns: 'input[name="pronouns"], #customPronounsOption, #customPronounsTextField',
+  pronounOption: 'input[type="checkbox"][name="pronouns"]',
   disabilitySignature: 'input[name="eeo[disabilitySignature]"]',
   disabilityDate: 'input[name="eeo[disabilitySignatureDate]"]',
 } as const;
@@ -65,6 +68,31 @@ async function fillLocation(ctx: FillContext): Promise<FieldResult | null> {
   return { label: 'Current location', status: 'filled' };
 }
 
+/**
+ * Lever's pronoun checkboxes carry no value, only their text. Tick the one whose
+ * text is your pronouns ("he/him" → "He/him"); anything else is left to you.
+ */
+function fillPronouns(ctx: FillContext): FieldResult | null {
+  const boxes = [...document.querySelectorAll<HTMLInputElement>(SELECTORS.pronounOption)];
+  const pronouns = ctx.profile.personal.pronouns.trim();
+  if (!boxes.length || !pronouns) return null;
+  if (boxes.some((b) => b.checked) && !ctx.settings.overwriteExisting) return null;
+  const wanted = new Set([pronouns, ...pronounTiers(pronouns).flat()].map(normalize));
+  const text = (b: HTMLInputElement) => normalize(b.closest('label')?.textContent ?? '');
+  const match = boxes.find((b) => wanted.has(text(b)));
+  if (!match) return { label: 'Pronouns', status: 'review', reason: `No pronoun option matched "${pronouns}".` };
+  for (const b of boxes) if (b !== match && b.checked) fillCheckbox(b, 'No');
+  fillCheckbox(match, 'Yes');
+  if (!match.checked) return { label: 'Pronouns', status: 'review', reason: 'Tick your pronouns.' };
+  if (ctx.settings.highlightFields) {
+    const list = (match.closest('#candidatePronounsCheckboxes') as HTMLElement | null) ?? match;
+    list.setAttribute('data-getmeajobpls', 'filled');
+    list.style.setProperty('outline', '2px solid #1f9d63', 'important');
+    list.style.setProperty('outline-offset', '2px', 'important');
+  }
+  return { label: 'Pronouns', status: 'filled' };
+}
+
 export const lever: Adapter = {
   id: 'lever',
   name: 'Lever',
@@ -77,13 +105,13 @@ export const lever: Adapter = {
       overrides: OVERRIDES,
       incremental: ctx.incremental,
       resumeTarget: () => document.querySelector<HTMLElement>(SELECTORS.resume),
-      // Location needs its dropdown pick; pronoun checkboxes are left to you.
+      // Location needs its dropdown pick; pronouns are matched by their text below.
       skip: (f) => f.members.some((m) => m.matches(`${SELECTORS.location}, ${SELECTORS.pronouns}`)),
     });
-    const location = await fillLocation(ctx);
-    if (location) {
-      report.fields.push(location);
-      if (location.status === 'filled') report.filled++;
+    for (const result of [await fillLocation(ctx), fillPronouns(ctx)]) {
+      if (!result) continue;
+      report.fields.push(result);
+      if (result.status === 'filled') report.filled++;
       else report.needsReview++;
     }
     return report;

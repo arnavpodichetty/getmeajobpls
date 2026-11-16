@@ -272,5 +272,12 @@ export function ownText(el: Element | null): string {
       'input, select, textarea, option, button, [role="listbox"], [role="option"], [role="radiogroup"] label, script, style, svg, [aria-hidden="true"], [hidden], .ng-hide, [role="combobox"], [role="alert"], [class*="error" i], .ada-unique-content',
     )
     .forEach((n) => n.remove());
+  // A collapsed "more info" panel (Lever's race descriptions sit inside the
+  // <label>) is not part of the question.
+  clone.querySelectorAll('[aria-controls][aria-expanded="false"]').forEach((toggle) => {
+    for (const id of toggle.getAttribute('aria-controls')!.split(/\s+/)) {
+      clone.querySelectorAll(`[id="${CSS.escape(id)}"]`).forEach((n) => n.remove());
+    }
+  });
   return (clone.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
