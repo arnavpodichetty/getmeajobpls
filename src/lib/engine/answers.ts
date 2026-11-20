@@ -44,6 +44,8 @@ interface Def {
   choiceOnly?: boolean;
   /** Only for typed answers; choice questions fall through to the next rule. */
   textOnly?: boolean;
+  /** Only for choices (checkbox, radio, select); typed answers fall through to the next rule. */
+  choicesOnly?: boolean;
   /**
    * Only match short labels. Long free-text questions often mention a keyword
    * in passing ("Share contributions with links (GitHub PRs…)"); those aren't
@@ -333,6 +335,15 @@ const DEFS: Def[] = [
     key: 'veteranDetails',
     re: /\b(?:discharge|separation|release from (?:active )?duty) date\b|\bdate of (?:discharge|separation)\b|\bbranch of (?:service|the military)\b|\bdates? of (?:military )?service\b/,
     value: (c) => (isVeteran(c.profile) ? null : LEAVE_EMPTY),
+  },
+  // A checkbox that stands in for a signature (iCIMS: "Signature (checking the checkbox above is
+  // equivalent to a handwritten signature)"). Before the name rules, which would offer a name.
+  {
+    key: 'signatureCheckbox',
+    re: /^(?:your |my |applicant s |candidate s )?(?:(?:electronic|digital|e) )?signature$|\b(?:check|tick|select|click)\w*\b.{0,40}\bbox\b.{0,80}\bsignature\b|\bsignature\b.{0,80}\b(?:check|tick|select|click)\w*\b.{0,40}\bbox\b/,
+    not: /signature date|date (?:of|for) (?:your )?(?:electronic |digital )?signature/,
+    choicesOnly: true,
+    value: (c) => yesNo(c.profile.answers.agreeToTerms),
   },
   { key: 'unlistedReferencesConsent', re: /(?:consent|authoriz|contact).{0,60}unlisted references|contact references.{0,60}not listed/, choiceOnly: true, value: (c) => yesNo(c.profile.answers.unlistedReferencesConsent) },
   {
@@ -1397,6 +1408,7 @@ function matchDefs(n: string, c: AnswerContext, confidence: 'high' | 'low', isCh
     if (!def.re.test(n) || def.not?.test(n)) continue;
     if (def.short && words > SHORT_LABEL_WORDS) continue;
     if (def.textOnly && isChoice) continue;
+    if (def.choicesOnly && !isChoice) continue;
     const value = def.value(c, n);
     if (value === null || value === undefined || (Array.isArray(value) ? !value.length : !value)) return 'blank';
     const tiers = def.tiers?.(c, n).filter((t) => t.length);

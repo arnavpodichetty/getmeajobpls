@@ -289,6 +289,13 @@ const BANK: Record<string, [string, string | null][]> = {
     ['Are you Hispanic or Latino?', 'No'],
     ['Please indicate your veteran status:', 'I am not a protected veteran'],
     ['Are you a protected veteran?', 'I am not a protected veteran'],
+    // iCIMS VEVRAA form: the question is the numbered paragraph above the options.
+    ['2. If you believe you belong to any of the categories of protected veterans listed above, please indicate by checking the appropriate box below. As a Government contractor subject to VEVRAA, we request this information in order to measure the effectiveness of the outreach and positive recruitment efforts we undertake pursuant to VEVRAA.', 'I am not a protected veteran'],
+    // A checkbox standing in for a signature is ticked, not given your name.
+    ['Signature (checking the checkbox above is equivalent to a handwritten signature)', 'Yes'],
+    ['Signature', 'Yes'],
+    ['Electronic Signature', 'Yes'],
+    ['By checking this box I am providing my electronic signature', 'Yes'],
     ['Do you have a disability?', 'No, I do not have a disability'],
     // Service details are blank for a non-veteran, not filled with the status.
     ['Newly Separated Veteran Discharge Date', '__leave_empty__'],
@@ -445,6 +452,7 @@ const CHOICES: [string, string[], string | null, boolean][] = [
   ['Are you authorized to work in the US?', ['Yes, but I will need sponsorship in the future', 'No'], 'Yes, but I will need sponsorship in the future', false],
   ['Please indicate your veteran status:', ['I am a protected veteran, as I identify as one or more of the listed classifications above of protected veterans', 'I am a veteran, but not a protected veteran, based on the listed classifications.', 'I am not a veteran.', 'I do not wish to provide this information.'], 'I am not a veteran.', true],
   ['Please indicate your veteran status:', ['I identify as one or more of the classifications of protected veteran', 'I am not a protected veteran', 'I prefer not to answer'], 'I am not a protected veteran', true],
+  ['2. If you believe you belong to any of the categories of protected veterans listed above, please indicate by checking the appropriate box below.', ['I IDENTIFY AS ONE OR MORE OF THE CLASSIFICATIONS OF PROTECTED VETERAN LISTED ABOVE', 'I AM NOT A PROTECTED VETERAN', "I DON'T WISH TO ANSWER"], 'I AM NOT A PROTECTED VETERAN', true],
   ['Have you served in the U.S. military?', ['Yes', 'No'], 'No', true],
   ['Do you have a disability?', ['Yes, I have a disability (or previously had a disability)', 'No, I do not have a disability and have not had one in the past', 'I do not want to answer'], 'No, I do not have a disability and have not had one in the past', true],
   ['What is your gender?', ['Male', 'Female', 'Non-binary', 'Decline to self-identify'], 'Female', true],

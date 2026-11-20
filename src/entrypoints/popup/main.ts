@@ -4,7 +4,7 @@ import { uid } from '../../lib/defaults';
 import { $, h } from '../../lib/dom';
 import { mergeSavedAnswers } from '../../lib/engine/capture';
 import { sendToFrame } from '../../lib/messages';
-import { describe, detectFrames, fromFrames, pageContext, targetFrames } from '../../lib/orchestrate';
+import { captureFrame, describe, detectFrames, fromFrames, pageContext, targetFrames } from '../../lib/orchestrate';
 import { listResumes } from '../../lib/resumeDb';
 import { pickResume, pickSkillSetFor, skillSetForResume } from '../../lib/resumeRules';
 import { findTailored, jobLabel } from '../../lib/tailorMatch';
@@ -179,8 +179,8 @@ async function init(): Promise<void> {
     captureBtn.disabled = true;
     captureBtn.textContent = 'Capturing…';
     try {
-      const frame = targets[0];
-      const name = downloadCapture(await sendToFrame(tabId, frame.frameId, { type: 'capture' }));
+      const frame = captureFrame(targets);
+      const name = downloadCapture(await sendToFrame(tabId, frame?.frameId ?? 0, { type: 'capture' }));
       showOk(`Downloaded ${name}. Attach the HTML file in chat or share its local file path so the form can be inspected.`);
     } catch (err) {
       showError(`Capture failed: ${err instanceof Error ? err.message : String(err)}`);

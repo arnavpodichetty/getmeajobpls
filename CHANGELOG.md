@@ -17,6 +17,9 @@
 - **"Drug Free Workplace"** and drug or alcohol screening questions are always Yes.
 - **Lever Race:** the Race dropdown is filled again. Lever puts the race descriptions (hidden until you open them) inside the question, and because they mention "Hispanic or Latino", the question was read as a Hispanic yes/no question and left for review. Hidden "more info" text is no longer read as part of any question.
 - **Lever Pronouns:** the pronoun checkbox matching your profile ("he/him" → He/him) is ticked. If none matches, the question is flagged for you and nothing is ticked.
+- **iCIMS veteran self-identification:** the protected-veteran radio buttons are filled from your profile. The question is a numbered paragraph above the options with nothing tying it to them, so it was left for review.
+- **Signature checkboxes:** a checkbox labeled "Signature" ("checking the checkbox above is equivalent to a handwritten signature") is ticked. It used to be offered your name and flagged. A "Signature" text box still gets your name.
+- **Capture page on iCIMS:** captures the frame that holds the form. On iCIMS it saved the empty step page around it.
 - **Mixed pronouns:** pronouns like "she/they" are no longer treated as "she/her" when a form lists only She/Her.
 
 ## 1.4.1 (2026-11-05)

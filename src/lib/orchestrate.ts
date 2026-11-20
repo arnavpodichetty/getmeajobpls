@@ -150,6 +150,14 @@ export async function saveAnswersFromTab(tabId: number): Promise<{ added: number
 }
 
 export async function captureTab(tabId: number): Promise<{ html: string; url: string }> {
-  const [target] = targetFrames(await detectFrames(tabId));
+  const target = captureFrame(targetFrames(await detectFrames(tabId)));
   return sendToFrame(tabId, target?.frameId ?? 0, { type: 'capture' });
+}
+
+/**
+ * The frame to capture: the target with the most fields. iCIMS nests its form one iframe
+ * deeper than the step page, and both frames are iCIMS, so the first one is often empty.
+ */
+export function captureFrame<T extends Pick<Frame, 'fieldCount'>>(targets: T[]): T | undefined {
+  return targets.reduce<T | undefined>((best, f) => (!best || f.fieldCount > best.fieldCount ? f : best), undefined);
 }

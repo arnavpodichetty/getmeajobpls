@@ -141,11 +141,15 @@ function headingBefore(container: Element, el: Element): string {
 function containerLabel(el: Element, group: Element[] = [el]): string {
   const own = new Set(group);
   let fallback = '';
+  let child: Element = el;
   let cur = parentOf(el);
   // Deep enough for react-select inputs ~10 levels under their label; the walk
   // still stops at the first ancestor that holds another question.
   for (let depth = 0; cur && depth < 12; depth++, cur = parentOf(cur)) {
-    if (cur === document.body || cur === document.documentElement) break;
+    if (cur === document.body || cur === document.documentElement) {
+      if (!fallback && group.length > 1 && group.every(isChoiceInput)) fallback = textJustBefore(child, own);
+      break;
+    }
     const controls = controlsIn(cur);
     const foreign = controls.filter((c) => !own.has(c) && !(group.length > 1 && c.getAttribute('name') === group[0].getAttribute('name')));
     if (foreign.length && fieldCount(cur) > 1) {
@@ -155,6 +159,9 @@ function containerLabel(el: Element, group: Element[] = [el]): string {
         const heading = headingBefore(cur, el);
         if (heading) return heading;
       }
+      // A radio group whose question is a plain paragraph just above its options (iCIMS
+      // self-identification forms): the nearest text before the first option.
+      if (!fallback && group.length > 1 && group.every(isChoiceInput)) fallback = textJustBefore(child, own);
       break;
     }
     const heading = headingBefore(cur, el);
@@ -164,8 +171,35 @@ function containerLabel(el: Element, group: Element[] = [el]): string {
       const text = questionText(cur);
       if (text && text.length <= 1500 && !isGenericLabel(cleanLabel(text))) fallback = text;
     }
+    child = cur;
   }
   return fallback;
+}
+
+const isChoiceInput = (el: Element) => el instanceof HTMLInputElement && (el.type === 'radio' || el.type === 'checkbox');
+
+/**
+ * Text of the nearest sibling before `start` (skipping blank nodes and this group's
+ * option labels). Stops at anything holding another control, which is a different question.
+ */
+function textJustBefore(start: Element, own: Set<Element>): string {
+  for (let node = start.previousSibling; node; node = node.previousSibling) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = cleanLabel(node.textContent);
+      if (text) return text.length <= 1000 ? text : '';
+      continue;
+    }
+    if (!(node instanceof Element)) continue;
+    if (controlsIn(node).length) return '';
+    if (node.matches('label')) {
+      const target = node.getAttribute('for');
+      if (target && [...own].some((m) => m.id === target)) continue;
+    }
+    const text = cleanLabel(node.textContent);
+    if (!text) continue;
+    return text.length <= 1000 && !isGenericLabel(text) ? text : '';
+  }
+  return '';
 }
 
 function humanize(value: string): string {
