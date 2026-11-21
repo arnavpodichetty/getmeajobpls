@@ -105,6 +105,7 @@ export function fillText(el: HTMLInputElement | HTMLTextAreaElement, value: stri
 /** A read-only date box that opens a calendar (Eightfold, Ant Design pickers); typing into it does nothing. */
 export function isCalendarInput(el: Element): boolean {
   if (!(el instanceof HTMLInputElement) || el.getAttribute('aria-haspopup') !== 'dialog') return false;
+  if (isPrimeCalendar(el)) return true;
   return /\bdate\b/i.test(`${el.placeholder} ${el.getAttribute('aria-label') ?? ''}`);
 }
 
@@ -143,6 +144,115 @@ export async function fillCalendarDate(el: HTMLInputElement, iso: string): Promi
   if (el.getAttribute('aria-expanded') === 'true') pressKey(el, 'Escape');
   blur(el);
   return el.value.trim() ? OK : fail('The calendar did not take the date.');
+}
+
+// PrimeVue's Calendar (Phenom apply flows): a read-only box whose popup picks a month or a
+// year. Classes from PrimeVue's styled mode, data-pc-section from its pass-through mode.
+const PRIME = {
+  root: '[data-pc-name="calendar"], .p-calendar',
+  panel: '.p-datepicker, [data-pc-section="panel"]',
+  trigger: '.p-datepicker-trigger, [data-pc-section="dropdownbutton"]',
+  prev: '.p-datepicker-prev, [data-pc-section="previousbutton"]',
+  next: '.p-datepicker-next, [data-pc-section="nextbutton"]',
+  yearTitle: '.p-datepicker-year, [data-pc-section="yeartitle"]',
+  month: '.p-monthpicker-month, [data-pc-section="month"]',
+  year: '.p-yearpicker-year, [data-pc-section="year"]',
+  day: '.p-datepicker-calendar td, [data-pc-section="day"]',
+} as const;
+
+export const isPrimeCalendar = (el: Element): boolean => el instanceof HTMLInputElement && !!el.closest(PRIME.root);
+
+/** The box shows `iso`'s year, and its month when it shows one ("10/2026", "Oct 2026"). */
+export function showsMonthYear(shown: string, iso: string): boolean {
+  const [y, m] = iso.split('-');
+  if (!shown.includes(y)) return false;
+  const rest = shown.replace(y, ' ');
+  if (!m || !/\d|[a-z]/i.test(rest)) return true; // a year is all that was asked, or all the box shows
+  return new RegExp(`(?:^|\\D)0?${Number(m)}(?:\\D|$)`).test(rest) || rest.toLowerCase().includes(MONTH_NAMES[Number(m) - 1]);
+}
+
+/**
+ * Open a PrimeVue month or year picker and click through to `iso` ("YYYY-MM" or "YYYY").
+ * Months are clicked by position, so the calendar's language doesn't matter.
+ */
+export async function fillPrimeCalendar(el: HTMLInputElement, iso: string): Promise<Outcome> {
+  const [y, m] = iso.split('-');
+  if (!/^\d{4}$/.test(y)) return fail('No date in your profile for this.');
+  if (el.disabled) return fail('This date box is turned off.');
+  const panelId = el.getAttribute('aria-controls');
+  const panel = (): HTMLElement | null => {
+    const byIdPanel = panelId ? document.getElementById(panelId) : null;
+    if (byIdPanel && isVisible(byIdPanel)) return byIdPanel;
+    return queryAllDeep<HTMLElement>(PRIME.panel).find(isVisible) ?? null;
+  };
+  const cells = (sel: string) => {
+    const p = panel();
+    return p ? [...p.querySelectorAll<HTMLElement>(sel)].filter(isVisible) : [];
+  };
+  el.focus();
+  realClick(el);
+  if (!(await waitForElement(panel, 1500))) {
+    const trigger = el.closest(PRIME.root)?.querySelector<HTMLElement>(PRIME.trigger);
+    if (trigger) realClick(trigger);
+    if (!(await waitForElement(panel, 1500))) return fail("The calendar didn't open; pick the date yourself.");
+  }
+  const close = () => {
+    if (panel()) pressKey(el, 'Escape');
+    blur(el);
+  };
+  const step = async (forward: boolean) => {
+    const button = cells(forward ? PRIME.next : PRIME.prev)[0];
+    if (!button) return false;
+    realClick(button);
+    await sleep(80);
+    return true;
+  };
+
+  // A day calendar: switch to months through the year in its header.
+  if (!cells(PRIME.month).length && !cells(PRIME.year).length && cells(PRIME.day).length) {
+    const title = cells(PRIME.yearTitle)[0];
+    if (title) realClick(title);
+    await sleep(80);
+  }
+  // Year view: page by decade until the year is shown, then click it.
+  if (cells(PRIME.year).length) {
+    for (let guard = 0; guard < 20; guard++) {
+      const years = cells(PRIME.year).map((c) => Number((c.textContent ?? '').trim())).filter(Boolean);
+      if (!years.length || years.includes(Number(y))) break;
+      if (!(await step(Number(y) > Math.max(...years)))) break;
+    }
+    const cell = cells(PRIME.year).find((c) => (c.textContent ?? '').trim() === y);
+    if (!cell) {
+      close();
+      return fail(`Couldn't find ${y} in the calendar.`);
+    }
+    realClick(cell);
+    await sleep(120);
+  }
+  // Month view: step to the year shown in the header, then click the month by position.
+  if (cells(PRIME.month).length === 12) {
+    if (!m) {
+      close();
+      return fail('This calendar needs a month; your profile has only the year.');
+    }
+    for (let guard = 0; guard < 80; guard++) {
+      const shown = Number((cells(PRIME.yearTitle)[0]?.textContent ?? '').trim());
+      if (!shown || shown === Number(y)) break;
+      if (!(await step(Number(y) > shown))) break;
+    }
+    const shown = Number((cells(PRIME.yearTitle)[0]?.textContent ?? '').trim());
+    if (shown && shown !== Number(y)) {
+      close();
+      return fail(`Couldn't reach ${y} in the calendar.`);
+    }
+    realClick(cells(PRIME.month)[Number(m) - 1]);
+    await sleep(120);
+  } else if (cells(PRIME.day).length) {
+    close();
+    return fail('This calendar wants a day; pick it yourself.');
+  }
+  close();
+  return showsMonthYear(el.value, m ? `${y}-${m}` : y) ? OK : fail('The calendar did not take the date.');
 }
 
 /**

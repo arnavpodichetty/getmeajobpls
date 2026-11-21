@@ -21,6 +21,9 @@
 - **Signature checkboxes:** a checkbox labeled "Signature" ("checking the checkbox above is equivalent to a handwritten signature") is ticked. It used to be offered your name and flagged. A "Signature" text box still gets your name.
 - **Capture page on iCIMS:** captures the frame that holds the form. On iCIMS it saved the empty step page around it.
 - **Mixed pronouns:** pronouns like "she/they" are no longer treated as "she/her" when a form lists only She/Her.
+- **Phenom apply pages** (including companies' own careers sites built on Phenom): the Work Experience and Education rows Phenom's resume parser fills in are rewritten from your profile, in order: title, company, location, dates, "I currently work here" and description for each job, and school, degree, field of study and years for each school. The parser often merged two jobs into one row or cut off a title. Rows beyond your profile are flagged for you to remove. Skills get your skill list instead of the parser's. The month and year pickers (PrimeVue calendars) are now clicked through on any site; they used to be skipped or flagged.
+- **"Please Select" dropdowns:** a dropdown showing "Please Select" (Phenom's Voluntary Disclosure race, Hispanic or Latino and veteran questions) is filled. It was read as already answered and skipped.
+- **Password boxes:** "If your URL or Demo Reel requires a password, please enter it here" is left empty. It got your portfolio link because the box's name contains "portfolio".
 
 ## 1.4.1 (2026-11-05)
 

@@ -14,6 +14,8 @@ import {
   dateWantsDay,
   fillCalendarDate,
   fillCombobox,
+  fillPrimeCalendar,
+  isPrimeCalendar,
   fillMultiCombobox,
   isCalendarInput,
   fillRadio,
@@ -230,6 +232,7 @@ async function fillField(field: Field, answer: Answer): Promise<Outcome> {
       if (one === DECLINE) return { ok: false, review: 'Decline-to-answer question with a text box.' };
       return fillTextOrNumber(field.el as HTMLInputElement, one);
     case 'date':
+      if (isPrimeCalendar(field.el) && typeof value === 'string') return fillPrimeCalendar(field.el as HTMLInputElement, value.slice(0, 7));
       if (isCalendarInput(field.el) && typeof answer.value === 'string') {
         const picked = await fillCalendarDate(field.el as HTMLInputElement, answer.value);
         // A calendar we can't click through still takes the date typed in its format (bootstrap-datepicker).

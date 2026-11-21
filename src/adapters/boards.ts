@@ -22,7 +22,6 @@ const BOARDS: { id: string; name: string; host: RegExp }[] = [
   { id: 'ukg', name: 'UKG', host: /(ultipro\.com|ukg\.net)$/ },
   { id: 'dayforce', name: 'Dayforce', host: /dayforcehcm\.com$/ },
   { id: 'paylocity', name: 'Paylocity', host: /recruiting\.paylocity\.com$/ },
-  { id: 'phenom', name: 'Phenom', host: /phenompeople\.com$/ },
   { id: 'eightfold', name: 'Eightfold', host: /eightfold\.ai$/ },
   { id: 'avature', name: 'Avature', host: /avature\.net$/ },
   { id: 'pinpoint', name: 'Pinpoint', host: /pinpointhq\.com$/ },

@@ -284,8 +284,10 @@ export function currentValue(field: Field): string {
         return el.value.trim();
       }
       if (!(el instanceof HTMLInputElement)) {
+        // PrimeVue marks its "Please Select" prompt with p-placeholder (Phenom).
+        if (el.classList.contains('p-placeholder')) return '';
         const text = renderedText(el);
-        return /^[\s\-–—]*(?:select|choose|search|make a selection)/i.test(text) ? '' : text;
+        return /^[\s\-–—]*(?:(?:please )?(?:select|choose)|search|make a selection)/i.test(text) ? '' : text;
       }
       return '';
     }

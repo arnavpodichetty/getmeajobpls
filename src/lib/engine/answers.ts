@@ -1054,6 +1054,9 @@ const DEFS: Def[] = [
   },
 
   // --- Links ---
+  // "If your URL or Demo Reel requires a password, enter it here": never a link (or anything else
+  // from the profile). Matching it here also stops its name ("portfolioPasswordQuestion") from counting.
+  { key: 'password', re: /\bpass ?(?:word|code)s?\b/, value: () => null },
   { key: 'linkedin', short: true, re: /linked ?in/, value: (c) => c.profile.links.linkedin || null },
   { key: 'github', short: true, re: /git ?hub/, value: (c) => c.profile.links.github || null },
   { key: 'twitter', short: true, re: /twitter|^x$|\bx profile|x com/, value: (c) => c.profile.links.twitter || null },
