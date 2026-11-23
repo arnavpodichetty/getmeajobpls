@@ -171,7 +171,10 @@ export function setNativeValue(el: HTMLInputElement | HTMLTextAreaElement, value
   const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
   const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
   // React tracks the last value on the element; reset it so the change registers.
-  const tracker = (el as unknown as { _valueTracker?: { setValue(v: string): void } })._valueTracker;
+  // Firefox hides the page's own properties from content scripts; they're on wrappedJSObject.
+  type Tracked = { _valueTracker?: { setValue(v: string): void }; wrappedJSObject?: Tracked };
+  const tracked = el as unknown as Tracked;
+  const tracker = tracked._valueTracker ?? tracked.wrappedJSObject?._valueTracker;
   tracker?.setValue(value === '' ? ' ' : '');
   if (setter) setter.call(el, value);
   else el.value = value;

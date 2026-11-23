@@ -43,7 +43,7 @@ What sets it apart:
 
 ### Build from source
 
-Requires Node 20+ and Chrome (or another Chromium browser).
+Requires Node 20+ and Chrome (or another Chromium browser), Firefox or Zen.
 
 ```sh
 npm install
@@ -53,6 +53,14 @@ npm run build
 Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick `.output/chrome-mv3`. Fill in your profile and upload your resumes on the options page.
 
 After rebuilding, click ↻ on the extension and reload open application pages. To move to another browser, use **Backup → Export JSON** and **Import JSON…**.
+
+**Firefox, Zen and other Firefox-based browsers** (Firefox 140+) use the same code:
+
+```sh
+npm run build:firefox
+```
+
+Open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on…** and pick `.output/firefox-mv2/manifest.json`. A temporary add-on is removed when the browser restarts; to keep it installed, sign the zip from `npm run zip:firefox` as an unlisted add-on on [addons.mozilla.org](https://addons.mozilla.org/developers/) and install the `.xpi` it gives you.
 
 ## Resume tailoring
 

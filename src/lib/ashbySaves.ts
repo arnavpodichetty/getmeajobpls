@@ -22,3 +22,25 @@ export async function waitForAshbySaves(): Promise<void> {
   const end = Date.now() + TIMEOUT_MS;
   while (root.getAttribute(ASHBY_SAVING_ATTR) !== '0' && Date.now() < end) await sleep(25);
 }
+
+/** Count Ashby's ApiSetFormValue requests made through `page.fetch` and publish the number on <html>. */
+export function countAshbySaves(page: { fetch: typeof fetch }): void {
+  let inFlight = 0;
+  const publish = () => document.documentElement?.setAttribute(ASHBY_SAVING_ATTR, String(inFlight));
+  publish();
+  const pageFetch = page.fetch;
+  page.fetch = function (this: unknown, ...args: Parameters<typeof fetch>) {
+    const [input] = args;
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    const result = pageFetch.apply(this, args);
+    if (!url.includes('ApiSetFormValue')) return result;
+    inFlight++;
+    publish();
+    const done = () => {
+      inFlight--;
+      publish();
+    };
+    result.then(done, done);
+    return result;
+  } as typeof fetch;
+}
