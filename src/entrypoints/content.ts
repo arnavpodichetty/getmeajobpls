@@ -162,7 +162,11 @@ export default defineContentScript({
     function toast(text: string): void {
       const host = document.createElement('div');
       const shadow = host.attachShadow({ mode: 'closed' });
-      shadow.innerHTML = `<div style="position:fixed;z-index:2147483647;right:16px;bottom:16px;padding:10px 14px;border-radius:8px;background:#1d1d1b;color:#fff;font:13px system-ui,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.2)">getmeajobpls — ${text.replace(/</g, '&lt;')}</div>`;
+      // Built with textContent, not innerHTML: field labels in the text come from the page.
+      const box = document.createElement('div');
+      box.style.cssText = 'position:fixed;z-index:2147483647;right:16px;bottom:16px;padding:10px 14px;border-radius:8px;background:#1d1d1b;color:#fff;font:13px system-ui,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.2)';
+      box.textContent = `getmeajobpls — ${text}`;
+      shadow.append(box);
       document.documentElement.append(host);
       setTimeout(() => host.remove(), 4000);
     }
