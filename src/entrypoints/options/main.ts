@@ -641,7 +641,7 @@ renderAll().then(trackActiveSection);
 // it from another tab. Load that change, or the next edit here would save this page's older
 // copy over it and the new answers would be gone.
 browser.storage.onChanged?.addListener((changes, area) => {
-  // Cloud sync downloaded another browser's profile, rules and settings: show them.
+  // Cloud sync brought in another browser's profile, rules, settings or resumes: show them.
   if (area === 'local' && APPLIED_KEY in changes) {
     const y = window.scrollY;
     void renderAll().then(() => window.scrollTo(0, y));

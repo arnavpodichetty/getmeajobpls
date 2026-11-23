@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6 (2026-11-23)
+
+### New
+- **Cloud sync (optional):** under Options → Cloud sync, "Sign in with Google" keeps your profile, saved answers, resume rules, settings, resumes and transcript the same in every browser you sign in from, Chrome and Firefox alike. They are kept in a hidden app folder in your own Google Drive that the extension can reach but nothing else can, and the extension can't see the rest of your Drive. A resume added or deleted in one browser is added or deleted in the others; if two browsers change things before syncing, the newest change wins, but a newly added resume is never lost. Files over 5 MB stay on their own computer. Off until you sign in.
+
 ## 1.5 (2026-11-22)
 
 ### New

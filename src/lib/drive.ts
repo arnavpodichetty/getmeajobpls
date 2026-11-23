@@ -141,16 +141,36 @@ export async function readFile(id: string, loginHint?: string): Promise<string> 
   return (await call(`${API}/files/${id}?alt=media`, {}, loginHint)).text();
 }
 
+export async function readBlob(id: string, loginHint?: string): Promise<Blob> {
+  return (await call(`${API}/files/${id}?alt=media`, {}, loginHint)).blob();
+}
+
+/** Every file in the app data folder whose name starts with `prefix`. */
+export async function listFiles(prefix: string, loginHint?: string): Promise<{ id: string; name: string }[]> {
+  const out: { id: string; name: string }[] = [];
+  let pageToken = '';
+  do {
+    const q = new URLSearchParams({ spaces: 'appDataFolder', q: `name contains '${prefix}' and trashed = false`, fields: 'nextPageToken,files(id,name)', pageSize: '1000', ...(pageToken && { pageToken }) });
+    const res = (await (await call(`${API}/files?${q}`, {}, loginHint)).json()) as { files: { id: string; name: string }[]; nextPageToken?: string };
+    out.push(...res.files.filter((f) => f.name.startsWith(prefix)));
+    pageToken = res.nextPageToken ?? '';
+  } while (pageToken);
+  return out;
+}
+
 /** Create the file in the app data folder, or replace the contents of `id`. Returns its id. */
-export async function writeFile(name: string, content: string, id: string | null, loginHint?: string): Promise<string> {
+export async function writeFile(name: string, content: string | Blob, id: string | null, loginHint?: string, mimeType = 'application/json'): Promise<string> {
   if (id) {
-    await call(`${UPLOAD}/files/${id}?uploadType=media`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: content }, loginHint);
+    await call(`${UPLOAD}/files/${id}?uploadType=media`, { method: 'PATCH', headers: { 'Content-Type': mimeType }, body: content }, loginHint);
     return id;
   }
   const boundary = `gmjp${randomState()}`;
-  const body =
-    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name, parents: ['appDataFolder'] })}\r\n` +
-    `--${boundary}\r\nContent-Type: application/json\r\n\r\n${content}\r\n--${boundary}--`;
+  const body = new Blob([
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ name, parents: ['appDataFolder'] })}\r\n`,
+    `--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`,
+    content,
+    `\r\n--${boundary}--`,
+  ]);
   const res = await call(`${UPLOAD}/files?uploadType=multipart&fields=id`, { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${boundary}` }, body }, loginHint);
   return ((await res.json()) as { id: string }).id;
 }

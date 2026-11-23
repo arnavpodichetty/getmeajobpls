@@ -35,14 +35,14 @@ export function cloudSyncSection(): HTMLElement {
     'p',
     { class: 'intro' },
     'Optional. Sign in with Google to keep your profile, saved answers, resume rules and settings the same in every browser where you sign in, Chrome and Firefox alike. ' +
-      'They are saved as one file in a hidden app folder in your own Google Drive, which only this extension can open; nothing goes to the developer. ' +
-      'Resume and transcript PDFs stay on each computer (use Backup to move them). Off until you sign in.',
+      'They are saved in a hidden app folder in your own Google Drive, which only this extension can open; nothing goes to the developer. ' +
+      'Your resumes and transcript sync too, except files over 5 MB. Off until you sign in.',
   );
 
   const render = async () => {
     if (!GOOGLE_CLIENT_ID) {
       body.replaceChildren(
-        h('p', { class: 'hint' }, 'Cloud sync is not set up in this build. To set it up, create a Google OAuth client (Web application) with the Drive API, add this redirect URI to it, and build with WXT_GOOGLE_CLIENT_ID set (see README).'),
+        h('p', { class: 'hint' }, 'Cloud sync is not set up in this build. To set it up, create a Google OAuth client (Web application) with the Drive API, add this redirect URI to it, and build with WXT_GOOGLE_CLIENT_ID set in .env.'),
         h('p', {}, h('code', {}, redirectUrl() || 'This browser does not support extension sign-in.')),
       );
       return;
@@ -99,7 +99,7 @@ export function cloudSyncSection(): HTMLElement {
     return h(
       'div',
       { class: 'notice' },
-      h('p', {}, h('strong', {}, `${email}'s Google Drive already has a profile`), ` (saved ${when(remoteUpdatedAt)}), and it differs from this browser's. Which one do you want to keep? The other is replaced.`),
+      h('p', {}, h('strong', {}, `${email}'s Google Drive already has a profile`), ` (saved ${when(remoteUpdatedAt)}), and it differs from this browser's. Which one do you want to keep? The other's profile, answers, rules and settings are replaced; resumes from both are kept.`),
       h(
         'div',
         { class: 'row' },
@@ -138,7 +138,7 @@ export function cloudSyncSection(): HTMLElement {
     const offAndDelete: HTMLButtonElement = h('button', {
       class: 'secondary',
       onClick: () => busy(offAndDelete, async () => {
-        if (!confirm('Turn off cloud sync and delete the copy in your Google Drive? Your data in this browser stays. Other browsers stop syncing too.')) return;
+        if (!confirm('Turn off cloud sync and delete the copy in your Google Drive? Your data in this browser stays. Turn sync off in your other browsers too, or they will save their copy to Drive again.')) return;
         await disableSync(true);
         showToast('Cloud sync is off; the Google Drive copy is deleted');
       }),

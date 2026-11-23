@@ -1,6 +1,6 @@
 # Privacy policy
 
-_Last updated: November 22, 2026_
+_Last updated: November 23, 2026_
 
 getmeajobpls is a browser extension that fills in job applications for you. This policy explains what it does with your information. It covers the Chrome version and the Firefox version (including Firefox-based browsers such as Zen), which work the same way.
 
@@ -8,7 +8,7 @@ getmeajobpls is a browser extension that fills in job applications for you. This
 
 You enter your own information on the extension's options page: your name, contact details, address, links, education, work history, projects, skills, languages, answers to common application questions, optional demographic (EEO) answers, and the resume files you upload.
 
-All of it is stored in your browser, in the extension's local storage and IndexedDB. It is not sent to the developer or to any server operated by the developer, and the extension has no account of its own. If you turn on optional Cloud sync (below), a copy of your profile, resume rules and settings is also kept in your own Google Drive.
+All of it is stored in your browser, in the extension's local storage and IndexedDB. It is not sent to the developer or to any server operated by the developer, and the extension has no account of its own. If you turn on optional Cloud sync (below), a copy of your profile, resume rules, settings, resume files and transcript is also kept in your own Google Drive.
 
 ## When your information leaves your browser
 
@@ -24,9 +24,9 @@ Application pages often leave out the job description (Workday's steps, Lever's 
 
 ## Cloud sync (optional, off by default)
 
-If you click **Sign in with Google** under **Options → Cloud sync**, Google asks you to let the extension store its own data in your Google Drive. With your permission, the extension saves your profile (including saved and EEO answers), resume rules and settings as one file in Drive's hidden app data folder, and keeps it in step with every browser where you turn on Cloud sync with the same Google account. The extension asks only for access to that folder: it cannot see or change anything else in your Drive, and other apps cannot see the folder. Resume and transcript PDFs are not synced.
+If you click **Sign in with Google** under **Options → Cloud sync**, Google asks you to let the extension store its own data in your Google Drive. With your permission, the extension saves your profile (including saved and EEO answers), resume rules, settings, resume files and transcript in Drive's hidden app data folder, and keeps it in step with every browser where you turn on Cloud sync with the same Google account. The extension asks only for access to that folder: it cannot see or change anything else in your Drive, and other apps cannot see the folder. Resume and transcript files over 5 MB are not synced.
 
-The file goes directly from your browser to Google and is stored under your Google account, subject to Google's terms and privacy policy. It is never sent to the developer. The sign-in token is kept in the browser's session storage, which is cleared when the browser closes. **Turn off** stops syncing and withdraws the extension's access; **Turn off and delete from Drive** also deletes the file. Your data in the browser stays either way. You can also remove the extension's access at any time in your Google Account's security settings.
+Your data goes directly from your browser to Google and is stored under your Google account, subject to Google's terms and privacy policy. It is never sent to the developer. The sign-in token is kept in the browser's session storage, which is cleared when the browser closes. **Turn off** stops syncing and withdraws the extension's access; **Turn off and delete from Drive** also deletes everything the extension stored in Drive. Your data in the browser stays either way. You can also remove the extension's access at any time in your Google Account's security settings.
 
 ## Filling your profile with Claude (optional, off by default)
 
@@ -52,7 +52,7 @@ If you turn on **Settings → Developer → Show "Capture page" button**, the bu
 
 ## Your control
 
-You can change or delete anything on the options page at any time. **Backup → Export JSON** saves a copy for you. Removing the extension deletes everything it stored in your browser. If you installed the tailoring helper, `npm run tailor-install -- --uninstall` removes it; its cached resume reads are in the folder named above, which you can delete.
+You can change or delete anything on the options page at any time. **Backup → Export JSON** saves a copy for you. Removing the extension deletes everything it stored in your browser; if you used Cloud sync, use **Turn off and delete from Drive** first, or remove the extension's access in your Google Account, which lets you delete its data there. If you installed the tailoring helper, `npm run tailor-install -- --uninstall` removes it; its cached resume reads are in the folder named above, which you can delete.
 
 ## Selling and sharing
 

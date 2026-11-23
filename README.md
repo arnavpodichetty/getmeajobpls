@@ -1,15 +1,15 @@
 <p align="center"><img src="docs/logo.png" alt="getmeajobpls" width="240"></p>
 
-A Chrome extension that autofills job applications, built to fill them faster and more completely than other autofill tools. Open an application on Workday, Greenhouse, Lever or another site, click **Fill page**, and it uploads your resume and answers the form from your profile. It never clicks Submit.
+A Chrome and Firefox extension that autofills job applications, built to fill them faster and more completely than other autofill tools. Open an application on Workday, Greenhouse, Lever or another site, click **Fill page**, and it uploads your resume and answers the form from your profile. It never clicks Submit.
 
-**[Get it on the Chrome Web Store](https://chromewebstore.google.com/detail/getmeajobpls-%E2%80%94-autofill/mehdobcbdbllkjnolbpcgdfojdccjdhf)**
+**[Get it on the Chrome Web Store](https://chromewebstore.google.com/detail/getmeajobpls-%E2%80%94-autofill/mehdobcbdbllkjnolbpcgdfojdccjdhf)** · **[Get it for Firefox](https://addons.mozilla.org/firefox/addon/getmeajobpls/)**
 
 What sets it apart:
 
 - **Fills the parts that usually take longest**: Workday's multi-step forms, searchable dropdowns, forms embedded in a company's careers site, and custom questions you've answered before.
 - **Honest about what it filled**: green means filled; anything it isn't sure of is flagged orange instead of guessed.
 - **Tailors your resume to each job** with your own Claude account, and can set up your whole profile from your resume.
-- **No account, no subscription**: your profile and resumes are stored on your device.
+- **No account, no subscription**: your profile and resumes are stored on your device, and in your own Google Drive only if you turn on Cloud sync.
 
 ![A form filled by getmeajobpls, with filled fields outlined in green and the Fill page panel on the right](store/screenshot-4-filled-form.png)
 
@@ -24,8 +24,8 @@ What sets it apart:
 - **Saved answers**: answer a custom question once and similar questions are filled later.
 - **Standard and EEO questions**: work authorization, sponsorship, relocation, start dates, referral source and more, all editable. Blank EEO answers become "decline to answer".
 - **Every kind of field**, including searchable dropdowns, rich-text editors, date pickers and shadow DOM.
-- **Resume tailoring (optional)**: rewrites a resume for the posting with your own Claude account. See [below](#resume-tailoring).
-- **Cloud sync (optional)**: sign in with Google to keep your profile, answers, rules and settings the same in every browser (Chrome and Firefox), in a hidden folder in your own Google Drive. See [below](#cloud-sync).
+- **Resume tailoring (optional)**: rewrites a resume for the posting with your own Claude account.
+- **Cloud sync (optional)**: sign in with Google to keep your profile, answers, rules, settings and resumes the same in every browser (Chrome and Firefox), in a hidden folder in your own Google Drive.
 - **Fill my profile (optional)**: Claude reads your resume, a profile page (Simplify, LinkedIn, your website) or pasted text into your profile. Every value is checked against the source, and you review each change before it's saved.
 
 ## Supported sites
@@ -40,51 +40,7 @@ What sets it apart:
 
 ## Install
 
-**[Add it from the Chrome Web Store](https://chromewebstore.google.com/detail/getmeajobpls-%E2%80%94-autofill/mehdobcbdbllkjnolbpcgdfojdccjdhf)**, then fill in your profile and upload your resumes on the options page.
-
-### Build from source
-
-Requires Node 20+ and Chrome (or another Chromium browser), Firefox or Zen.
-
-```sh
-npm install
-npm run build
-```
-
-Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick `.output/chrome-mv3`. Fill in your profile and upload your resumes on the options page.
-
-After rebuilding, click ↻ on the extension and reload open application pages. To move to another browser, use **Backup → Export JSON** and **Import JSON…**.
-
-**Firefox, Zen and other Firefox-based browsers** (Firefox 142+) use the same code:
-
-```sh
-npm run build:firefox
-```
-
-Open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on…** and pick `.output/firefox-mv2/manifest.json`. A temporary add-on is removed when the browser restarts; to keep it installed, sign the zip from `npm run zip:firefox` as an unlisted add-on on [addons.mozilla.org](https://addons.mozilla.org/developers/) and install the `.xpi` it gives you.
-
-## Resume tailoring
-
-Optional. **Tailor resume** rewrites the selected resume for a posting from your resume and profile, using your own Claude account through [Claude Code](https://claude.com/claude-code) (no API key), and keeps it to one page. To set it up, open **Resume tailoring** on the options page and follow the steps there.
-
-> **Always read a tailored resume before you submit it.** It is written by AI, which can get things wrong.
-
-## Cloud sync
-
-Optional and off by default. Under **Cloud sync** on the options page, **Sign in with Google** saves your profile, resume rules and settings to a hidden app folder in your own Google Drive (the `drive.appdata` scope: the extension can't see the rest of your Drive) and keeps every browser where you sign in up to date. Resume and transcript PDFs stay on each computer; use **Backup** to move them. When two browsers change things before syncing, the most recent change wins.
-
-### Setting it up in a build
-
-Sync needs a Google OAuth client id, set when you build:
-
-1. In the [Google Cloud console](https://console.cloud.google.com/), create a project and enable the **Google Drive API**.
-2. Under **Google Auth Platform**, set up the consent screen and add the `.../auth/drive.appdata` scope. While the app is in **Testing**, only test users you add can sign in, and sign-ins expire after 7 days; publish it to lift that.
-3. Create an OAuth client of type **Web application**. Add each browser's redirect URI under **Authorized redirect URIs**. The extension shows it under **Cloud sync** when no client id is set: `https://<extension-id>.chromiumapp.org/` for Chrome, and an `https://….extensions.allizom.org/` address for Firefox. An unpacked Chrome extension's id depends on its folder, so the Chrome Web Store build needs its own entry.
-4. Put the client id in a `.env` file (ignored by git) and build:
-
-   ```
-   WXT_GOOGLE_CLIENT_ID=1234567890-abc.apps.googleusercontent.com
-   ```
+**[Add it from the Chrome Web Store](https://chromewebstore.google.com/detail/getmeajobpls-%E2%80%94-autofill/mehdobcbdbllkjnolbpcgdfojdccjdhf)** or **[get it for Firefox](https://addons.mozilla.org/firefox/addon/getmeajobpls/)** (also works in Zen and other Firefox-based browsers), then fill in your profile and upload your resumes on the options page.
 
 ## Privacy
 

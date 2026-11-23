@@ -10,6 +10,8 @@ npm run build
 npm run zip        # → .output/getmeajobpls-<version>-chrome.zip
 ```
 
+Cloud sync needs `WXT_GOOGLE_CLIENT_ID` in `.env` (git-ignored) when you build; without it the zip ships with sync turned off.
+
 Upload the zip under **Package**. The first upload can use the current version; every later upload needs a higher `version` in `package.json` than the one already in the store.
 
 ## Store listing
@@ -18,7 +20,7 @@ Upload the zip under **Package**. The first upload can use the current version; 
 
 **Summary** (132 characters max):
 
-> Apply faster: one-click autofill for Workday, Greenhouse, Lever and more, plus tailored resumes. No account; data stored on-device.
+> Apply faster: one-click autofill for Workday, Greenhouse, Lever and more, plus tailored resumes. No account, no tracking.
 
 **Category:** Workflow & Planning
 
@@ -28,7 +30,7 @@ Upload the zip under **Package**. The first upload can use the current version; 
 
 > Apply faster. getmeajobpls fills job applications in one click on the major hiring platforms, such as Workday and Greenhouse, and on any other application form that labels its fields. That includes the parts that usually take longest: multi-step forms, searchable dropdowns and custom questions. It can also tailor your resume to each posting.
 >
-> Your profile and resumes are stored on your device, in your browser. No account, no subscription, no tracking.
+> Your profile and resumes are stored on your device, in your browser. No account, no subscription, no tracking. Optional Cloud sync keeps them in your own Google Drive, so every browser you sign in from has the same profile and resumes.
 >
 > BUILT TO BE TRUSTED, NOT JUST FAST
 > • Green means filled. Anything it isn't sure of is flagged orange for you to check, instead of being guessed and left looking done.
@@ -41,6 +43,7 @@ Upload the zip under **Package**. The first upload can use the current version; 
 > • Save your answer to a custom question and it's filled the next time a similar one appears.
 > • Handles dropdowns, searchable lists, radio buttons, checkboxes, date pickers and multi-step forms like Workday's, including forms embedded in a company's own careers site.
 > • Shows the role, company, location and pay of the posting you're on.
+> • Optional Cloud sync: sign in with Google to keep your profile, answers and resumes the same in Chrome and Firefox. They go to a hidden folder in your own Google Drive that the extension can't see beyond; nothing goes to the developer.
 >
 > OPTIONAL, WITH YOUR OWN CLAUDE ACCOUNT
 > Through Claude Code on your computer. Both are off by default and send nothing until you click.
@@ -61,13 +64,14 @@ Upload the zip under **Package**. The first upload can use the current version; 
 
 **Single purpose:**
 
-> Helps the user apply for jobs: fills in job application forms with information the user saved in the extension, when the user asks it to. Optional features, off by default, use the user's own Claude account to tailor their resume to a posting and to fill their saved profile from their resume or a page they choose.
+> Helps the user apply for jobs: fills in job application forms with information the user saved in the extension, when the user asks it to. Optional features, off by default, use the user's own Claude account to tailor their resume to a posting and to fill their saved profile from their resume or a page they choose. Optional Cloud sync keeps the user's saved data the same in each of their browsers, through a private app folder in their own Google Drive.
 
 **Permission justifications:**
 
 | Permission | Justification |
 | --- | --- |
 | `storage` | Saves the user's profile, answers and settings locally in the browser. |
+| `identity` | Shows Google's sign-in window when the user clicks Sign in with Google under Options → Cloud sync (off by default). The token it returns is used only to read and write the extension's own files in the user's Google Drive app data folder (`drive.appdata` scope), so the user's profile and resumes stay the same in each of their browsers. Nothing is sent to the developer. |
 | `unlimitedStorage` | Stores the user's resume PDFs locally (IndexedDB) so they can be attached to applications; several resumes can exceed the default quota. |
 | `webNavigation` | Lists the frames of the current tab to find the one that holds the application form. Many employers embed their application form (Greenhouse, iCIMS, Workday) in an iframe on their own careers site. |
 | `nativeMessaging` (optional) | Requested only when the user turns on resume tailoring in Options. It lets the extension talk to a helper program the user installs on their own computer, which runs Claude Code (signed in with the user's own Claude account) to rewrite the selected resume for the job posting, and, when the user asks, to read their resume, a profile page they choose or text they paste into profile fields for them to review. Not requested otherwise. |
@@ -77,7 +81,7 @@ Upload the zip under **Package**. The first upload can use the current version; 
 
 **Data usage** — check these boxes:
 
-- [x] **Personally identifiable information** (name, address, email, phone, resume): stored locally; filled into application forms only when the user starts a fill. With the optional Claude features, the resume and profile details are sent to the user's own Claude Code on their computer only when they click Tailor resume or Read.
+- [x] **Personally identifiable information** (name, address, email, phone, resume): stored locally; filled into application forms only when the user starts a fill. With the optional Claude features, the resume and profile details are sent to the user's own Claude Code on their computer only when they click Tailor resume or Read. With optional Cloud sync, the profile and resumes are stored in the user's own Google Drive app data folder after they sign in with Google.
 - [x] **Website content** (the job posting's text, or a profile page the user picks): read to pick a resume; with the optional Claude features, sent to the user's own Claude Code on their computer only when they click Tailor resume, or Use this page for my profile and then Read.
 
 Leave everything else unchecked (health, financial, authentication, personal communications, location, web history, user activity).
@@ -92,7 +96,7 @@ Certify all three:
 
 ## Test instructions (Access → Test instructions, 500 characters max)
 
-> No login needed. In the options page (opens on install), fill a few Personal fields and upload any PDF under Resumes. Open a public application, e.g. any job on boards.greenhouse.io or jobs.lever.co, then Apply. Click "Fill page" in the panel at the top right; the form fills. Submit is never clicked. Tailoring and Fill my profile are optional (need Claude Code) and can stay off. ashby-saves.js only counts Ashby's in-flight saves so fields save one at a time; it sends nothing.
+> No login needed. In the options page (opens on install), fill a few Personal fields and upload any PDF under Resumes. Open a public application, e.g. any job on boards.greenhouse.io or jobs.lever.co, then Apply. Click "Fill page" in the panel at the top right; the form fills. Submit is never clicked. Tailoring, Fill my profile and Cloud sync are optional and can stay off. ashby-saves.js only counts Ashby's in-flight saves so fields save one at a time; it sends nothing.
 
 Leave the username and password empty.
 

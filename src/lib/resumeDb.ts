@@ -2,7 +2,18 @@
 // so only extension pages and the background worker can open it. Content
 // scripts run in the page's origin and must ask the background for files
 // (see messages.ts → 'getResumeFile').
+import { browser } from 'wxt/browser';
 import type { ResumeMeta, ResumeRecord } from './types';
+
+/**
+ * Bumped in storage.local after every change to the stored files. IndexedDB has no change
+ * events, so this is how Cloud sync (in the background) learns a resume was added or removed.
+ */
+export const FILES_CHANGED_KEY = 'resumeFilesChangedAt';
+
+async function touch(): Promise<void> {
+  await browser.storage.local.set({ [FILES_CHANGED_KEY]: Date.now() }).catch(() => {});
+}
 
 const DB_NAME = 'getmeajobpls';
 const DB_VERSION = 1;
@@ -62,6 +73,7 @@ export async function getResume(id: string): Promise<ResumeRecord | undefined> {
 
 export async function putResume(record: ResumeRecord): Promise<void> {
   await promisify((await tx('readwrite')).put(record));
+  await touch();
 }
 
 /** Patch metadata fields, keeping the stored blob. */
@@ -73,6 +85,7 @@ export async function updateResumeMeta(id: string, patch: Partial<Omit<ResumeMet
 
 export async function deleteResume(id: string): Promise<void> {
   await promisify((await tx('readwrite')).delete(id));
+  await touch();
 }
 
 /** Make exactly one resume the default. */

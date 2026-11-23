@@ -35,7 +35,7 @@ export default defineConfig({
   manifest: ({ browser }) => ({
     name: 'getmeajobpls',
     version: displayVersion(version),
-    description: 'Apply faster: one-click autofill for Workday, Greenhouse, Lever and more, plus tailored resumes. No account; data stored on-device.',
+    description: 'Apply faster: one-click autofill for Workday, Greenhouse, Lever and more, plus tailored resumes. No account, no tracking.',
     // identity: Google sign-in for optional Cloud sync. No install warning, and nothing
     // happens until you click "Sign in with Google" (Options → Cloud sync).
     permissions: ['storage', 'unlimitedStorage', 'webNavigation', 'identity'],
@@ -51,7 +51,8 @@ export default defineConfig({
           id: FIREFOX_ID,
           // data_collection_permissions needs 142 (on Android too; addons.mozilla.org warns below that).
           strict_min_version: '142.0',
-          // Nothing is sent to the developer or anyone else; see PRIVACY.md.
+          // Nothing is sent to the developer; optional Cloud sync goes only to the user's own
+          // Google Drive. See PRIVACY.md.
           data_collection_permissions: { required: ['none'] },
         },
       },
