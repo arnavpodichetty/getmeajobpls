@@ -56,3 +56,11 @@ describe('version shown in the browser', () => {
     expect(manifestFor('chrome').version).toBe(manifestFor('firefox').version);
   });
 });
+
+describe('sources zip for addons.mozilla.org', () => {
+  it('lists only what rebuilding needs, never your profile, resumes or captures', () => {
+    const include = (config.zip as { includeSources?: string[] }).includeSources ?? [];
+    expect(include.length).toBeGreaterThan(0); // WXT's default packs the whole folder
+    for (const pattern of include) expect(pattern).toMatch(/^(?:src|public)\/\*\*$|^(?:package(?:-lock)?\.json|tsconfig\.json|wxt\.config\.ts|README\.md)$/);
+  });
+});

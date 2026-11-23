@@ -23,6 +23,12 @@ export default defineConfig({
   srcDir: 'src',
   // Explicit imports everywhere; easier to follow than auto-imports.
   imports: false,
+  // `npm run zip:firefox` also makes a sources zip for addons.mozilla.org's reviewers. WXT
+  // ignores .gitignore there, so it would pack profile/, captures/ and your resumes: list
+  // exactly what rebuilding the extension needs instead (tests/firefox.test.ts checks).
+  zip: {
+    includeSources: ['src/**', 'public/**', 'package.json', 'package-lock.json', 'tsconfig.json', 'wxt.config.ts', 'README.md'],
+  },
   // `npm run build` → .output/chrome-mv3, `npm run build:firefox` → .output/firefox-mv2.
   manifest: ({ browser }) => ({
     name: 'getmeajobpls — Autofill',
