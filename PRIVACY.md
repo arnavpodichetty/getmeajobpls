@@ -1,8 +1,8 @@
 # Privacy policy
 
-_Last updated: October 21, 2026_
+_Last updated: November 22, 2026_
 
-getmeajobpls is a browser extension that fills in job applications for you. This policy explains what it does with your information.
+getmeajobpls is a browser extension that fills in job applications for you. This policy explains what it does with your information. It covers the Chrome version and the Firefox version (including Firefox-based browsers such as Zen), which work the same way.
 
 ## What the extension stores
 
