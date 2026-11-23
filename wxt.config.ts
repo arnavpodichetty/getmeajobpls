@@ -47,8 +47,8 @@ export default defineConfig({
       browser_specific_settings: {
         gecko: {
           id: FIREFOX_ID,
-          // storage.session and data_collection_permissions.
-          strict_min_version: '140.0',
+          // data_collection_permissions needs 142 (on Android too; addons.mozilla.org warns below that).
+          strict_min_version: '142.0',
           // Nothing is sent to the developer or anyone else; see PRIVACY.md.
           data_collection_permissions: { required: ['none'] },
         },

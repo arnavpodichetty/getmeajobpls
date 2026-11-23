@@ -54,7 +54,7 @@ Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** 
 
 After rebuilding, click ↻ on the extension and reload open application pages. To move to another browser, use **Backup → Export JSON** and **Import JSON…**.
 
-**Firefox, Zen and other Firefox-based browsers** (Firefox 140+) use the same code:
+**Firefox, Zen and other Firefox-based browsers** (Firefox 142+) use the same code:
 
 ```sh
 npm run build:firefox
