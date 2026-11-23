@@ -36,7 +36,9 @@ export default defineConfig({
     name: 'getmeajobpls',
     version: displayVersion(version),
     description: 'Apply faster: one-click autofill for Workday, Greenhouse, Lever and more, plus tailored resumes. No account; data stored on-device.',
-    permissions: ['storage', 'unlimitedStorage', 'webNavigation'],
+    // identity: Google sign-in for optional Cloud sync. No install warning, and nothing
+    // happens until you click "Sign in with Google" (Options → Cloud sync).
+    permissions: ['storage', 'unlimitedStorage', 'webNavigation', 'identity'],
     // Only requested when you turn on resume tailoring (Options → Resume tailoring),
     // to talk to the local helper that runs Claude Code.
     optional_permissions: ['nativeMessaging'],

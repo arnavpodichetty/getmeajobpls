@@ -45,7 +45,9 @@ export interface ContentResponses {
 
 /** Content script → background. */
 export type BackgroundRequest =
-  | { type: 'getResumeFile'; id: string };
+  | { type: 'getResumeFile'; id: string }
+  /** Options page → background: sync with Google Drive now (see cloudSync.ts). */
+  | { type: 'sync:now' };
 
 
 /** On-page panel (top frame) → background, which works across the tab's frames. */

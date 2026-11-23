@@ -9,6 +9,8 @@ import { listResumes } from '../../lib/resumeDb';
 import { loadProfile, loadRules, loadSettings, saveProfile, saveSettings } from '../../lib/storage';
 import type { Profile, ResumeMeta, Settings } from '../../lib/types';
 import { backupSection } from './backup';
+import { cloudSyncSection } from './cloudSync';
+import { APPLIED_KEY } from '../../lib/cloudSync';
 import { checkboxField, grid, listField, monthDayField, selectField, textArea, textField } from './fields';
 import { resumeSection, rulesSection, transcriptSection } from './resumes';
 import { PAGE_SOURCE_KEY, type PageSource } from '../../lib/profileImport';
@@ -554,6 +556,7 @@ const NAV: [string, string][] = [
   ['tailoring', 'Resume tailoring'],
   ['#App', ''],
   ['settings', 'Settings'],
+  ['sync', 'Cloud sync'],
   ['backup', 'Backup'],
   ['credits', 'Credits'],
 ];
@@ -583,7 +586,7 @@ async function render(): Promise<void> {
     h(
       'div',
       { class: 'page-head' },
-      h('div', {}, h('h1', {}, 'Your profile'), h('p', {}, 'Everything here is stored in this browser.')),
+      h('div', {}, h('h1', {}, 'Your profile'), h('p', {}, 'Everything here is stored in this browser (and in your Google Drive if you turn on Cloud sync).')),
       h('div', { class: 'save-state' }, 'Changes save automatically'),
     ),
     importSection({ resumes: library, page, enabled: settings.tailorEnabled, profile: () => profile, onApplied: renderAll }),
@@ -593,6 +596,7 @@ async function render(): Promise<void> {
     await rulesSection(rules),
     tailoringSection(settings, saveS),
     settingsSection(),
+    cloudSyncSection(),
     backupSection(renderAll),
     creditsSection(),
   );
@@ -637,6 +641,12 @@ renderAll().then(trackActiveSection);
 // it from another tab. Load that change, or the next edit here would save this page's older
 // copy over it and the new answers would be gone.
 browser.storage.onChanged?.addListener((changes, area) => {
+  // Cloud sync downloaded another browser's profile, rules and settings: show them.
+  if (area === 'local' && APPLIED_KEY in changes) {
+    const y = window.scrollY;
+    void renderAll().then(() => window.scrollTo(0, y));
+    return;
+  }
   const change = area === 'local' ? changes.profile : undefined;
   if (!change || !profile) return;
   const incoming = JSON.stringify(change.newValue);

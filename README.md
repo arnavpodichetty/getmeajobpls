@@ -25,6 +25,7 @@ What sets it apart:
 - **Standard and EEO questions**: work authorization, sponsorship, relocation, start dates, referral source and more, all editable. Blank EEO answers become "decline to answer".
 - **Every kind of field**, including searchable dropdowns, rich-text editors, date pickers and shadow DOM.
 - **Resume tailoring (optional)**: rewrites a resume for the posting with your own Claude account. See [below](#resume-tailoring).
+- **Cloud sync (optional)**: sign in with Google to keep your profile, answers, rules and settings the same in every browser (Chrome and Firefox), in a hidden folder in your own Google Drive. See [below](#cloud-sync).
 - **Fill my profile (optional)**: Claude reads your resume, a profile page (Simplify, LinkedIn, your website) or pasted text into your profile. Every value is checked against the source, and you review each change before it's saved.
 
 ## Supported sites
@@ -68,9 +69,26 @@ Optional. **Tailor resume** rewrites the selected resume for a posting from your
 
 > **Always read a tailored resume before you submit it.** It is written by AI, which can get things wrong.
 
+## Cloud sync
+
+Optional and off by default. Under **Cloud sync** on the options page, **Sign in with Google** saves your profile, resume rules and settings to a hidden app folder in your own Google Drive (the `drive.appdata` scope: the extension can't see the rest of your Drive) and keeps every browser where you sign in up to date. Resume and transcript PDFs stay on each computer; use **Backup** to move them. When two browsers change things before syncing, the most recent change wins.
+
+### Setting it up in a build
+
+Sync needs a Google OAuth client id, set when you build:
+
+1. In the [Google Cloud console](https://console.cloud.google.com/), create a project and enable the **Google Drive API**.
+2. Under **Google Auth Platform**, set up the consent screen and add the `.../auth/drive.appdata` scope. While the app is in **Testing**, only test users you add can sign in, and sign-ins expire after 7 days; publish it to lift that.
+3. Create an OAuth client of type **Web application**. Add each browser's redirect URI under **Authorized redirect URIs**. The extension shows it under **Cloud sync** when no client id is set: `https://<extension-id>.chromiumapp.org/` for Chrome, and an `https://….extensions.allizom.org/` address for Firefox. An unpacked Chrome extension's id depends on its folder, so the Chrome Web Store build needs its own entry.
+4. Put the client id in a `.env` file (ignored by git) and build:
+
+   ```
+   WXT_GOOGLE_CLIENT_ID=1234567890-abc.apps.googleusercontent.com
+   ```
+
 ## Privacy
 
-Everything is stored only in your browser. The optional Claude features (resume tailoring and Fill my profile) send what you choose to Claude through your own Claude Code, only when you click their buttons; tailoring may also fetch the posting's description from the job site's public listing. See [PRIVACY.md](PRIVACY.md).
+Everything is stored only in your browser, unless you turn on Cloud sync, which keeps a copy in your own Google Drive. The optional Claude features (resume tailoring and Fill my profile) send what you choose to Claude through your own Claude Code, only when you click their buttons; tailoring may also fetch the posting's description from the job site's public listing. See [PRIVACY.md](PRIVACY.md).
 
 ## Credits
 

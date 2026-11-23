@@ -5,6 +5,7 @@ import { captureTab, fillTab, saveAnswersFromTab, tabState } from '../lib/orches
 import { blobToBase64, getResume } from '../lib/resumeDb';
 import { forgetPostings } from '../lib/posting';
 import { REOPEN_KEY, tailorForTab } from '../lib/tailor';
+import { syncNow, syncOnWake, watchLocalChanges } from '../lib/cloudSync';
 
 export default defineBackground(() => {
   browser.runtime.onInstalled.addListener(async ({ reason }) => {
@@ -16,6 +17,10 @@ export default defineBackground(() => {
       await browser.tabs.create({ url: browser.runtime.getURL(`/options.html#${section}`) });
     }
   });
+
+  // Optional Google Drive sync: upload local edits, and pick up other browsers' edits on wake.
+  watchLocalChanges();
+  void syncOnWake();
 
   browser.tabs.onRemoved.addListener((tabId) => { void forgetPostings(tabId); });
 
@@ -55,6 +60,14 @@ export default defineBackground(() => {
         const { blob, ...meta } = rec;
         return { meta, base64: await blobToBase64(blob) };
       })().then(sendResponse, () => sendResponse(null));
+      return true;
+    }
+
+    if (msg?.type === 'sync:now') {
+      syncNow().then(
+        (result) => sendResponse({ ok: true, result }),
+        (err: unknown) => sendResponse({ ok: false, error: err instanceof Error ? err.message : String(err) }),
+      );
       return true;
     }
 
