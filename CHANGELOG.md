@@ -4,6 +4,7 @@
 
 ### New
 - **Firefox and Zen:** the extension now also runs on Firefox and Firefox-based browsers like Zen, from the same code as the Chrome version, so every fix reaches both. Build it with `npm run build:firefox`. Resume tailoring works there too: run `npm run tailor-install` again after installing the browser. On Firefox, typing into forms built with React uses Firefox's own way of reaching the page, so an answer typed again after the site cleared it still counts.
+- **Shorter name:** the extension is now called just "getmeajobpls" in the browser and the stores (it was "getmeajobpls — Autofill").
 - **Workday required fields:** "Save and Continue" does nothing while a field marked * on the step is blank. The blank fields are outlined in red, the page scrolls to the first one, and a note names them. On by default; turn it off in Options ("Workday: don't let me continue with required fields empty"). "Click Next for me" also waits until they are filled.
 
 ### Fixes

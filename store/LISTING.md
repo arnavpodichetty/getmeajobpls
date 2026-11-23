@@ -14,7 +14,7 @@ Upload the zip under **Package**. The first upload can use the current version; 
 
 ## Store listing
 
-**Name:** getmeajobpls — Autofill
+**Name:** getmeajobpls
 
 **Summary** (132 characters max):
 

@@ -31,7 +31,7 @@ export default defineConfig({
   },
   // `npm run build` → .output/chrome-mv3, `npm run build:firefox` → .output/firefox-mv2.
   manifest: ({ browser }) => ({
-    name: 'getmeajobpls — Autofill',
+    name: 'getmeajobpls',
     version: displayVersion(version),
     description: 'Apply faster: one-click autofill for Workday, Greenhouse, Lever and more, plus tailored resumes. No account; data stored on-device.',
     permissions: ['storage', 'unlimitedStorage', 'webNavigation'],
