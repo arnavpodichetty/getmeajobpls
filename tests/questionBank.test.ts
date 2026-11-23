@@ -444,6 +444,9 @@ function choose(options: string[], question: string) {
 
 /** [question, options, expected option (or null = leave it), confident?] */
 const CHOICES: [string, string[], string | null, boolean][] = [
+  // A graduation year with terms picks the term the date falls in (2028-06 is spring).
+  ['Graduation Year', ['2027 Spring', '2027 Fall', '2028 Spring', '2028 Fall', '2029 Spring'], '2028 Spring', true],
+  ['Graduation Year', ['2026', '2027', '2028', '2029'], '2028', true],
   ['Are you legally authorized to work in the United States?', ['Yes', 'No'], 'Yes', true],
   ['Are you legally authorized to work in the United States?', ['Yes, I am authorized to work in the US', 'No, I am not authorized to work in the US'], 'Yes, I am authorized to work in the US', true],
   ['Do you require visa sponsorship?', ['Yes, I will require sponsorship', 'No, I will not require sponsorship'], 'No, I will not require sponsorship', true],

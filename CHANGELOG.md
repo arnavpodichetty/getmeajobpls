@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.3 (2026-11-22)
+
+### New
+- **Workday required fields:** "Save and Continue" does nothing while a field marked * on the step is blank. The blank fields are outlined in red, the page scrolls to the first one, and a note names them. On by default; turn it off in Options ("Workday: don't let me continue with required fields empty"). "Click Next for me" also waits until they are filled.
+
+### Fixes
+- **Graduation year with terms:** a "Graduation Year" dropdown offering terms ("2028 Spring", "2028 Fall") picks the term your graduation date falls in. It used to pick Fall for a May graduation, because only the year was compared.
+- **Review list after a link fix:** when a link box was fixed late in a fill (Oracle copying a link without "https://"), a later "the site cleared this answer" warning could land on the wrong row of the fill report, leaving the cleared box shown as filled. Each warning now stays on its own field.
+- **Faster dropdowns:** picking from long lists (countries, schools, majors) is about 1.7 times faster on first use, and much faster on the next passes of the same form, because option text is compared once instead of once per spelling of your answer. The panel also reads your rules and profile while it looks for the form, not after.
+
 ## 1.4.2 (2026-11-12)
 
 ### Fixes

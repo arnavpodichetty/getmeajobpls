@@ -13,6 +13,8 @@ import type { ContentRequest, FrameInfo, PageText } from '../lib/messages';
 import { requestResumeFile } from '../lib/messages';
 import { base64ToBlob, TRANSCRIPT_ID } from '../lib/resumeDb';
 import { loadProfile, loadSettings } from '../lib/storage';
+import { installWorkdayGate } from '../lib/workdayGate';
+import { normalizeSettings } from '../lib/defaults';
 import type { FillReport } from '../lib/types';
 
 const PAGE_TEXT_LIMIT = 20_000;
@@ -31,6 +33,8 @@ export default defineContentScript({
     const adapter = () => detectAdapter(new URL(location.href), document);
     let lastContext: FillContext | null = null;
     let filling = false;
+    // Workday required-field gate: on until settings say otherwise; refreshed wherever settings load and when they change.
+    let requireFields = true;
 
     // Reloading the extension disconnects content scripts in already-open
     // tabs. Catch in-flight failures and let WXT tear down their callbacks.
@@ -72,6 +76,7 @@ export default defineContentScript({
       const [profile, settings, resume, transcript] = await Promise.all([
         loadProfile(), loadSettings(), load(resumeId), load(TRANSCRIPT_ID).catch(() => null),
       ]);
+      requireFields = settings.workdayRequireFields !== false;
       const skills = profile.skillSets.find((s) => s.id === skillSetId)?.skills;
       return { profile, resume, transcript, settings, skills };
     }
@@ -89,6 +94,28 @@ export default defineContentScript({
         filling = false;
       }
     }
+
+    // --- Workday: no "Save and Continue" with required fields empty -----------
+
+    const onSettings: Parameters<typeof browser.storage.onChanged.addListener>[0] = (changes, area) => {
+      if (area === 'local' && changes.settings) requireFields = normalizeSettings(changes.settings.newValue).workdayRequireFields;
+    };
+    browser.storage.onChanged?.addListener(onSettings);
+    const removeGate = installWorkdayGate({
+      enabled: () => requireFields && adapter().id === 'workday',
+      onBlocked: (missing) => {
+        const names = missing.slice(0, 3).map((m) => m.label).join(', ');
+        toast(`Fill the required field${missing.length === 1 ? '' : 's'} first: ${names}${missing.length > 3 ? ` and ${missing.length - 3} more` : ''}.`);
+      },
+    });
+    ctx.onInvalidated(() => {
+      removeGate();
+      try {
+        browser.storage.onChanged?.removeListener(onSettings);
+      } catch {
+        // The old extension API may already be gone.
+      }
+    });
 
     // --- Multi-step forms: fill new fields as they appear -------------------
 
@@ -213,6 +240,7 @@ export default defineContentScript({
         try {
           const settings = await loadSettings();
           if (ctx.isInvalid) return;
+          requireFields = settings.workdayRequireFields !== false;
           if (!settings.showOnPage) return panel.remove();
           if (Date.now() - lastCheck < 1500) return schedule(1500 - (Date.now() - lastCheck));
           lastCheck = Date.now();

@@ -574,6 +574,9 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
     await sleep(400);
   }
 
+  // Rows replaced by a later result. They're dropped at the end, not spliced out here,
+  // because `typed` and `picked` point into `results` by index.
+  const replaced = new Set<number>();
   // Link boxes the site filled after we passed them (Oracle copies links from the resume a
   // moment later), still without "https://", which the site then rejects.
   for (const field of scanFields(root)) {
@@ -583,7 +586,7 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
     const outcome = await fillField(field, { key: 'linkWithScheme', value: fixed, confidence: 'high' }).catch(() => null);
     if (!outcome?.ok) continue;
     const label = displayLabel(field);
-    for (let i = results.length - 1; i >= 0; i--) if (results[i].label === label && results[i].status === 'skipped') results.splice(i, 1);
+    results.forEach((r, i) => { if (r.label === label && r.status === 'skipped') replaced.add(i); });
     record(field, outcome.review ? 'review' : 'filled', outcome.review);
   }
 
@@ -610,6 +613,7 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
     }
   }
 
-  const needsReview = results.filter((r) => r.status === 'review').length;
-  return { ats: opts.ats, filled, needsReview, fields: results, notes };
+  const fields = replaced.size ? results.filter((_, i) => !replaced.has(i)) : results;
+  const needsReview = fields.filter((r) => r.status === 'review').length;
+  return { ats: opts.ats, filled, needsReview, fields, notes };
 }

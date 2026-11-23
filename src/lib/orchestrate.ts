@@ -73,6 +73,9 @@ export async function pageContext(tabId: number, targets?: Frame[]): Promise<{ t
 }
 
 export async function tabState(tabId: number): Promise<TabState> {
+  // Storage reads don't depend on the frames; start them while the frames answer.
+  const rulesAndProfile = Promise.all([loadRules(), loadProfile()]);
+  rulesAndProfile.catch(() => {}); // awaited below, unless the tab has no frames
   const [library, settings, frames] = await Promise.all([listResumes(), loadSettings(), detectFrames(tabId)]);
   const resumes = library.map(({ id, name, tags, tailoredFrom }) => ({ id, name, tags, tailoredFrom }));
   const showCapture = settings.showCaptureButton;
@@ -84,11 +87,10 @@ export async function tabState(tabId: number): Promise<TabState> {
   const fields = targets.reduce((n, f) => n + f.fieldCount, 0);
   const knownAts = targets.some((f) => f.atsId !== 'generic');
 
-  const [page, tab, rules, profile] = await Promise.all([
+  const [page, tab, [rules, profile]] = await Promise.all([
     pageContext(tabId, targets),
     browser.tabs.get(tabId).catch(() => null),
-    loadRules(),
-    loadProfile(),
+    rulesAndProfile,
   ]);
   // Known ATS with a form, or a form elsewhere that looks like a job application
   // (not a sign-up, checkout, settings or contact form).

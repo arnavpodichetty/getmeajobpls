@@ -134,7 +134,7 @@ describe('job details for the panel', () => {
       <div data-automation-id="postedOn"><dl><dt>posted on</dt><dd>Posted Today</dd></dl></div>
       <p>The salary range for this role is: $19.00- $32.00 an hour</p>
       <div data-automation-id="jobSidebar"><h3>About Initech Corporation</h3></div>`);
-    expect(readJobInfo(doc, new URL('https://itc.wd5.myworkdayjobs.com/Careers/job/Rochester-New-York/Intern_R-1'))).toEqual({
+    expect(readJobInfo(doc, new URL('https://initech.wd5.myworkdayjobs.com/Careers/job/Rochester-New-York/Intern_R-1'))).toEqual({
       title: 'Intern, Data Science', company: 'Initech Corporation', location: 'Rochester, NY', locations: '', pay: '$19 – $32/hr', posted: 'Posted Feb 3, 2025',
     });
   });
@@ -149,7 +149,7 @@ describe('job details for the panel', () => {
 
   it('carries the posting\'s details to its application pages', () => {
     sessionStorage.clear();
-    const base = 'https://itc.wd5.myworkdayjobs.com/Careers/job/Rochester-New-York/Intern_R-1';
+    const base = 'https://initech.wd5.myworkdayjobs.com/Careers/job/Rochester-New-York/Intern_R-1';
     const ld = `<script type="application/ld+json">${JSON.stringify({
       '@type': 'JobPosting', title: 'Intern, Data Science', datePosted: '2025-02-03',
       jobLocation: { address: { addressCountry: 'United States of America', addressLocality: 'Initech Headquarters' } },
@@ -167,7 +167,7 @@ describe('job details for the panel', () => {
 
     // Another job in the same tab doesn't borrow them.
     page('<h2>My Information</h2>');
-    expect(jobInfoForPage(document, new URL('https://itc.wd5.myworkdayjobs.com/Careers/job/Austin-Texas/Analyst_R-2/apply')).pay).toBe('');
+    expect(jobInfoForPage(document, new URL('https://initech.wd5.myworkdayjobs.com/Careers/job/Austin-Texas/Analyst_R-2/apply')).pay).toBe('');
   });
 
   it('gives a posting and its application steps the same key', () => {

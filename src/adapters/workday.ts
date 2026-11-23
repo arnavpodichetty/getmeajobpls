@@ -4,6 +4,7 @@
 // and new "name--legalName--firstName" styles), with Autofill-Jobs (MIT) as a
 // reference. Applications sit behind a Workday account, so this hasn't been run
 // against a live tenant here — use "Capture this form" on any step it misses.
+import { emptyRequiredFields } from '../lib/workdayGate';
 import { fillCheckbox, fillCombobox, fillMultiCombobox, fillText } from '../lib/engine/controls';
 import { todayISO } from '../lib/clock';
 import { blur, isVisible, queryAllDeep, realClick, sleep, typeInto, waitForElement, waitForStable } from '../lib/engine/dom';
@@ -418,7 +419,7 @@ export const workday: Adapter = {
     report.notes.push(step ? `Workday step: ${step}.` : 'Workday step not recognized.');
 
     // Opt-in, and only when nothing on this step needs a person.
-    if (ctx.settings.workdayAutoAdvance && report.needsReview === 0) {
+    if (ctx.settings.workdayAutoAdvance && report.needsReview === 0 && !emptyRequiredFields().length) {
       const next = queryAllDeep<HTMLButtonElement>(SELECTORS.next).find((b) => isVisible(b) && !b.disabled);
       if (next && !/submit/i.test(next.textContent ?? '')) {
         realClick(next);

@@ -1250,7 +1250,17 @@ const DEFS: Def[] = [
   { key: 'eduStartYear', re: /start (date )?year|first year attended/, not: EDU_DATE_NOT, value: (c) => latestSchool(c.profile)?.start?.slice(0, 4) || null },
   { key: 'eduEndMonth', re: /end (date )?month/, not: EDU_DATE_NOT, value: (c) => monthOf(latestSchool(c.profile)?.end) },
   // "Completion Date … Year" is the year box of a split month/day/year date.
-  { key: 'eduEndYear', re: /end (date )?year|last year attended|graduation year|\b(?:graduation|completion) date\b.*\byear$/, value: (c) => latestSchool(c.profile)?.end?.slice(0, 4) || null },
+  {
+    key: 'eduEndYear',
+    re: /end (date )?year|last year attended|graduation year|\b(?:graduation|completion) date\b.*\byear$/,
+    value: (c) => latestSchool(c.profile)?.end?.slice(0, 4) || null,
+    // "Graduation Year" choices can carry a term ("2028 Spring", "2028 Fall"):
+    // the full date picks the term containing it, then the bare year.
+    tiers: (c) => {
+      const end = latestSchool(c.profile)?.end ?? '';
+      return /^\d{4}-\d{2}/.test(end) ? [[end], [end.slice(0, 4)]] : [];
+    },
+  },
 
   // --- Logistics ---
   {

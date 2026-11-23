@@ -2,9 +2,27 @@
 import { rangeOptionScore } from './choiceRanges';
 import { academicYearScore } from './academicYear';
 
+// normalize() is pure and runs on the same labels and option texts many times per fill
+// (every option against every spelling of an answer), so short inputs are remembered.
+const NORMALIZED = new Map<string, string>();
+const NORMALIZE_CACHE_MAX = 5000;
+const NORMALIZE_CACHE_LEN = 400;
+
 /** Lowercase, strip accents/required markers/punctuation, collapse whitespace. */
 export function normalize(value: string | null | undefined): string {
-  return (value ?? '')
+  const raw = value ?? '';
+  if (raw.length > NORMALIZE_CACHE_LEN) return normalizeUncached(raw);
+  let out = NORMALIZED.get(raw);
+  if (out === undefined) {
+    out = normalizeUncached(raw);
+    if (NORMALIZED.size >= NORMALIZE_CACHE_MAX) NORMALIZED.clear();
+    NORMALIZED.set(raw, out);
+  }
+  return out;
+}
+
+function normalizeUncached(value: string): string {
+  return value
     .normalize('NFKD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
@@ -266,7 +284,24 @@ function veteranScore(opt: string, wanted: string): number | null {
   return notProtected(want) && notProtected(have) ? 0.95 : 0;
 }
 
+// optionScore() is pure; a dropdown scores the same options against the same spellings
+// on every pass, and country or school lists have hundreds of options.
+const SCORES = new Map<string, number>();
+const SCORE_CACHE_MAX = 20000;
+
 export function optionScore(optionText: string, wanted: string): number {
+  if (optionText.length + wanted.length > 600) return optionScoreUncached(optionText, wanted);
+  const key = `${optionText}\u0000${wanted}`;
+  let score = SCORES.get(key);
+  if (score === undefined) {
+    score = optionScoreUncached(optionText, wanted);
+    if (SCORES.size >= SCORE_CACHE_MAX) SCORES.clear();
+    SCORES.set(key, score);
+  }
+  return score;
+}
+
+function optionScoreUncached(optionText: string, wanted: string): number {
   const opt = normalize(optionText);
   if (!opt) return 0;
 

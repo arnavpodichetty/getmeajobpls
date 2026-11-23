@@ -236,6 +236,8 @@ export interface Settings {
   highlightFields: boolean;
   /** Allow clicking "Next" between Workday steps once you have started a fill there. */
   workdayAutoAdvance: boolean;
+  /** Workday: block "Save and Continue" while a required (*) field on the step is empty. */
+  workdayRequireFields: boolean;
   /** Keep filling new fields that appear (next step, conditional questions) for a while after a fill. */
   watchForNewFields: boolean;
   /** Show the floating fill panel on application pages. */

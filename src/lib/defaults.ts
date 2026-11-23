@@ -171,6 +171,7 @@ export const defaultSettings = (): Settings => ({
   overwriteExisting: false,
   highlightFields: true,
   workdayAutoAdvance: false,
+  workdayRequireFields: true,
   watchForNewFields: true,
   showOnPage: true,
   showCaptureButton: false,

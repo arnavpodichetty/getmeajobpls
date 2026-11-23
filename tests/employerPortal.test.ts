@@ -5,7 +5,7 @@ import { resolveAnswer } from '../src/lib/engine/answers';
 import { scanFields } from '../src/lib/engine/scan';
 import { context, fastTimings, loadFixture } from './helpers/fixture';
 
-beforeEach(() => { fastTimings(); loadFixture('amazon-a'); });
+beforeEach(() => { fastTimings(); loadFixture('portal-a'); });
 
 const answer = (label: RegExp) => {
   const field = scanFields().find((f) => label.test(f.label))!;

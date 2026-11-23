@@ -9,3 +9,5 @@ node_modules
 profile/
 # Page snapshots from "Capture page" (name the employers you applied to)
 captures/
+# Notes for Claude Code (kept local)
+CLAUDE.md

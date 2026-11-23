@@ -440,6 +440,13 @@ function settingsSection(): HTMLElement {
       s,
       'Only after you start a fill on Workday, and only when nothing on the step needs review. Submit is never clicked.',
     ),
+    checkboxField(
+      'Workday: don\'t let me continue with required fields empty',
+      settings,
+      'workdayRequireFields',
+      s,
+      'Blocks "Save and Continue" while a field marked * on the step is blank, and outlines the blank ones in red.',
+    ),
     selectField('Time zone for today\'s date', settings, 'timeZone', TIME_ZONES, s),
     h('h3', {}, 'Developer'),
     checkboxField(
