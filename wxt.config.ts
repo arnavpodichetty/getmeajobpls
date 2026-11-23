@@ -17,7 +17,9 @@ const { version } = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json
  * every install gets a random id, which loses saved data on reinstall and breaks the
  * tailoring helper's registration (scripts/tailor/install.mjs uses the same id).
  */
-export const FIREFOX_ID = 'getmeajobpls@getmeajobpls';
+// Never reuse an ID that was deleted on addons.mozilla.org: Mozilla rejects it for good.
+// Retired: getmeajobpls@getmeajobpls (deleted 2026-11-22).
+export const FIREFOX_ID = 'getmeajobpls@addon';
 
 export default defineConfig({
   srcDir: 'src',

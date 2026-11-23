@@ -16,7 +16,7 @@ import { findClaude } from './claude.mjs';
 
 export const HOST_NAME = 'com.getmeajobpls.tailor';
 /** Must match FIREFOX_ID in wxt.config.ts (tests/firefox.test.ts checks). */
-export const FIREFOX_ID = 'getmeajobpls@getmeajobpls';
+export const FIREFOX_ID = 'getmeajobpls@addon';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const home = homedir();
