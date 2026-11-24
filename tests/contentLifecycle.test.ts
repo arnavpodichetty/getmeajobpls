@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => ({
   fill: vi.fn(),
   loadProfile: vi.fn(),
   looksLikeJobForm: vi.fn(() => false),
+  panelFill: vi.fn(async () => {}),
+  panelShown: false,
 }));
 
 vi.mock('../src/lib/engine/jobForm', () => ({ looksLikeJobForm: mocks.looksLikeJobForm }));
@@ -22,9 +24,10 @@ vi.mock('../src/adapters', () => ({ detectAdapter: () => ({ id: 'workday', name:
 vi.mock('../src/lib/panel', () => ({
   FillPanel: class {
     constructor(onClose: () => void) { closePanel = onClose; }
-    shown = false;
+    get shown() { return mocks.panelShown; }
     show = mocks.show;
     remove = mocks.remove;
+    fillFromShortcut = mocks.panelFill;
   },
 }));
 
@@ -58,6 +61,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   fakeBrowser.reset();
   document.body.innerHTML = '';
+  mocks.panelShown = false;
   mocks.loadSettings.mockResolvedValue({ showOnPage: true });
   mocks.sendPanel.mockResolvedValue({ kind: 'state', isApplication: true });
   mocks.loadProfile.mockResolvedValue({ skillSets: [] });
@@ -220,6 +224,32 @@ describe('content script reload lifecycle', () => {
     await vi.advanceTimersByTimeAsync(2000);
     expect(mocks.remove).toHaveBeenCalled();
     expect(mocks.loadSettings).toHaveBeenCalledOnce();
+    ctx.notifyInvalidated();
+  });
+
+  it('fills from the keyboard shortcut like Fill page when the panel is on screen', async () => {
+    mocks.panelShown = true;
+    const ctx = startContent();
+    expect(await fakeBrowser.runtime.sendMessage({ type: 'shortcutFill' })).toEqual({ started: true });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(mocks.panelFill).toHaveBeenCalledOnce();
+    expect(mocks.sendPanel).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'panel:fill' }));
+    ctx.notifyInvalidated();
+  });
+
+  it('fills from the keyboard shortcut with the picked resume when the panel is closed', async () => {
+    mocks.sendPanel.mockImplementation(async (msg: { type: string }) =>
+      msg.type === 'panel:fill'
+        ? { kind: 'reports', reports: [{ ats: 'Workday', filled: 3, needsReview: 1, fields: [{ label: 'Essay', status: 'review' }], notes: [] }] }
+        : { kind: 'state', isApplication: true, pickedResumeId: 'r1', pickedSkillSetId: 's1' });
+    const ctx = startContent();
+    const before = document.documentElement.children.length;
+    await fakeBrowser.runtime.sendMessage({ type: 'shortcutFill' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(mocks.panelFill).not.toHaveBeenCalled();
+    expect(mocks.sendPanel).toHaveBeenCalledWith({ type: 'panel:fill', resumeId: 'r1', skillSetId: 's1' });
+    // A summary toast instead of the panel's report.
+    expect(document.documentElement.children.length).toBe(before + 1);
     ctx.notifyInvalidated();
   });
 

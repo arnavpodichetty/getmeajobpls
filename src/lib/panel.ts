@@ -205,7 +205,7 @@ export class FillPanel {
     this.reasonEl.textContent = this.resumeSel.value === keep && keep ? 'Tailored for this posting' : state.pickReason;
     this.captureBtn.hidden = !state.showCapture;
     this.tailorBtn.hidden = !state.canTailor;
-    this.fillBtn.title = postingOnly ? 'Open the application to fill it' : `Fill this ${state.atsLabel} application`;
+    this.fillBtn.title = postingOnly ? 'Open the application to fill it' : `Fill this ${state.atsLabel} application${state.shortcut ? ` (${state.shortcut})` : ''}`;
     if (!this.host.isConnected) {
       this.render();
       document.documentElement.append(this.host);
@@ -361,6 +361,11 @@ export class FillPanel {
     const url = URL.createObjectURL(base64ToBlob(file.base64, file.meta.mimeType));
     window.open(url, '_blank');
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
+  /** The Fill page keyboard shortcut: the same as clicking Fill page. */
+  fillFromShortcut(): Promise<void> {
+    return this.fill();
   }
 
   private async fill(): Promise<void> {

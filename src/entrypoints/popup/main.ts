@@ -4,7 +4,7 @@ import { uid } from '../../lib/defaults';
 import { $, h } from '../../lib/dom';
 import { mergeSavedAnswers } from '../../lib/engine/capture';
 import { sendToFrame } from '../../lib/messages';
-import { captureFrame, describe, detectFrames, fromFrames, pageContext, targetFrames } from '../../lib/orchestrate';
+import { captureFrame, describe, detectFrames, fillShortcut, fromFrames, pageContext, targetFrames } from '../../lib/orchestrate';
 import { listResumes } from '../../lib/resumeDb';
 import { pickResume, pickSkillSetFor, skillSetForResume } from '../../lib/resumeRules';
 import { findTailored, jobLabel } from '../../lib/tailorMatch';
@@ -119,6 +119,7 @@ async function init(): Promise<void> {
   });
 
   fillBtn.disabled = false;
+  void fillShortcut().then((keys) => { if (keys) fillBtn.title = `Shortcut: ${keys}`; });
   saveBtn.disabled = false;
   captureBtn.disabled = false;
   usePageBtn.disabled = false;

@@ -45,6 +45,16 @@ export default defineConfig({
     // Content script runs in every frame (all_frames) so embedded Greenhouse/iCIMS
     // iframes on company career sites are reachable.
     host_permissions: ['<all_urls>'],
+    // Keyboard shortcut for Fill page (needs no permission). People can change it at
+    // chrome://extensions/shortcuts, or in Firefox under Add-ons → ⚙ → Manage Extension
+    // Shortcuts. The name matches FILL_COMMAND in src/lib/orchestrate.ts. On a Mac both
+    // browsers read "Ctrl" as Command, so the default there is ⌘⇧F.
+    commands: {
+      'fill-page': {
+        suggested_key: { default: 'Ctrl+Shift+F' },
+        description: 'Fill the application on this page',
+      },
+    },
     ...(browser === 'firefox' && {
       browser_specific_settings: {
         gecko: {

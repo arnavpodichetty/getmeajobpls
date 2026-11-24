@@ -33,7 +33,9 @@ export type ContentRequest =
   | { type: 'pageText'; limit?: number }
   | { type: 'fill'; resumeId: string | null; skillSetId?: string | null }
   | { type: 'capture' }
-  | { type: 'collectAnswers' };
+  | { type: 'collectAnswers' }
+  /** The Fill page keyboard shortcut (sent to the top frame only); answered at once, the fill shows on the page. */
+  | { type: 'shortcutFill' };
 
 export interface ContentResponses {
   detect: FrameInfo;
@@ -41,6 +43,7 @@ export interface ContentResponses {
   fill: FillReport;
   capture: { html: string; url: string };
   collectAnswers: { question: string; answer: string }[];
+  shortcutFill: { started: boolean };
 }
 
 /** Content script → background. */

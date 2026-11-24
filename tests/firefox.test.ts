@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import config, { displayVersion, FIREFOX_ID } from '../wxt.config';
 import { setNativeValue } from '../src/lib/engine/dom';
+import { FILL_COMMAND } from '../src/lib/orchestrate';
 
 type ManifestFn = (env: { browser: string }) => Record<string, unknown>;
 const manifestFor = (browser: string) => (config.manifest as unknown as ManifestFn)({ browser });
@@ -21,6 +22,13 @@ describe('manifest per browser', () => {
     const gecko = (manifestFor('firefox').browser_specific_settings as { gecko: Record<string, unknown> }).gecko;
     expect(gecko.id).toBe(FIREFOX_ID);
     expect(gecko.data_collection_permissions).toEqual({ required: ['none'] });
+  });
+
+  it('declares the Fill page shortcut for both browsers, under the name the extension listens for', () => {
+    for (const browser of ['chrome', 'firefox']) {
+      const commands = manifestFor(browser).commands as Record<string, { suggested_key: { default: string } }>;
+      expect(commands[FILL_COMMAND].suggested_key.default).toBe('Ctrl+Shift+F');
+    }
   });
 
   it('registers the tailoring helper for the same Firefox id', () => {

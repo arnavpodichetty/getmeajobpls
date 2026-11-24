@@ -198,9 +198,33 @@ export default defineContentScript({
 
     // --- On-page panel (top frame only) ---------------------------------------
 
+    /** The Fill page keyboard shortcut; set in the top frame, which holds the panel. */
+    let fillFromShortcut: (() => Promise<void>) | null = null;
+
     if (window === window.top) {
       // Closing the panel also stops filling new fields, so changes you make by hand stay.
       const panel = new FillPanel(stopWatching);
+      let shortcutBusy = false;
+      fillFromShortcut = async () => {
+        // The panel on screen: exactly like clicking its Fill page button (its resume and skills).
+        if (panel.shown) return panel.fillFromShortcut();
+        // Panel closed or turned off: fill with the resume and skills it would have picked, and say how it went.
+        if (shortcutBusy) return;
+        shortcutBusy = true;
+        try {
+          const state = await sendPanel({ type: 'panel:state' });
+          if (state.kind === 'error') return toast(`Couldn't fill this page: ${state.error}`);
+          if (state.kind !== 'state') return;
+          const res = await sendPanel({ type: 'panel:fill', resumeId: state.pickedResumeId, skillSetId: state.pickedSkillSetId });
+          if (res.kind === 'error') return toast(`Couldn't fill this page: ${res.error}`);
+          if (res.kind !== 'reports') return;
+          const filled = res.reports.reduce((n, r) => n + r.filled, 0);
+          const review = res.reports.reduce((n, r) => n + r.fields.filter((f) => f.status === 'review').length, 0);
+          toast(filled || review ? `Filled ${filled} field${filled === 1 ? '' : 's'}${review ? `, ${review} to review` : ''}.` : 'Nothing to fill on this page.');
+        } finally {
+          shortcutBusy = false;
+        }
+      };
       let lastUrl = '';
       let checking = false;
       let checkTimer: number | undefined;
@@ -337,6 +361,10 @@ export default defineContentScript({
           return { html: captureForm(), url: location.href };
         case 'collectAnswers':
           return collectAnswers(await loadProfile());
+        case 'shortcutFill':
+          // Answered at once: a fill can take a while, and its result shows on the page.
+          if (fillFromShortcut) void runSafely(fillFromShortcut);
+          return { started: !!fillFromShortcut };
       }
     }
 

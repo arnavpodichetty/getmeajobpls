@@ -1,7 +1,7 @@
 import { defineBackground } from 'wxt/utils/define-background';
 import { browser } from 'wxt/browser';
-import type { BackgroundRequest, PanelRequest, PanelResponse, ResumeFilePayload } from '../lib/messages';
-import { captureTab, fillTab, saveAnswersFromTab, tabState } from '../lib/orchestrate';
+import { sendToFrame, type BackgroundRequest, type PanelRequest, type PanelResponse, type ResumeFilePayload } from '../lib/messages';
+import { captureTab, FILL_COMMAND, fillTab, saveAnswersFromTab, tabState } from '../lib/orchestrate';
 import { blobToBase64, getResume } from '../lib/resumeDb';
 import { forgetPostings } from '../lib/posting';
 import { REOPEN_KEY, tailorForTab } from '../lib/tailor';
@@ -28,6 +28,15 @@ export default defineBackground(() => {
   syncOnWake().catch(() => {});
 
   browser.tabs.onRemoved.addListener((tabId) => { forgetPostings(tabId).catch(() => {}); });
+
+  // The Fill page keyboard shortcut: the page's top frame fills it as if Fill page were clicked.
+  browser.commands?.onCommand.addListener((command, tab) => {
+    if (command !== FILL_COMMAND) return;
+    (async () => {
+      const tabId = tab?.id ?? (await browser.tabs.query({ active: true, currentWindow: true }))[0]?.id;
+      if (tabId !== undefined) await sendToFrame(tabId, 0, { type: 'shortcutFill' });
+    })().catch(() => {}); // a page the extension can't run on (browser pages, the web store), or one opened before it was installed
+  });
 
   browser.runtime.onMessage.addListener((msg: BackgroundRequest | PanelRequest, sender, sendResponse) => {
     if (typeof msg?.type === 'string' && msg.type.startsWith('panel:')) {

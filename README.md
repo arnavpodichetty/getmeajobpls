@@ -17,7 +17,7 @@ What sets it apart:
 
 ## Features
 
-- **One-click fill** from a panel on the page or the toolbar popup. Uploads your resume first, then fills the rest without overwriting what the site already filled.
+- **One-click fill** from a panel on the page, the toolbar popup, or a keyboard shortcut (Ctrl+Shift+F, or ⌘⇧F on a Mac; changeable). Uploads your resume first, then fills the rest without overwriting what the site already filled.
 - **Picks the right resume and skills** for each job from keywords in the title and description.
 - **Review highlights**: green for filled, orange for fields to check, with the reason in the popup.
 - **Multi-page forms**: keeps filling each new step of Workday-style flows.

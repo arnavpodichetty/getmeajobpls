@@ -33,6 +33,20 @@ export interface TabState {
   showCapture: boolean;
   /** Resume tailoring is turned on (Options → Resume tailoring). */
   canTailor: boolean;
+  /** Keys for Fill page, shown on its button; '' when none is set. */
+  shortcut?: string;
+}
+
+/** The keyboard shortcut for Fill page (declared in wxt.config.ts under `commands`). */
+export const FILL_COMMAND = 'fill-page';
+
+/** The keys set for Fill page, like "Ctrl+Shift+F", or '' when none is set (or the browser can't say). */
+export async function fillShortcut(): Promise<string> {
+  try {
+    return (await browser.commands.getAll()).find((c) => c.name === FILL_COMMAND)?.shortcut ?? '';
+  } catch {
+    return '';
+  }
 }
 
 /** Ask every frame's content script what it sees; frames without one are skipped. */
@@ -76,12 +90,12 @@ export async function tabState(tabId: number): Promise<TabState> {
   // Storage reads don't depend on the frames; start them while the frames answer.
   const rulesAndProfile = Promise.all([loadRules(), loadProfile()]);
   rulesAndProfile.catch(() => {}); // awaited below, unless the tab has no frames
-  const [library, settings, frames] = await Promise.all([listResumes(), loadSettings(), detectFrames(tabId)]);
+  const [library, settings, frames, shortcut] = await Promise.all([listResumes(), loadSettings(), detectFrames(tabId), fillShortcut()]);
   const resumes = library.map(({ id, name, tags, tailoredFrom }) => ({ id, name, tags, tailoredFrom }));
   const showCapture = settings.showCaptureButton;
   const canTailor = settings.tailorEnabled;
   if (!frames.length) {
-    return { connected: false, atsLabel: 'Not connected', isApplication: false, resumes, pickedResumeId: null, pickReason: '', skillSets: [], pickedSkillSetId: null, skillSetByResume: {}, showCapture, canTailor };
+    return { connected: false, atsLabel: 'Not connected', isApplication: false, resumes, pickedResumeId: null, pickReason: '', skillSets: [], pickedSkillSetId: null, skillSetByResume: {}, showCapture, canTailor, shortcut };
   }
   const targets = targetFrames(frames);
   const fields = targets.reduce((n, f) => n + f.fieldCount, 0);
@@ -111,6 +125,7 @@ export async function tabState(tabId: number): Promise<TabState> {
   return {
     showCapture,
     canTailor,
+    shortcut,
     skillSets: profile.skillSets.map(({ id, name }) => ({ id, name })),
     // The skill set follows the picked resume so the two start out matching.
     pickedSkillSetId: pickSkillSetFor(profile.skillSets, library, pick?.resumeId ?? null, page),
