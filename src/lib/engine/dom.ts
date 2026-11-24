@@ -222,6 +222,15 @@ export function waitForElement<T extends Element = HTMLElement>(
 ): Promise<T | null> {
   const found = find();
   if (found) return Promise.resolve(found);
+  // A lookup that throws while waiting counts as "not there yet": the wait must still end at
+  // `timeout` and stop its observer and timer, or the fill waiting on it never finishes.
+  const look = (): T | null => {
+    try {
+      return find() ?? null;
+    } catch {
+      return null;
+    }
+  };
   return new Promise((resolve) => {
     let done = false;
     const finish = (value: T | null) => {
@@ -233,14 +242,14 @@ export function waitForElement<T extends Element = HTMLElement>(
       resolve(value);
     };
     const check = () => {
-      const el = find();
+      const el = look();
       if (el) finish(el);
     };
     const observer = new MutationObserver(check);
     observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true });
     // Shadow-DOM changes don't reach a document observer, so poll as well.
     const poll = setInterval(check, 150);
-    const timer = setTimeout(() => finish(find() ?? null), timeout);
+    const timer = setTimeout(() => finish(look()), timeout);
   });
 }
 

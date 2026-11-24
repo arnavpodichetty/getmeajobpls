@@ -81,6 +81,15 @@ const BANK: Record<string, [string, string | null][]> = {
   ],
   'fiduciary roles': [
     ['Do you currently hold a position, or have you been named to serve as a board member, trustee, trust protector, executor, or personal representative?', 'No'],
+    ['Are you currently serving on the board of directors of any for-profit company?', 'No'],
+    ['Do you have any plans to join the board of directors of a for-profit company prior to starting a job with Acme?', 'No'],
+  ],
+  'screening questions (one employer\'s set)': [
+    ['Are you at least 18 years old?', 'Yes'],
+    ['When would you be available if an offer was accepted?', 'Immediately after offer acceptance'],
+    ['Have you ever been terminated or asked to resign by any former employer for the following reasons:', 'No'],
+    ['All Acme sites must observe U.S. export control rules that control information that may be provided to persons from Cuba, Iran, North Korea, and Syria. Are you a citizen of, or do you hold dual citizenship with any of these countries?', 'No'],
+    ['In the last 5 years, have you been an employee of a U.S. federal, state, or local government?', 'No'],
   ],
   'current or previous employer': [
     ['Who is your current or previous employer?', 'Analytical Engines'],

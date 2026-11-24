@@ -11,7 +11,10 @@ const mocks = vi.hoisted(() => ({
   remove: vi.fn(),
   fill: vi.fn(),
   loadProfile: vi.fn(),
+  looksLikeJobForm: vi.fn(() => false),
 }));
+
+vi.mock('../src/lib/engine/jobForm', () => ({ looksLikeJobForm: mocks.looksLikeJobForm }));
 
 vi.mock('../src/lib/storage', () => ({ loadSettings: mocks.loadSettings, loadProfile: mocks.loadProfile }));
 vi.mock('../src/lib/messages', () => ({ sendPanel: mocks.sendPanel, requestResumeFile: vi.fn() }));
@@ -121,6 +124,45 @@ describe('content script reload lifecycle', () => {
     ctx.notifyInvalidated();
   });
 
+  it('runs a fill asked for during a pass on new fields once that pass ends', async () => {
+    mocks.loadSettings.mockResolvedValue({ showOnPage: true, watchForNewFields: true });
+    const report = (filled: number) => ({ ats: 'Workday', filled, needsReview: 0, fields: [], notes: [] });
+    let finishPass!: (value: unknown) => void;
+    mocks.fill
+      .mockResolvedValueOnce(report(3))
+      .mockImplementationOnce(() => new Promise((resolve) => { finishPass = resolve; }))
+      .mockResolvedValueOnce(report(5));
+    const ctx = startContent();
+    expect(await fakeBrowser.runtime.sendMessage({ type: 'fill', resumeId: null })).toEqual(report(3));
+    // The page changes: after a quiet moment the new fields are filled.
+    document.body.append(document.createElement('input'));
+    await vi.advanceTimersByTimeAsync(1600);
+    expect(mocks.fill).toHaveBeenCalledTimes(2);
+    expect(mocks.fill.mock.calls[1][0].incremental).toBe(true);
+    // Fill page clicked meanwhile: it waits for that pass instead of saying a fill is running.
+    const response = fakeBrowser.runtime.sendMessage({ type: 'fill', resumeId: null });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(mocks.fill).toHaveBeenCalledTimes(2);
+    finishPass(report(0));
+    expect(await response).toEqual(report(5));
+    expect(mocks.fill).toHaveBeenCalledTimes(3);
+    expect(mocks.fill.mock.calls[2][0].incremental).toBeUndefined();
+    ctx.notifyInvalidated();
+  });
+
+  it('answers a failed request in its own shape, so the frame is skipped rather than mistaken for a form', async () => {
+    const ctx = startContent();
+    mocks.looksLikeJobForm.mockImplementationOnce(() => { throw new Error('boom'); });
+    expect(await fakeBrowser.runtime.sendMessage({ type: 'detect' })).toMatchObject({ atsId: 'workday', atsName: 'Workday', fieldCount: 0, jobForm: false });
+    // Not a fill report, which "Save my answers" would have stored as a blank answer.
+    mocks.loadProfile.mockRejectedValueOnce(new Error('boom'));
+    expect(await fakeBrowser.runtime.sendMessage({ type: 'collectAnswers' })).toEqual([]);
+    // A fill still says what went wrong.
+    mocks.fill.mockRejectedValueOnce(new Error('boom'));
+    expect(await fakeBrowser.runtime.sendMessage({ type: 'fill', resumeId: null })).toMatchObject({ filled: 0, notes: ['Error: boom'] });
+    ctx.notifyInvalidated();
+  });
+
   it('cleans up an invalid-context rejection from the settings check', async () => {
     mocks.loadSettings.mockRejectedValue(new Error('Extension context invalidated.'));
     const ctx = startContent();
@@ -159,6 +201,26 @@ describe('content script reload lifecycle', () => {
     await vi.advanceTimersByTimeAsync(10_000);
     expect(mocks.loadSettings).not.toHaveBeenCalled();
     expect(mocks.sendPanel).not.toHaveBeenCalled();
+  });
+
+  it('reads settings for its checks once, then follows changes made in Options', async () => {
+    const ctx = startContent();
+    await vi.advanceTimersByTimeAsync(1200);
+    expect(mocks.show).toHaveBeenCalled();
+    // The page keeps changing: more checks, no more storage reads.
+    for (let i = 0; i < 5; i++) {
+      document.body.append(document.createElement('div'));
+      await vi.advanceTimersByTimeAsync(2000);
+    }
+    expect(mocks.sendPanel.mock.calls.length).toBeGreaterThan(1);
+    expect(mocks.loadSettings).toHaveBeenCalledOnce();
+    // Turning the panel off in Options applies at the next check.
+    await fakeBrowser.storage.local.set({ settings: { showOnPage: false } });
+    document.body.append(document.createElement('div'));
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(mocks.remove).toHaveBeenCalled();
+    expect(mocks.loadSettings).toHaveBeenCalledOnce();
+    ctx.notifyInvalidated();
   });
 
   it('still shows the panel while the extension is connected', async () => {

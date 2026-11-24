@@ -4,7 +4,7 @@ import { blur, isVisible, realClick, sleep, typeInto, waitForElement } from '../
 import { fillCheckbox, TIMING } from '../lib/engine/controls';
 import { pronounTiers } from '../lib/engine/answers';
 import { normalize } from '../lib/engine/text';
-import { fillPage, type Override } from '../lib/engine/fill';
+import { fillPage, outline, type Override } from '../lib/engine/fill';
 import type { FieldResult } from '../lib/types';
 import type { Adapter, FillContext } from './types';
 
@@ -29,6 +29,8 @@ const SELECTORS = {
   disabilityDate: 'input[name="eeo[disabilitySignatureDate]"]',
 } as const;
 
+// First and last name only. Not the shared fullName in answers.ts, which prefers the
+// "full name" you saved; Lever's name box and disability signature have always taken this.
 const fullName = (c: { profile: FillContext['profile'] }) =>
   [c.profile.personal.firstName, c.profile.personal.lastName].filter(Boolean).join(' ');
 
@@ -46,10 +48,17 @@ const OVERRIDES: Override[] = [
   { selector: SELECTORS.disabilityDate, key: 'todayDate', value: () => { const [y, m, d] = todayISO().split('-'); return `${Number(m)}/${Number(d)}/${y}`; } },
 ];
 
+// Location and pronouns already handled, so watching for new fields doesn't redo them on
+// every change to the page (retyping the location, or flagging pronouns again). A fresh
+// (non-incremental) fill starts over.
+let handled = new WeakSet<Element>();
+
 async function fillLocation(ctx: FillContext): Promise<FieldResult | null> {
   const input = document.querySelector<HTMLInputElement>(SELECTORS.location);
+  if (!input || handled.has(input)) return null;
+  handled.add(input);
   const { city, state } = ctx.profile.personal;
-  if (!input || !city || (input.value && !ctx.settings.overwriteExisting)) return null;
+  if (!city || (input.value && !ctx.settings.overwriteExisting)) return null;
   typeInto(input, [city, state].filter(Boolean).join(', '));
   const first = await waitForElement(() => [...document.querySelectorAll<HTMLElement>(SELECTORS.locationResult)].find(isVisible), TIMING.search + 1000);
   if (!first) {
@@ -60,11 +69,7 @@ async function fillLocation(ctx: FillContext): Promise<FieldResult | null> {
   const pick = bestOption(results, (r) => r.textContent ?? '', `${city}, ${state}`);
   realClick(pick && pick.score >= MIN_OPTION_SCORE ? pick.option : first);
   await sleep(200);
-  if (ctx.settings.highlightFields) {
-    input.setAttribute('data-getmeajobpls', 'filled');
-    input.style.setProperty('outline', '2px solid #1f9d63', 'important');
-    input.style.setProperty('outline-offset', '2px', 'important');
-  }
+  if (ctx.settings.highlightFields) outline(input, 'filled');
   return { label: 'Current location', status: 'filled' };
 }
 
@@ -74,8 +79,10 @@ async function fillLocation(ctx: FillContext): Promise<FieldResult | null> {
  */
 function fillPronouns(ctx: FillContext): FieldResult | null {
   const boxes = [...document.querySelectorAll<HTMLInputElement>(SELECTORS.pronounOption)];
+  if (!boxes.length || boxes.some((b) => handled.has(b))) return null;
+  boxes.forEach((b) => handled.add(b));
   const pronouns = ctx.profile.personal.pronouns.trim();
-  if (!boxes.length || !pronouns) return null;
+  if (!pronouns) return null;
   if (boxes.some((b) => b.checked) && !ctx.settings.overwriteExisting) return null;
   const wanted = new Set([pronouns, ...pronounTiers(pronouns).flat()].map(normalize));
   const text = (b: HTMLInputElement) => normalize(b.closest('label')?.textContent ?? '');
@@ -84,12 +91,7 @@ function fillPronouns(ctx: FillContext): FieldResult | null {
   for (const b of boxes) if (b !== match && b.checked) fillCheckbox(b, 'No');
   fillCheckbox(match, 'Yes');
   if (!match.checked) return { label: 'Pronouns', status: 'review', reason: 'Tick your pronouns.' };
-  if (ctx.settings.highlightFields) {
-    const list = (match.closest('#candidatePronounsCheckboxes') as HTMLElement | null) ?? match;
-    list.setAttribute('data-getmeajobpls', 'filled');
-    list.style.setProperty('outline', '2px solid #1f9d63', 'important');
-    list.style.setProperty('outline-offset', '2px', 'important');
-  }
+  if (ctx.settings.highlightFields) outline((match.closest('#candidatePronounsCheckboxes') as HTMLElement | null) ?? match, 'filled');
   return { label: 'Pronouns', status: 'filled' };
 }
 
@@ -100,6 +102,7 @@ export const lever: Adapter = {
     return url.hostname === 'jobs.lever.co' || url.hostname === 'jobs.eu.lever.co';
   },
   async fill(ctx) {
+    if (!ctx.incremental) handled = new WeakSet();
     const report = await fillPage(ctx, {
       ats: this.name,
       overrides: OVERRIDES,

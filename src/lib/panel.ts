@@ -349,7 +349,14 @@ export class FillPanel {
   }
 
   private async preview(resumeId: string): Promise<void> {
-    const file = await requestResumeFile(resumeId);
+    let file: Awaited<ReturnType<typeof requestResumeFile>>;
+    try {
+      file = await requestResumeFile(resumeId);
+    } catch (err) {
+      // The extension was reloaded or updated since this page opened.
+      this.status.append(h('div', { class: 'err' }, `Couldn't open the preview: ${err instanceof Error ? err.message : String(err)}. Refresh the page and try again.`));
+      return;
+    }
     if (!file) return;
     const url = URL.createObjectURL(base64ToBlob(file.base64, file.meta.mimeType));
     window.open(url, '_blank');

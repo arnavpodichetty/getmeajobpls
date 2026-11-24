@@ -310,7 +310,8 @@ async function fillSchools(schools: Education[], results: FieldResult[]): Promis
     }
     const degree = panel.querySelector<HTMLElement>(PANEL.school.degree);
     if (degree && ed.degree) {
-      // Replace a wrong pick (e.g. one made by resume parsing) only if it doesn't already match.
+      // Always picked, so a wrong pick (e.g. one made by resume parsing) is replaced; picking
+      // the option already shown just keeps it.
       const outcome = await fillCombobox(degree, ed.degree, { tiers: degreeTiers(ed.degree) });
       record(results, `${tag}: degree`, outcome.ok && !outcome.review, outcome.review);
     }

@@ -8,8 +8,12 @@ export interface ResumeFile {
 export interface FillContext {
   profile: Profile;
   resume: ResumeFile | null;
-  /** Your transcript, for "upload your unofficial transcript" fields. */
-  transcript?: ResumeFile | null;
+  /**
+   * Your transcript, for "upload your unofficial transcript" fields: the file, or a function
+   * that fetches it. It can be a large file and most pages don't ask for one, so the content
+   * script fetches it the first time a page does. Read it with `transcriptOf` (engine/fill.ts).
+   */
+  transcript?: ResumeFile | null | (() => Promise<ResumeFile | null>);
   settings: Settings;
   /** Skills from the chosen skill set (overrides resume and profile skills). */
   skills?: string[];

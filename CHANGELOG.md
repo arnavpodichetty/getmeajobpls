@@ -5,6 +5,18 @@
 ### New
 - **Cloud sync (optional):** under Options → Cloud sync, "Sign in with Google" keeps your profile, saved answers, resume rules, settings, resumes and transcript the same in every browser you sign in from, Chrome and Firefox alike. They are kept in a hidden app folder in your own Google Drive that the extension can reach but nothing else can, and the extension can't see the rest of your Drive. A resume added or deleted in one browser is added or deleted in the others; if two browsers change things before syncing, the newest change wins, but a newly added resume is never lost. Files over 5 MB stay on their own computer. Off until you sign in.
 
+### Fixes
+- **More screening questions answered:** "When would you be available if an offer was accepted?" picks "Immediately after offer acceptance" (or "Immediately" / "ASAP"). "Do you have any plans to join the board of directors of a for-profit company…?" gets your board-membership answer, like "Are you currently serving on the board…?" already did. "In the last 5 years, have you been an employee of a U.S. federal, state, or local government?" gets your government-employment answer. These were left blank before.
+- **Lever, after a fill:** watching for new fields no longer retypes your location (moving the cursor into that box) or re-ticks your pronouns each time the page changes when "Overwrite existing" is on. When no pronoun option matches yours, the "1 to review" note now shows once instead of on every change to the page.
+- **Fill page while new fields are being filled:** clicking Fill page (or Fill in the toolbar popup) a moment after the page changed used to answer "A fill is already running on this page" and fill nothing. It now lets the fill of the new fields finish, then fills the page.
+- **When something goes wrong:** a frame of the page that fails to answer is now left out, instead of being taken for a recognized site (the panel showed "undefined (embedded)", and "Save my answers" could save a blank answer). A fill can no longer get stuck waiting forever on a dropdown or a new row, which used to block every later fill on that page. Preview PDF in the panel now says why it couldn't open (usually: the extension was updated, so refresh the page). Background errors that only showed in the extension's console (Cloud sync's start-up check, reopening Options after an update, closing a tab) are now caught.
+- **Faster watching for new fields:** after a fill, each change to the page starts a look for new fields. A look that finds none now scans the page once instead of three times, skips a 400 ms wait, and reads the posting's text only if a question needs it.
+- **Transcript fetched only when needed:** your saved transcript is read only when a page asks for one, not on every fill.
+- **Fewer settings reads:** the on-page panel reads your settings once and then follows your changes, instead of reading them from storage each time it checks a changing page.
+
+### Development
+- `package.json` now says Node 22 or newer (`engines`): the resume-reading tests use the PDF library, which needs it.
+
 ## 1.5 (2026-11-22)
 
 ### New

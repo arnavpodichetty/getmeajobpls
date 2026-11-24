@@ -1,7 +1,7 @@
 // The fill pipeline every adapter runs: resume first, wait for parsing, then
 // each field top to bottom, then a second pass for questions revealed by the
 // first answers.
-import type { FillContext } from '../../adapters/types';
+import type { FillContext, ResumeFile } from '../../adapters/types';
 import { setTimeZone } from '../clock';
 import { jobInfoForPage } from '../jobInfo';
 import type { FieldResult, FillReport } from '../types';
@@ -89,21 +89,20 @@ export function clearHighlights(): void {
   });
 }
 
+/** Outline exactly this element (clearHighlights removes it). */
+export function outline(el: HTMLElement, status: 'filled' | 'review'): void {
+  el.setAttribute(HIGHLIGHT_ATTR, status);
+  el.style.setProperty('outline', `2px solid ${COLORS[status]}`, 'important');
+  el.style.setProperty('outline-offset', '2px', 'important');
+}
+
 /** Outline a control an adapter filled itself (rows it handled outside the main pass). */
 export function markField(el: HTMLElement, status: 'filled' | 'review', enabled: boolean, isGroup = false): void {
-  if (!enabled) return;
-  const target = highlightTarget(el, isGroup);
-  target.setAttribute(HIGHLIGHT_ATTR, status);
-  target.style.setProperty('outline', `2px solid ${COLORS[status]}`, 'important');
-  target.style.setProperty('outline-offset', '2px', 'important');
+  if (enabled) outline(highlightTarget(el, isGroup), status);
 }
 
 function highlight(field: Field, status: 'filled' | 'review', enabled: boolean): void {
-  if (!enabled) return;
-  const target = highlightTarget(field.el, ['radio', 'checkboxes', 'buttons'].includes(field.kind));
-  target.setAttribute(HIGHLIGHT_ATTR, status);
-  target.style.setProperty('outline', `2px solid ${COLORS[status]}`, 'important');
-  target.style.setProperty('outline-offset', '2px', 'important');
+  markField(field.el, status, enabled, ['radio', 'checkboxes', 'buttons'].includes(field.kind));
 }
 
 // Upload widgets that list the file themselves (Workday, many React uploaders) leave
@@ -333,16 +332,24 @@ export function findResumeTarget(fields: Field[]): HTMLElement | null {
   return null;
 }
 
+/** Your transcript (see FillContext.transcript), fetched if it hasn't been yet. */
+export async function transcriptOf(ctx: FillContext): Promise<ResumeFile | null> {
+  const transcript = ctx.transcript;
+  return typeof transcript === 'function' ? transcript() : transcript ?? null;
+}
+
 async function attachTranscripts(ctx: FillContext, root: ParentNode, results: FieldResult[], notes: string[], onFilled: () => void): Promise<void> {
   // Cheap check first: most steps have no upload, and a full scan reads every label.
   if (!queryDeep('input[type=file]', root)) return;
   const fields = scanFields(root).filter((f) => f.kind === 'file' && !handled.has(f.el) && isTranscriptUpload(`${f.label} ${f.hints}`));
+  let transcript: ResumeFile | null | undefined;
   for (const field of fields) {
     handled.add(field.el);
     const label = displayLabel(field);
     const key = `${pageKey()}|${normalize(label)}`;
     if (transcriptAttached.has(key)) continue;
-    if (!ctx.transcript) {
+    if (transcript === undefined) transcript = await transcriptOf(ctx);
+    if (!transcript) {
       if (field.required) results.push({ label, status: 'review', reason: 'Required. Add your transcript under Options → Transcript, or attach it here.' });
       continue;
     }
@@ -351,15 +358,15 @@ async function attachTranscripts(ctx: FillContext, root: ParentNode, results: Fi
       results.push({ label, status: 'skipped', reason: 'A file is already attached.' });
       continue;
     }
-    const outcome = attachFile(field.el, ctx.transcript.file, 'transcript');
+    const outcome = attachFile(field.el, transcript.file, 'transcript');
     if (outcome.ok) {
       transcriptAttached.add(key);
       onFilled();
       await waitForStable(document.body, 800, 6000);
-      if (outcome.review && pageShows(ctx.transcript.file.name)) outcome.review = undefined;
+      if (outcome.review && pageShows(transcript.file.name)) outcome.review = undefined;
     }
     if (outcome.ok && !outcome.review) notes.push('Transcript attached.');
-    results.push({ label: `Transcript (${ctx.transcript.file.name})`, status: outcome.ok && !outcome.review ? 'filled' : 'review', reason: outcome.review });
+    results.push({ label: `Transcript (${transcript.file.name})`, status: outcome.ok && !outcome.review ? 'filled' : 'review', reason: outcome.review });
   }
 }
 
@@ -390,17 +397,38 @@ function overrideFor(field: Field, overrides: Override[], c: AnswerContext): Ans
   return null;
 }
 
+/**
+ * What questions are answered from. The job's title, text and location come from the page,
+ * and reading its text lays the page out. A full fill reads them up front; a pass on fields
+ * that appeared later (often none) reads each only when a question asks for it.
+ */
+function answerContext(ctx: FillContext, upFront: boolean): AnswerContext {
+  let job: ReturnType<typeof jobInfoForPage> | undefined;
+  const info = () => (job ??= jobInfoForPage());
+  const title = () => info().title || document.querySelector('[data-test="topbar-job-title"], h1')?.textContent?.trim() || document.title;
+  const text = () => (document.body.innerText || document.body.textContent || '').slice(0, 30000);
+  const answers: AnswerContext = { profile: ctx.profile, skills: ctx.skills?.length ? ctx.skills : ctx.profile.skills };
+  if (upFront) return { ...answers, jobTitle: title(), jobText: text(), jobLocation: info().location };
+  const onFirstUse = (key: 'jobTitle' | 'jobText' | 'jobLocation', read: () => string) =>
+    Object.defineProperty(answers, key, {
+      configurable: true,
+      enumerable: true,
+      get() {
+        const value = read();
+        Object.defineProperty(answers, key, { value, configurable: true, enumerable: true, writable: true });
+        return value;
+      },
+    });
+  onFirstUse('jobTitle', title);
+  onFirstUse('jobText', text);
+  onFirstUse('jobLocation', () => info().location);
+  return answers;
+}
+
 export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<FillReport> {
   const root = opts.root ?? document;
   setTimeZone(ctx.settings.timeZone);
-  const job = jobInfoForPage();
-  const answers: AnswerContext = {
-    profile: ctx.profile,
-    jobTitle: job.title || document.querySelector('[data-test="topbar-job-title"], h1')?.textContent?.trim() || document.title,
-    jobText: (document.body.innerText || document.body.textContent || '').slice(0, 30000),
-    jobLocation: job.location,
-    skills: ctx.skills?.length ? ctx.skills : ctx.profile.skills,
-  };
+  const answers = answerContext(ctx, !opts.incremental);
   const results: FieldResult[] = [];
   const notes: string[] = [];
   const open: { field: Field; question: OpenQuestion }[] = [];
@@ -571,6 +599,10 @@ export async function fillPage(ctx: FillContext, opts: EngineOptions): Promise<F
       if (outcome.ok) await opts.afterField?.();
       await sleep(30);
     }
+    // A pass over the page for new fields that found none answered nothing, so nothing new can
+    // have been revealed by it; fields the page adds by itself start another pass when they
+    // appear. Not for an entry form an adapter just opened (`root`): its fields may still be drawing.
+    if (opts.incremental && !opts.root && !fields.length) break;
     await sleep(400);
   }
 

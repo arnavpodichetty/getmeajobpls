@@ -172,6 +172,28 @@ describe('Lever', () => {
     expect(status(r, /^Pronouns$/)).toBe('review');
   });
 
+  it('does not redo location or pronouns when watching for new fields', async () => {
+    loadFixture('lever-c');
+    const unmatched = context();
+    unmatched.profile.personal.pronouns = 'she/they';
+    expect(status(await adapterFor('lever').fill(unmatched), /^Pronouns$/)).toBe('review');
+    // Flagged once, not again on every change to the page.
+    const again = await adapterFor('lever').fill({ ...unmatched, incremental: true });
+    expect(again.fields.map((f) => f.label)).not.toContain('Pronouns');
+    expect(again.needsReview).toBe(0);
+
+    // With "overwrite existing" on, a pass on new fields still leaves them alone.
+    loadFixture('lever-b');
+    const overwrite = context();
+    overwrite.settings.overwriteExisting = true;
+    await adapterFor('lever').fill(overwrite);
+    const pass = await adapterFor('lever').fill({ ...overwrite, incremental: true });
+    expect(pass.fields.map((f) => f.label)).not.toContain('Pronouns');
+    expect(pass.fields.map((f) => f.label)).not.toContain('Current location');
+    // A new full fill does them again.
+    expect(status(await adapterFor('lever').fill(overwrite), /^Pronouns$/)).toBe('filled');
+  });
+
   it('reads "Race" without its collapsed descriptions and picks the race option', async () => {
     loadFixture('lever-c');
     const ctx = context();

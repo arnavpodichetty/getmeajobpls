@@ -356,13 +356,13 @@ export function watchLocalChanges(delayMs = 3000): void {
   let timer: ReturnType<typeof setTimeout> | undefined;
   browser.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local' || !SYNCED_KEYS.some((k) => k in changes)) return;
-    void (async () => {
+    (async () => {
       const state = await loadSyncState();
       if (!state.enabled) return;
       await patchSyncState({ localChangedAt: Date.now() });
       clearTimeout(timer);
       timer = setTimeout(() => void syncNow().catch(() => {}), delayMs);
-    })();
+    })().catch(() => {}); // storage unavailable (the extension is reloading): the next change tries again
   });
 }
 

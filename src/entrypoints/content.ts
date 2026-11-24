@@ -15,7 +15,7 @@ import { base64ToBlob, TRANSCRIPT_ID } from '../lib/resumeDb';
 import { loadProfile, loadSettings } from '../lib/storage';
 import { installWorkdayGate } from '../lib/workdayGate';
 import { normalizeSettings } from '../lib/defaults';
-import type { FillReport } from '../lib/types';
+import type { FillReport, Settings } from '../lib/types';
 
 const PAGE_TEXT_LIMIT = 20_000;
 /** After a fill, keep filling fields that appear (wizard steps, follow-ups) for this long. */
@@ -32,7 +32,10 @@ export default defineContentScript({
     if (ctx.isInvalid || !browser.runtime?.onMessage) return;
     const adapter = () => detectAdapter(new URL(location.href), document);
     let lastContext: FillContext | null = null;
+    /** A full fill (Fill page, or the popup's Fill) is running. */
     let filling = false;
+    /** The pass on fields that appeared after a fill, while one runs. */
+    let watchPass: Promise<FillReport> | null = null;
     // Workday required-field gate: on until settings say otherwise; refreshed wherever settings load and when they change.
     let requireFields = true;
 
@@ -73,18 +76,21 @@ export default defineContentScript({
         const blob = base64ToBlob(payload.base64, payload.meta.mimeType);
         return { meta: payload.meta, file: new File([blob], payload.meta.fileName, { type: payload.meta.mimeType }) };
       };
-      const [profile, settings, resume, transcript] = await Promise.all([
-        loadProfile(), loadSettings(), load(resumeId), load(TRANSCRIPT_ID).catch(() => null),
-      ]);
+      const [profile, settings, resume] = await Promise.all([loadProfile(), loadSettings(), load(resumeId)]);
       requireFields = settings.workdayRequireFields !== false;
       const skills = profile.skillSets.find((s) => s.id === skillSetId)?.skills;
-      return { profile, resume, transcript, settings, skills };
+      // Fetched the first time a page asks for a transcript, and kept for the passes that follow:
+      // it can be a large file, and most applications don't ask for one.
+      let transcript: Promise<ResumeFile | null> | undefined;
+      return { profile, resume, transcript: () => (transcript ??= load(TRANSCRIPT_ID).catch(() => null)), settings, skills };
     }
 
     async function fill(resumeId: string | null, skillSetId: string | null): Promise<FillReport> {
       if (filling) return { ats: adapter().name, filled: 0, needsReview: 0, fields: [], notes: ['A fill is already running on this page.'] };
       filling = true;
       try {
+        // Filling fields that just appeared (the page changed a moment ago): let that finish, then fill everything.
+        if (watchPass) await watchPass.catch(() => null);
         const fillContext = await buildContext(resumeId, skillSetId);
         lastContext = fillContext;
         const report = await adapter().fill(fillContext);
@@ -97,8 +103,26 @@ export default defineContentScript({
 
     // --- Workday: no "Save and Continue" with required fields empty -----------
 
+    // Settings for the panel's checks, read once and then kept current by onSettings rather
+    // than read from storage on every check. Without change events, every check reads them.
+    const settingsEvents = !!browser.storage.onChanged;
+    let panelSettings: Settings | null = null;
+    let settingsChanges = 0;
+    async function settingsForCheck(): Promise<Settings> {
+      if (panelSettings) return panelSettings;
+      const seen = settingsChanges;
+      const settings = await loadSettings();
+      // A change that arrived during the read makes the next check read again.
+      if (settingsEvents && seen === settingsChanges) panelSettings = settings;
+      return settings;
+    }
+
     const onSettings: Parameters<typeof browser.storage.onChanged.addListener>[0] = (changes, area) => {
-      if (area === 'local' && changes.settings) requireFields = normalizeSettings(changes.settings.newValue).workdayRequireFields;
+      if (area !== 'local' || !changes.settings) return;
+      const next = normalizeSettings(changes.settings.newValue);
+      requireFields = next.workdayRequireFields;
+      settingsChanges++;
+      if (panelSettings) panelSettings = next;
     };
     browser.storage.onChanged?.addListener(onSettings);
     const removeGate = installWorkdayGate({
@@ -148,14 +172,15 @@ export default defineContentScript({
         stopWatching();
         return;
       }
-      if (filling || !lastContext) return;
-      filling = true;
+      if (filling || watchPass || !lastContext) return;
+      // The resume was handled on the first fill; don't re-attach it on each step.
+      const pass = adapter().fill({ ...lastContext, incremental: true });
+      watchPass = pass;
       try {
-        // The resume was handled on the first fill; don't re-attach it on each step.
-        const report = await adapter().fill({ ...lastContext, incremental: true });
+        const report = await pass;
         if (!ctx.isInvalid && (report.filled || report.needsReview)) toast(`Filled ${report.filled} new field${report.filled === 1 ? '' : 's'}${report.needsReview ? `, ${report.needsReview} to review` : ''}.`);
       } finally {
-        filling = false;
+        if (watchPass === pass) watchPass = null;
       }
     }
 
@@ -242,7 +267,7 @@ export default defineContentScript({
         if (!mightBeApplication()) return;
         checking = true;
         try {
-          const settings = await loadSettings();
+          const settings = await settingsForCheck();
           if (ctx.isInvalid) return;
           requireFields = settings.workdayRequireFields !== false;
           if (!settings.showOnPage) return panel.remove();
@@ -315,6 +340,34 @@ export default defineContentScript({
       }
     }
 
+    /**
+     * The answer to send when handling a request failed, shaped like a normal one so the caller
+     * skips this frame: a frame that "sees" nothing, empty page text, no answers to save. Only
+     * a fill reports the error itself.
+     */
+    function failedResponse(msg: ContentRequest, err: unknown): unknown {
+      const error = err instanceof Error ? err.message : String(err);
+      const site = (() => {
+        try {
+          return adapter();
+        } catch {
+          return { id: 'generic', name: 'Unknown site' };
+        }
+      })();
+      switch (msg.type) {
+        case 'detect':
+          return { atsId: site.id, atsName: site.name, url: location.href, isTop: window === window.top, fieldCount: 0, jobForm: false } satisfies FrameInfo;
+        case 'pageText':
+          return { title: '', text: '' } satisfies PageText;
+        case 'capture':
+          return { html: '', url: location.href };
+        case 'collectAnswers':
+          return [];
+        default:
+          return { ats: site.name, filled: 0, needsReview: 0, fields: [], notes: [`Error: ${error}`] } satisfies FillReport;
+      }
+    }
+
     const listener: Parameters<typeof browser.runtime.onMessage.addListener>[0] = (msg: ContentRequest, _sender, sendResponse) => {
       if (ctx.isInvalid) return false;
       void runSafely(async () => {
@@ -323,7 +376,7 @@ export default defineContentScript({
           response = await handle(msg);
         } catch (err) {
           if (ctx.isInvalid || /extension context invalidated/i.test(err instanceof Error ? err.message : String(err))) throw err;
-          response = { ats: adapter().name, filled: 0, needsReview: 0, fields: [], notes: [`Error: ${err instanceof Error ? err.message : String(err)}`] };
+          response = failedResponse(msg, err);
         }
         if (!ctx.isInvalid) sendResponse(response);
       });

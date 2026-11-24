@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { asksForTranscript, fillPage, isTranscriptUpload } from '../src/lib/engine/fill';
 import { resetLayoutCache } from '../src/lib/engine/dom';
 import { context, fastTimings } from './helpers/fixture';
@@ -89,5 +89,19 @@ describe('transcript uploads', () => {
     document.querySelector('input[type=file]')!.addEventListener('change', () => attaches++);
     await fillPage({ ...ctx, incremental: true }, { ats: 'Workday', incremental: true });
     expect(attaches).toBe(1);
+  });
+
+  it('fetches the transcript only when the page asks for one', async () => {
+    // The content script passes a function that fetches it (it can be a large file).
+    const fetchTranscript = vi.fn(async () => transcriptFile());
+    document.body.innerHTML = '<label for="first">First name</label><input id="first" type="text">';
+    await fillPage(context({ resume: null, transcript: fetchTranscript }), { ats: 'Greenhouse' });
+    expect(fetchTranscript).not.toHaveBeenCalled();
+
+    document.body.innerHTML = greenhouse();
+    const report = await fillPage(context({ transcript: fetchTranscript }), { ats: 'Greenhouse', resumeTarget: () => document.querySelector('input#resume') });
+    expect(fetchTranscript).toHaveBeenCalledOnce();
+    expect(fileOf('question_13056583007')).toBe('ada-transcript.pdf');
+    expect(report.fields.find((f) => f.label.startsWith('Transcript'))?.status).toBe('filled');
   });
 });

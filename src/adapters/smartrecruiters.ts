@@ -1,6 +1,6 @@
 import { attachFile, fillText } from '../lib/engine/controls';
 import { queryAllDeep, queryDeep, realClick, sleep, waitForElement } from '../lib/engine/dom';
-import { fillPage, isTranscriptUpload } from '../lib/engine/fill';
+import { fillPage, isTranscriptUpload, transcriptOf } from '../lib/engine/fill';
 import { labelFor } from '../lib/engine/labels';
 import { currentValue, scanFields } from '../lib/engine/scan';
 import { optionScore, normalize, schoolVariants } from '../lib/engine/text';
@@ -50,13 +50,14 @@ async function attachRequestedTranscript(ctx: FillContext, report: FillReport): 
     const request = queryAllDeep('[slot="label-content"]', prev).map((el) => el.textContent ?? '').join(' ');
     if (!isTranscriptUpload(request)) continue;
     const label = 'Transcript';
-    if (!ctx.transcript) {
+    const transcript = await transcriptOf(ctx);
+    if (!transcript) {
       report.fields.push({ label, status: 'review', reason: 'This job asks for your transcript. Add it under Options → Transcript, or attach it here.' });
       continue;
     }
-    const name = ctx.transcript.file.name;
+    const name = transcript.file.name;
     if (attachedNames(container).includes(name)) continue;
-    const outcome = attachFile(input, ctx.transcript.file, 'transcript');
+    const outcome = attachFile(input, transcript.file, 'transcript');
     if (outcome.ok) await waitForElement(() => (attachedNames(container).includes(name) ? container : null), 4000);
     const shown = attachedNames(container).includes(name);
     report.fields.push({ label: `${label} (${name})`, status: outcome.ok && (shown || !outcome.review) ? 'filled' : 'review', reason: shown ? undefined : outcome.review });

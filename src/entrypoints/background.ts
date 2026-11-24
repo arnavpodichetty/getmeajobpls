@@ -9,20 +9,25 @@ import { syncNow, syncOnWake, watchLocalChanges } from '../lib/cloudSync';
 
 export default defineBackground(() => {
   browser.runtime.onInstalled.addListener(async ({ reason }) => {
-    if (reason === 'install') browser.runtime.openOptionsPage();
+    if (reason === 'install') void browser.runtime.openOptionsPage().catch(() => {});
     // Turning on tailoring restarts the extension (see options/tailoring.ts); go back to where you were.
-    const { [REOPEN_KEY]: section } = await browser.storage.local.get(REOPEN_KEY);
-    if (typeof section === 'string') {
-      await browser.storage.local.remove(REOPEN_KEY);
-      await browser.tabs.create({ url: browser.runtime.getURL(`/options.html#${section}`) });
+    try {
+      const { [REOPEN_KEY]: section } = await browser.storage.local.get(REOPEN_KEY);
+      if (typeof section === 'string') {
+        await browser.storage.local.remove(REOPEN_KEY);
+        await browser.tabs.create({ url: browser.runtime.getURL(`/options.html#${section}`) });
+      }
+    } catch {
+      // Storage or tabs unavailable during the update; Options can be opened by hand.
     }
   });
 
   // Optional Google Drive sync: upload local edits, and pick up other browsers' edits on wake.
+  // Failures are kept in the sync state that Options shows; nothing to do here.
   watchLocalChanges();
-  void syncOnWake();
+  syncOnWake().catch(() => {});
 
-  browser.tabs.onRemoved.addListener((tabId) => { void forgetPostings(tabId); });
+  browser.tabs.onRemoved.addListener((tabId) => { forgetPostings(tabId).catch(() => {}); });
 
   browser.runtime.onMessage.addListener((msg: BackgroundRequest | PanelRequest, sender, sendResponse) => {
     if (typeof msg?.type === 'string' && msg.type.startsWith('panel:')) {

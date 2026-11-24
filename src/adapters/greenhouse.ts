@@ -1,4 +1,5 @@
 import { LEAVE_EMPTY, type AnswerContext } from '../lib/engine/answers';
+import { monthName } from '../lib/engine/controls';
 import { fillPage, type Override } from '../lib/engine/fill';
 import { dashedPhone } from '../lib/phone';
 import { normalize, US_STATES } from '../lib/engine/text';
@@ -40,9 +41,6 @@ export function cityWithState(p: Profile): string[] {
 
 /** A lone Greenhouse phone box gets "1-415-555-0100". */
 export const greenhousePhone = dashedPhone;
-
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const monthName = (iso: string) => MONTHS[Number(iso.split('-')[1]) - 1] ?? '';
 
 /**
  * The Employment blocks (company-name-0, title-0, start-date-month-0, …, current-role-0): block N

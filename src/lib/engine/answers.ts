@@ -490,7 +490,8 @@ const DEFS: Def[] = [
   },
   {
     key: 'fiduciaryRoles',
-    re: /\b(?:hold|serve|serving|named|appointed|acting)\b.{0,80}\b(?:board member|member of (?:a|the|any) board|board of directors|trustee|trust protector|executor|executrix|personal representative|fiduciary)\b/,
+    // Includes plans to join one ("plans to join the board of directors … prior to starting").
+    re: /\b(?:hold|serve|serving|named|appointed|acting|join|joining)\b.{0,80}\b(?:board member|member of (?:a|the|any) board|board of directors|trustee|trust protector|executor|executrix|personal representative|fiduciary)\b/,
     not: /relat|family|spouse/,
     choiceOnly: true,
     value: (c) => yesNo(c.profile.answers.fiduciaryRoles),
@@ -768,7 +769,7 @@ const DEFS: Def[] = [
   {
     key: 'governmentOfficial',
     // Includes past government / Department of Defense employment ("post-government employment", DoD Section 847).
-    re: /public official|government (official|entity|employee|agency)|politically exposed|foreign official|state.owned|(?:employed|worked) (?:by|for) (?:a |the |any )?(?:(?:u s|us|federal|united states|state|local|foreign|or|and) )*government|post government employment|department of defen[cs]e|\bdod\b|(?:official|employee) of (?:the )?(?:u s |us |federal )?(?:government|armed forces)/,
+    re: /public official|government (official|entity|employee|agency)|politically exposed|foreign official|state.owned|(?:employed|worked) (?:by|for) (?:a |the |any )?(?:(?:u s|us|federal|united states|state|local|foreign|or|and) )*government|post government employment|department of defen[cs]e|\bdod\b|(?:official|employee) of (?:a |an |any |the )?(?:(?:u s|us|federal|united states|state|local|foreign|or|and) )*(?:government|armed forces)/,
     // "Do you hold a US Department of Defense Security Clearance?" is about a clearance, not DoD employment.
     not: /\bclearances?\b/,
     value: (c) => yesNo(c.profile.answers.governmentOfficial),
@@ -1316,6 +1317,15 @@ const DEFS: Def[] = [
     choiceOnly: true,
     // Always Yes: you only apply to internships whose term you can do.
     value: () => 'Yes',
+  },
+  // "When would you be available if an offer was accepted?" A dropdown of relative timings
+  // ("Immediately after offer acceptance", "2 weeks", …): immediately.
+  {
+    key: 'availableAfterOffer',
+    re: /\bwhen (?:would|will|could|can) you (?:be )?(?:available|start|begin)\b.{0,40}\boffer\b|\bavailab\w*\b.{0,40}\bif (?:an |the |our )?offer (?:is|was|were) (?:accepted|extended|made)\b/,
+    choiceOnly: true,
+    value: () => 'Immediately after offer acceptance',
+    tiers: () => [['Immediately after offer acceptance', 'Immediately upon offer acceptance', 'Upon offer acceptance', 'Immediately'], ['As soon as possible', 'ASAP']],
   },
   {
     key: 'earliestStartDate',

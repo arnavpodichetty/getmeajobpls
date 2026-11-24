@@ -17,6 +17,8 @@ const BOARDS: { id: string; name: string; host: RegExp }[] = [
   { id: 'bamboohr', name: 'BambooHR', host: /\.bamboohr\.com$/ },
   { id: 'jazzhr', name: 'JazzHR', host: /(\.applytojob\.com|\.jazzhr\.com)$/ },
   { id: 'taleo', name: 'Taleo', host: /\.taleo\.net$/ },
+  // Not a duplicate of ./oracle.ts: that adapter comes first and takes the application
+  // (/CandidateExperience/); this names Oracle's other pages, like job search.
   { id: 'oracle', name: 'Oracle Recruiting', host: /\.oraclecloud\.com$/ },
   { id: 'adp', name: 'ADP', host: /(workforcenow|recruiting)\.adp\.com$/ },
   { id: 'ukg', name: 'UKG', host: /(ultipro\.com|ukg\.net)$/ },
